@@ -17,7 +17,7 @@ export default function Index() {
           </div>
         </div>
         <div className="flex flex-row items-center gap-16">
-          <Link to="#Why" className="text-2xl font-semibold">
+          <Link to="#Why" className="fon-semibold text-2xl">
             Why
           </Link>
           <Link to="#Features" className="text-2xl font-semibold">
@@ -43,19 +43,27 @@ export default function Index() {
         </div>
       </header>
       <main className="relative">
-        <div className="flex flex-col items-center">
-          <div id="HeroSection">
-            <p className="pb-16">
-              <span className="text-9xl font-bold text-[#2196F3]">Tourna</span>
-              <span className="text-9xl font-bold text-[#F24E1E]">Mate</span>
-            </p>
-            <div className="flex flex-row justify-center">
-              <div className="flex flex-col items-center justify-center">
+        <div className="flex flex-col">
+          <div
+            id="HeroSection"
+            className="flex h-screen w-full flex-col items-center bg-slate-100"
+          >
+            <div>
+              <p className="pb-16">
+                <span className="text-9xl font-bold text-[#2196F3]">
+                  Tourna
+                </span>
+                <span className="text-9xl font-bold text-[#F24E1E]">Mate</span>
+              </p>
+            </div>
+
+            <div className="flex flex-row gap-24">
+              <div className="flex w-[calc(100vw/2)] flex-col items-center justify-center">
                 <img
                   src="fitness.svg"
                   alt="Volleyball Image"
                   title="Volleyball Image"
-                  className="h-full w-full"
+                  className="h-124 w-full"
                 />
                 <a
                   href="http://www.freepik.com"
@@ -64,12 +72,24 @@ export default function Index() {
                   Designed by stories / Freepik
                 </a>
               </div>
-              <div className="flex flex-col"></div>
+              <div className="flex w-[calc(100vw/2)] flex-col items-center">
+                <p className="text-8xl font-semibold">
+                  Focus on the{' '}
+                  <span className="font-bold text-[#2196F3]">Tournament</span>
+                </p>
+              </div>
             </div>
           </div>
-          <div id="Why"></div>
-          <div id="Features"></div>
-          <div id="Pricing"></div>
+          <div id="Why" className="h-screen w-full">
+            {' '}
+            Why Section
+          </div>
+          <div id="Features" className="h-screen w-full">
+            Features Section
+          </div>
+          <div id="Pricing" className="h-screen w-full">
+            Pricing Section
+          </div>
         </div>
       </main>
     </div>
