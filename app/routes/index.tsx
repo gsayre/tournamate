@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, Form } from 'remix';
+import { Link, Form } from '@remix-run/react';
 
 export default function Index() {
   const [whyToggleState, setWhyToggleState] = useState('Tournament Director');
@@ -176,12 +176,12 @@ export default function Index() {
         break;
       case 'Business':
         setPricingComponent(
-          <div className="flex flex-col justify-center m-8 w-[calc(100vw/2)] items-start">
-            <p className='text-5xl font-medium'>
+          <div className="m-8 flex w-[calc(100vw/2)] flex-col items-start justify-center">
+            <p className="text-5xl font-medium">
               If you have any business inquiries or questions regarding the
               product please reach out to us at:
             </p>
-            <p className='text-6xl font-bold'>GrantSayre1999@gmail.com</p>
+            <p className="text-6xl font-bold">GrantSayre1999@gmail.com</p>
           </div>
         );
         break;

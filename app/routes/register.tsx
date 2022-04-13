@@ -1,4 +1,6 @@
-import { Link, Form } from 'remix';
+import type { ActionFunction, LoaderFunction } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
+import { Link, Form, useActionData } from '@remix-run/react';
 
 export default function register() {
   return (
@@ -19,7 +21,7 @@ export default function register() {
           </Link>
         </div>
         <div className="flex flex-row items-center gap-3 pr-8">
-          <p className="font-medium -mb-1 text-m">Already have one?</p>
+          <p className="text-m -mb-1 font-medium">Already have one?</p>
           <Link
             to="/login"
             className=" flex h-14 w-24 items-center rounded text-xl font-medium text-[#2196F3]"
@@ -39,7 +41,7 @@ export default function register() {
                   type="text"
                   name="firstname"
                   className="rounded-md p-1 text-2xl outline outline-1 outline-black focus:outline-blue-800"
-                  placeholder='First Name'
+                  placeholder="First Name"
                 />
               </label>
               <label className="flex flex-col pl-8 text-3xl font-medium">
@@ -48,7 +50,7 @@ export default function register() {
                   type="text"
                   name="lastname"
                   className="rounded-md p-1 text-2xl outline outline-1 outline-black focus:outline-blue-800"
-                  placeholder='Last Name'
+                  placeholder="Last Name"
                 />
               </label>
             </div>
