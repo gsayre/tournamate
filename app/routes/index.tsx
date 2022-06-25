@@ -148,27 +148,10 @@ export default function Index() {
       case 'Tournament Director':
         setPricingComponent(
           <div className="m-8 flex h-full w-[100vw] flex-row items-center justify-center">
-            <div className="flex w-[calc(100vw/4)] flex-col items-center justify-center">
-              <p className="text-9xl font-bold">$50</p>
-              <p className="mt-4 text-center text-5xl font-medium">
-                security fee for creating a tournament
-              </p>
-            </div>
-            <div>
-              <p className="text-9xl">&#8594;</p>
-            </div>
             <div className="m-8 flex w-[calc(100vw/4)] flex-col items-center">
-              <p className=" text-9xl font-bold">$10</p>
+              <p className=" text-9xl font-bold">$5</p>
               <p className="mt-4 text-center text-5xl font-medium">
                 per player participating in your tournament
-              </p>
-            </div>
-            <div>
-              <p className="text-9xl">&#8594;</p>
-            </div>
-            <div>
-              <p className=" text-center text-9xl font-normal">
-                We do the rest for you!
               </p>
             </div>
           </div>
@@ -181,7 +164,7 @@ export default function Index() {
               If you have any business inquiries or questions regarding the
               product please reach out to us at:
             </p>
-            <p className="text-6xl font-bold">GrantSayre1999@gmail.com</p>
+            <p className="text-6xl font-bold">EMAIL HERE</p>
           </div>
         );
         break;
