@@ -14,7 +14,7 @@ if (admin.apps.length === 0) {
 /**
  * setup the session cookie to be used for firebase
  */
-const { getSession, commitSession, destroySession } =
+export const { getSession, commitSession, destroySession } =
   createCookieSessionStorage({
     cookie: {
       name: 'fb:token',
