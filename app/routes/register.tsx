@@ -1,69 +1,83 @@
-import { json } from '@remix-run/node';
-import type { ActionFunction } from '@remix-run/node';
-import { Link, Form } from '@remix-run/react';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { addUser } from '~/db.server';
-import { sessionLogin } from '~/firebase.sessions.server';
-import { auth } from '../firebase-service';
+import type { ActionFunction, LoaderFunction } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
+import { Form, Link, useActionData } from '@remix-run/react';
+
+import { checkSessionCookie, signUp } from '~/server/auth.server';
+import { commitSession, getSession } from '~/sessions';
+
+
+export const loader: LoaderFunction = async ({ request }) => {
+  const session = await getSession(request.headers.get('cookie'));
+  const { uid } = await checkSessionCookie(session);
+  const headers = {
+    'Set-Cookie': await commitSession(session),
+  };
+  if (uid) {
+    return redirect('/dashboard', { headers });
+  }
+  return json(null, { headers });
+};
 
 type ActionData = {
   error?: string;
 };
 
 export const action: ActionFunction = async ({ request }) => {
-  let formData = await request.formData();
-  let email = formData.get('email') as string;
-  let password = formData.get('password') as string;
-  let firstName = formData.get('firstName') as string;
-  let lastName = formData.get('lastName') as string;
-
-  await auth.signOut();
+  const form = await request.formData();
+  const name = form.get('name');
+  const email = form.get('email');
+  const password = form.get('password');
+  const formError = json({ error: 'Please fill all fields!' }, { status: 400 });
+  if (typeof name !== 'string') return formError;
+  if (typeof email !== 'string') return formError;
+  if (typeof password !== 'string') return formError;
   try {
-    await createUserWithEmailAndPassword(auth, email, password);
-    const userId = (await auth.currentUser?.uid) as string;
-    await addUser(userId, firstName, lastName);
-
-    const idToken = (await auth.currentUser?.getIdToken()) as string;
-    return await sessionLogin(request, idToken, '/dashboard');
+    const sessionCookie = await signUp(name, email, password);
+    const session = await getSession(request.headers.get('cookie'));
+    session.set('session', sessionCookie);
+    return redirect('/dashboard', {
+      headers: {
+        'Set-Cookie': await commitSession(session),
+      },
+    });
   } catch (error) {
-    if (error instanceof Error) {
-      return json<ActionData>({ error: String(error) }, { status: 401 });
-    }
+    console.error(error);
+    return json<ActionData>({ error: String(error) }, { status: 401 });
   }
 };
 
 export default function register() {
+  const action = useActionData<ActionData>();
   return (
     <div>
-      <h3>Register</h3>
+      <h1>Join</h1>
+      {action?.error && <p>{action.error}</p>}
       <Form method="post">
-        <div>
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            name="email"
-            placeholder="example@gmail.com"
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="password">Password</label>
-          <input type="password" name="password" required />
-        </div>
-        <div>
-          <label htmlFor="firstName">First Name</label>
-          <input type="text" name="firstName" required />
-        </div>
-        <div>
-          <label htmlFor="lastName">Last Name</label>
-          <input type="text" name="lastName" required />
-        </div>
-        <button type="submit">Register</button>
+        <input
+          style={{ display: 'block' }}
+          name="name"
+          placeholder="Peter Parker"
+          type="text"
+        />
+        <input
+          style={{ display: 'block' }}
+          name="email"
+          placeholder="you@example.com"
+          type="email"
+        />
+        <input
+          style={{ display: 'block' }}
+          name="password"
+          placeholder="password"
+          type="password"
+        />
+        <button style={{ display: 'block' }} type="submit">
+          Register
+        </button>
       </Form>
-      <div></div>
-      <div>
-        <Link to="/login">Already Registered?</Link>
-      </div>
+      <p>
+        Do you want to <Link to="/login">login</Link>?
+      </p>
     </div>
   );
   // return (
