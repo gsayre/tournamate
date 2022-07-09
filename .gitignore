@@ -6,3 +6,5 @@ node_modules
 .env
 /ServiceAccountKey.json
 /firebaseAdminKey.json
+app/service-account.json
+app/firebase-config.json

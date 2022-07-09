@@ -4,7 +4,7 @@
     "**/*.ts",
     "**/*.tsx",
     "app/utils/firebase/db.server.ts"
-  ],
+, "app/firebase.sessions.server.tsx"  ],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2021"],
     "esModuleInterop": true,
