@@ -1,10 +1,11 @@
 import { Form, useActionData, useLoaderData } from '@remix-run/react';
-import { json } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import type { LoaderFunction } from '@remix-run/node';
 import { requireAuth } from '~/server/auth.server';
 import { getCurrentUser } from '~/server/db.server';
-import { User } from '~/types';
-import { ReactElement } from 'react';
+import type { ActionFunction } from '@remix-run/node';
+import type { User } from '~/types';
+import { destroySession, getSession } from '~/sessions';
 
 type ActionData = {
   error?: string;
@@ -24,6 +25,18 @@ export const loader: LoaderFunction = async ({ request }) => {
   });
 };
 
+export const action: ActionFunction = async ({ request }) => {
+  const form = await request.formData();
+  const action = form.get('action');
+  if (action === 'logout') {
+    const session = await getSession(request.headers.get('cookie'));
+    return redirect('/', {
+      headers: { 'Set-Cookie': await destroySession(session) },
+    });
+  }
+  return json<ActionData>({ error: 'unknown method' }, { status: 400 });
+};
+
 export default function Index() {
   const action = useActionData<ActionData>();
   const data = useLoaderData<LoaderData>();
@@ -32,7 +45,7 @@ export default function Index() {
       <h1>{data.message}</h1>
       <p>Press the button below to log out.</p>
       <Form method="post">
-        <button type="submit" name="logout">
+        <button type="submit" name="action" value="logout">
           Logout
         </button>
       </Form>
