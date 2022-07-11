@@ -2,7 +2,7 @@
 import { json, redirect } from '@remix-run/node';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { Link, useActionData } from '@remix-run/react';
-import { checkSessionCookie, signIn } from '~/server/auth.server';
+import { checkSessionCookie, signIn } from '~/lib/firebase/auth.server';
 import { commitSession, getSession } from '~/sessions';
 
 export const loader: LoaderFunction = async ({ request }) => {
