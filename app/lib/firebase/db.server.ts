@@ -1,14 +1,14 @@
 import { getFirestore } from 'firebase-admin/firestore';
-import type { User } from '~/types';
+import type { WithFieldValue } from 'firebase-admin/firestore';
+import type { User } from '~/lib/types/types';
 import type { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 
 const converter = <T>() => ({
-  toFirestore: (data: Partial<T>) => data,
-  fromFirestore: (snap: QueryDocumentSnapshot) => snap.data() as T,
+  toFirestore(data: WithFieldValue<T>) {return data} ,
+  fromFirestore(snap: QueryDocumentSnapshot):T { return snap.data() as T },
 });
 
-const dataPoint = <T>(collectionPath: string) =>
-  getFirestore().collection(collectionPath).withConverter(converter<T>());
+const dataPoint = <T>(collectionPath: string) => getFirestore().collection(collectionPath).withConverter(converter<T>());
 
 const db = {
   users: dataPoint<User>(`users`),

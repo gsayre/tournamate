@@ -10,8 +10,8 @@ import {
 import { getAuth as getServerAuth } from 'firebase-admin/auth';
 import { getAuth as getClientAuth } from 'firebase/auth';
 
-var serviceAccount = require('../service-account.json');
-const firebaseConfig = { ...require('../firebase-config.json') };
+var serviceAccount = require('./service-account.json');
+const firebaseConfig = { ...require('./firebase-config.json') };
 if (getClientApps().length === 0) {
   initializeClientApp(firebaseConfig);
 }

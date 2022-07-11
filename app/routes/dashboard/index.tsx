@@ -1,11 +1,11 @@
 import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import { json, redirect } from '@remix-run/node';
 import type { LoaderFunction } from '@remix-run/node';
-import { requireAuth } from '~/server/auth.server';
-import { getCurrentUser } from '~/server/db.server';
+import { requireAuth } from '~/lib/firebase/auth.server';
 import type { ActionFunction } from '@remix-run/node';
-import type { User } from '~/types';
 import { destroySession, getSession } from '~/sessions';
+import { getCurrentUser } from '~/lib/firebase/db.server';
+import type { DocumentData } from 'firebase-admin/firestore';
 
 type ActionData = {
   error?: string;
@@ -13,7 +13,7 @@ type ActionData = {
 
 type LoaderData = {
   message: string;
-  currentUser: User | undefined;
+  currentUser: DocumentData | undefined;
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
