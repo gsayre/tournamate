@@ -332,7 +332,7 @@ export default function login() {
             </div>
             <div className="pt-8">
               <button
-                className="h-14 w-48 rounded-lg bg-[#F24E1E] hover:bg-orange-600 text-white text-xl font-bold"
+                className="h-14 w-48 rounded-lg bg-[#F24E1E] text-xl font-bold text-white hover:bg-orange-600"
                 type="submit"
               >
                 Login
@@ -344,7 +344,10 @@ export default function login() {
             <p className="self-center pr-2 text-xl font-medium">
               or sign in with:
             </p>
-            <button className="flex h-14 w-14 items-center justify-center rounded-full bg-[#2196F3] hover:bg-sky-800">
+            <button
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-[#2196F3] hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled
+            >
               <svg
                 version="1.1"
                 id="Layer_1"
@@ -364,7 +367,10 @@ export default function login() {
                 </g>
               </svg>
             </button>
-            <button className="flex h-14 w-14 items-center justify-center rounded-full bg-[#2196F3] hover:bg-sky-800">
+            <button
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-[#2196F3] hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled
+            >
               <svg
                 version="1.1"
                 id="Layer_1"
@@ -391,7 +397,10 @@ export default function login() {
                 </g>
               </svg>
             </button>
-            <button className="flex h-14 w-14 items-center justify-center rounded-full bg-[#2196F3] hover:bg-sky-800">
+            <button
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-[#2196F3] hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled
+            >
               <svg
                 viewBox="-2 -2 24 24"
                 xmlns="http://www.w3.org/2000/svg"
