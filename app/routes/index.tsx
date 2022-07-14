@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Link, Form } from '@remix-run/react';
+import { useEffect, useState } from 'react';
+import { Link } from '@remix-run/react';
 
 export default function Index() {
   const [whyToggleState, setWhyToggleState] = useState('Tournament Director');
@@ -234,8 +234,8 @@ export default function Index() {
               <div className="flex w-[calc(100vw/2)] flex-col items-center justify-center">
                 <img
                   src="fitness.svg"
-                  alt="Volleyball Image"
-                  title="Volleyball Image"
+                  alt="Volleyball"
+                  title="Volleyball"
                   className="h-124 ml-48 w-full px-16"
                 />
                 <a
