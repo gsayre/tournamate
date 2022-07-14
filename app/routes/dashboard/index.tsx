@@ -1,16 +1,10 @@
-import { Outlet, useActionData, useLoaderData } from '@remix-run/react';
-import { json, redirect } from '@remix-run/node';
+import { Outlet, useLoaderData } from '@remix-run/react';
+import { json } from '@remix-run/node';
 import type { LoaderFunction } from '@remix-run/node';
 import { requireAuth } from '~/lib/firebase/auth.server';
-import type { ActionFunction } from '@remix-run/node';
-import { destroySession, getSession } from '~/sessions';
 import { getCurrentUser } from '~/lib/firebase/db.server';
 import type { DocumentData } from 'firebase-admin/firestore';
 import { NavLink } from '@remix-run/react';
-
-type ActionData = {
-  error?: string;
-};
 
 type LoaderData = {
   message: string;
@@ -26,20 +20,9 @@ export const loader: LoaderFunction = async ({ request }) => {
   });
 };
 
-export const action: ActionFunction = async ({ request }) => {
-  const form = await request.formData();
-  const action = form.get('action');
-  if (action === 'logout') {
-    const session = await getSession(request.headers.get('cookie'));
-    return redirect('/', {
-      headers: { 'Set-Cookie': await destroySession(session) },
-    });
-  }
-  return json<ActionData>({ error: 'unknown method' }, { status: 400 });
-};
+// 
 
 export default function Index() {
-  const action = useActionData<ActionData>();
   const data = useLoaderData<LoaderData>();
 
   return (
@@ -59,7 +42,7 @@ export default function Index() {
         </div>
         <div className="flex flex-col space-y-8 pt-10">
           <NavLink
-            to="/dashboard/tournaments"
+            to="./tournaments"
             className={({ isActive }) =>
               isActive
                 ? 'underline'
@@ -70,7 +53,7 @@ export default function Index() {
             <p>Tournaments</p>
           </NavLink>
           <NavLink
-            to="/dashboard/about"
+            to="./about"
             className={({ isActive }) =>
               isActive
                 ? 'underline'
@@ -85,7 +68,7 @@ export default function Index() {
             <p>About</p>
           </NavLink>
           <NavLink
-            to="/dashboard/pricing"
+            to="./pricing"
             className={({ isActive }) =>
               isActive
                 ? 'underline'
@@ -100,7 +83,7 @@ export default function Index() {
             <p>Pricing</p>
           </NavLink>
           <NavLink
-            to="/dashboard/profile"
+            to="./profile"
             className={({ isActive }) =>
               isActive
                 ? 'underline'
