@@ -12,7 +12,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     'Set-Cookie': await commitSession(session),
   };
   if (uid) {
-    return redirect('/dashboard', { headers });
+    return redirect('/', { headers });
   }
   return json(null, { headers });
 };
@@ -33,7 +33,7 @@ export const action: ActionFunction = async ({ request }) => {
     const sessionCookie = await signIn(email, password);
     const session = await getSession(request.headers.get('cookie'));
     session.set('session', sessionCookie);
-    return redirect('/dashboard', {
+    return redirect('/', {
       headers: {
         'Set-Cookie': await commitSession(session),
       },

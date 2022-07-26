@@ -22,7 +22,7 @@ export const requireAuth = async (request: Request): Promise<UserRecord> => {
   const session = await getSession(request.headers.get('cookie'));
   const { uid } = await checkSessionCookie(session);
   if (!uid) {
-    throw redirect('/login', {
+    throw redirect('/', {
       headers: { 'Set-Cookie': await destroySession(session) },
     });
   }
