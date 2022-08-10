@@ -2,50 +2,40 @@
 import { json, redirect } from '@remix-run/node';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { Form, Link, useActionData } from '@remix-run/react';
-import { checkSessionCookie, signIn } from '~/lib/firebase/auth.server';
-import { commitSession, getSession } from '~/sessions';
+import { validateEmail, validatePassword } from '~/lib/validators.server';
+import { loginUser } from '~/lib/auth.server';
+import { useState } from 'react';
+import { getUser } from '~/lib/auth.server';
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const session = await getSession(request.headers.get('cookie'));
-  const { uid } = await checkSessionCookie(session);
-  const headers = {
-    'Set-Cookie': await commitSession(session),
-  };
-  if (uid) {
-    return redirect('/', { headers });
-  }
-  return json(null, { headers });
-};
-
-type ActionData = {
-  error?: string;
+  return (await getUser(request)) ? redirect('/home') : null;
 };
 
 export const action: ActionFunction = async ({ request }) => {
   const form = await request.formData();
   const email = form.get('email');
   const password = form.get('password');
-  const formError = json({ error: 'Please fill all fields' }, { status: 400 });
-  if (typeof email !== 'string') return formError;
-  if (typeof password !== 'string') return formError;
 
-  try {
-    const sessionCookie = await signIn(email, password);
-    const session = await getSession(request.headers.get('cookie'));
-    session.set('session', sessionCookie);
-    return redirect('/', {
-      headers: {
-        'Set-Cookie': await commitSession(session),
-      },
-    });
-  } catch (error) {
-    console.log(error);
-    return json<ActionData>({ error: String(error) }, { status: 400 });
+  if (typeof email !== 'string' || typeof password !== 'string') {
+    return json({ error: 'Please fill all fields!' }, { status: 400 });
   }
+  const errors = {
+    email: validateEmail(email),
+    password: validatePassword(password),
+  };
+  if (Object.values(errors).some(Boolean)) {
+    return json(
+      { errors, fields: { email, password }, form: action },
+      { status: 400 }
+    );
+  }
+
+  return await loginUser({ email, password });
 };
 
 export default function login() {
-  const action = useActionData<ActionData>();
+  const actionData = useActionData();
+  const [formError, setFormError] = useState(actionData?.error || '');
   return (
     <div>
       <header
@@ -303,11 +293,13 @@ export default function login() {
           <p className="text-2xl font-light text-gray-400">
             Type in your information to log into your account
           </p>
-          {action?.error && <p>{action.error}</p>}
           <Form
             method="post"
             className="flex w-full flex-col items-center justify-center pt-6"
           >
+            <div className="w-full text-center text-xl font-semibold tracking-wide text-red-500">
+              {formError}
+            </div>
             <div className="flex w-1/2 flex-col items-center justify-center space-y-2">
               <label className="self-start px-1 text-3xl font-semibold">
                 Email
