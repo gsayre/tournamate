@@ -1,5 +1,5 @@
 import type { User } from '@prisma/client';
-import { Form } from 'remix';
+
 
 interface Props {
   currentUser: User;
@@ -50,11 +50,7 @@ export default function TopBar(props: Props) {
                 ' ' +
                 props!.currentUser!.profile!.lastName}
             </p>
-            <Form action="/logout" method="post">
-              <button type="submit">
-                <img className="h-8 w-8" src="/icons8-logout-50.png" alt="" />
-              </button>
-            </Form>
+            
           </div>
         </div>
       </div>

@@ -8,7 +8,8 @@ import { useState } from 'react';
 import { getUser } from '~/lib/auth.server';
 
 export const loader: LoaderFunction = async ({ request }) => {
-  return (await getUser(request)) ? redirect('/home') : null;
+  //TODO: Switch to redirect('/)
+  return (await getUser(request)) ? redirect('/') : null;
 };
 
 export const action: ActionFunction = async ({ request }) => {
