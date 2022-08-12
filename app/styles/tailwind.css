@@ -645,6 +645,22 @@ video {
   margin-top: -6rem;
 }
 
+.-mb-1 {
+  margin-bottom: -0.25rem;
+}
+
+.-mb-96 {
+  margin-bottom: -24rem;
+}
+
+.-mt-48 {
+  margin-top: -12rem;
+}
+
+.-mr-48 {
+  margin-right: -12rem;
+}
+
 .flex {
   display: flex;
 }
@@ -751,6 +767,14 @@ video {
 
 .h-36 {
   height: 9rem;
+}
+
+.h-\[calc\(100vh-20vh\)\] {
+  height: calc(100vh - 20vh);
+}
+
+.h-\[760px\] {
+  height: 760px;
 }
 
 .w-screen {
@@ -867,6 +891,18 @@ video {
 
 .w-0 {
   width: 0px;
+}
+
+.w-9\/12 {
+  width: 75%;
+}
+
+.w-2\/5 {
+  width: 40%;
+}
+
+.w-\[500px\] {
+  width: 500px;
 }
 
 .grid-cols-3 {
@@ -1180,6 +1216,10 @@ video {
 
 .p-3 {
   padding: 0.75rem;
+}
+
+.p-1 {
+  padding: 0.25rem;
 }
 
 .px-8 {
@@ -1498,6 +1538,10 @@ video {
   outline-width: 1px;
 }
 
+.outline-black {
+  outline-color: #000;
+}
+
 .drop-shadow-lg {
   --tw-drop-shadow: drop-shadow(0 10px 8px rgb(0 0 0 / 0.04)) drop-shadow(0 4px 3px rgb(0 0 0 / 0.1));
   filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
@@ -1584,6 +1628,14 @@ video {
 .focus\:border-sky-900:focus {
   --tw-border-opacity: 1;
   border-color: rgb(12 74 110 / var(--tw-border-opacity));
+}
+
+.focus\:outline-2:focus {
+  outline-width: 2px;
+}
+
+.focus\:outline-blue-800:focus {
+  outline-color: #1e40af;
 }
 
 .disabled\:cursor-not-allowed:disabled {

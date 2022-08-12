@@ -48,6 +48,7 @@ export const loginUser = async (form: LoginForm) => {
   if (!user || !(await bcrypt.compare(form.password, user.password))) {
     return json({ error: 'Incorrect Login' }, { status: 400 });
   }
+  //TODO: May need to switch this to /home
   return createUserSession(user.id, '/');
 };
 
