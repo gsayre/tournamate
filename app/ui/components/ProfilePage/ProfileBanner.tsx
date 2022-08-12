@@ -3,10 +3,10 @@ import { useMatches } from '@remix-run/react';
 
 export default function ProfileBanner() {
   const matches = useMatches();
-  let parentData = matches.find((route) => route.pathname === '/home')?.data;
+  let parentData = matches.find((route) => route.id === 'routes/__auth')?.data;
 
   return (
-    <div className="flex flex-col px-4 mb-4">
+    <div className="mb-4 flex flex-col px-4">
       <div className="h-44 w-full rounded-xl bg-[url('/nature.webp')] bg-cover bg-center bg-origin-border" />
       <div className="flex flex-row justify-between px-16">
         <div className="flex">

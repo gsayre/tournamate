@@ -22,7 +22,7 @@ export default function SidePannel() {
             to="./tournaments"
             className={({ isActive }) =>
               isActive
-                ? 'flex flex-row items-center space-x-3 text-2xl font-bold underline'
+                ? 'flex flex-row items-center space-x-3 text-2xl font-bold text-[#2196F3]'
                 : 'flex flex-row items-center space-x-3 text-2xl font-bold hover:text-[#2196F3]'
             }
           >
@@ -33,7 +33,7 @@ export default function SidePannel() {
             to="./about"
             className={({ isActive }) =>
               isActive
-                ? 'flex flex-row items-center space-x-3 text-2xl font-bold underline'
+                ? 'flex flex-row items-center space-x-3 text-2xl font-bold text-[#2196F3]'
                 : 'flex flex-row items-center space-x-3 text-2xl font-bold hover:text-[#2196F3]'
             }
           >
@@ -48,7 +48,7 @@ export default function SidePannel() {
             to="./pricing"
             className={({ isActive }) =>
               isActive
-                ? 'flex flex-row items-center space-x-3 text-2xl font-bold underline'
+                ? 'flex flex-row items-center space-x-3 text-2xl font-bold text-[#2196F3]'
                 : 'flex flex-row items-center space-x-3 text-2xl font-bold hover:text-[#2196F3]'
             }
           >
@@ -63,11 +63,15 @@ export default function SidePannel() {
             to="./profile"
             className={({ isActive }) =>
               isActive
-                ? 'flex flex-row items-center space-x-3 text-2xl font-bold underline'
+                ? 'flex flex-row items-center space-x-3 text-2xl font-bold text-[#2196F3]'
                 : 'flex flex-row items-center space-x-3 text-2xl font-bold hover:text-[#2196F3]'
             }
           >
-            <img src="/icons8-user-30.png" alt="" className="h-10 w-10" />
+            <img
+              src="/icons8-user-30.png"
+              alt=""
+              className="h-10 w-10"
+            />
             <p>Profile</p>
           </NavLink>
         </div>
