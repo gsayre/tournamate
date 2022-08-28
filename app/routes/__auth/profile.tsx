@@ -16,7 +16,7 @@ export default function Profile() {
         <BasicStatisticsGrid />
       </div>
       <div className="flex w-full flex-row space-x-4">
-        <div className="flex w-1/2 flex-row justify-between space-x-12">
+        <div className="flex w-1/2 flex-row justify-around space-x-12">
           <H2HCard nemesisName="Jane Shmoe" value={-9.4} />
           <TopTournamentCard
             tournamentName="Chaos Volleyball"

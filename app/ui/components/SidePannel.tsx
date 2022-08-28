@@ -1,10 +1,10 @@
-import { NavLink } from '@remix-run/react';
+import { Link, NavLink } from '@remix-run/react';
 import { Form } from 'remix';
 
 export default function SidePannel() {
   return (
     <div className="flex h-full w-80 flex-col items-center bg-white pt-4 shadow-md">
-      <div className="flex flex-row  gap-2 px-6 py-4 ">
+      <Link to='./' className="flex flex-row  gap-2 px-6 py-4 ">
         <img
           src="https://www.svgrepo.com/show/12756/cup.svg"
           alt="Cup SVG Vector"
@@ -15,7 +15,7 @@ export default function SidePannel() {
           <span className="text-3xl font-bold text-[#2196F3]">Tourna</span>
           <span className="text-3xl font-bold text-[#F24E1E]">Mate</span>
         </div>
-      </div>
+      </Link>
       <div className="flex h-full flex-col justify-between pb-8">
         <div className="flex flex-col space-y-8 pt-10">
           <NavLink
