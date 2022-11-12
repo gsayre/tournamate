@@ -42,8 +42,13 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  isAdmin       Boolean   @default(false)
+  isTournamentDirector Boolean @default(false)
+  tdRequest TournamentDirectorRequest?
   accounts      Account[]
   sessions      Session[]
+  teamsParticipation UsersInTeam[]
+  tournamentDirected Tournament[] 
 }
 
 model VerificationToken {
@@ -52,4 +57,113 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model TournamentDirectorRequest {
+  tdRequestId Int @id @default(autoincrement())
+  content String
+  user User @relation(fields: [profileId], references: [id])
+  profileId String @unique
+}
+
+model Team {
+  teamId Int @id @default(autoincrement())
+  division Division @relation(fields: [divisionId], references: [divisionId])
+  divisionId Int
+  tournament Tournament @relation(fields: [tournamentId], references: [tournamentId])
+  tournamentId Int
+  players UsersInTeam[]
+  games TeamInGame[]
+  gamesReffed Game[]
+  pool Pool @relation(fields: [poolId], references: [poolId])
+  poolId Int
+  @@unique([teamId, tournamentId])
+}
+
+model UsersInTeam {
+  user User @relation(fields: [userId], references: [id])
+  userId String
+  Team Team @relation(fields: [teamId], references: [teamId])
+  teamId Int
+  @@id([userId, teamId])
+}
+
+enum Format {
+  NONE
+  SAME_SEX_DOUBLES
+  COED_DOUBLES
+  REVERSE_COED_DOUBLES
+  SAME_SEX_SIXES
+  COED_SIXES
+  REVERSE_COED_QUADS
+  SAME_SEX_TRIPLES
+}
+
+enum Type {
+  NONE
+  GRASS
+  SAND
+  INDOOR
+}
+
+model Tournament {
+  tournamentId Int @id @default(autoincrement())
+  name String
+  type Type
+  dayOne               Boolean     @default(true)
+  dayTwo               Boolean     @default(false)
+  dayOneFormat         Format     
+  dayTwoFormat         Format?
+  dayOneDate           DateTime
+  dayTwoDate           DateTime?
+  location String      
+  participants Team[] 
+  tournamentDirector User @relation(fields: [tournamentDirectorId], references: [id])
+  tournamentDirectorId String 
+  divisions Division[]
+  @@unique([tournamentDirectorId, tournamentId])
+}
+
+model Division {
+  divisionId Int @id @default(autoincrement())
+  pools Pool[]
+  entries Team[]
+  tournament Tournament @relation(fields: [tournamentId], references: [tournamentId])
+  tournamentId Int
+  bracket Bracket?
+  
+}
+
+model Pool {
+  poolId Int @id @default(autoincrement())
+  division Division @relation(fields: [divisionId], references: [divisionId])
+  divisionId Int
+  games Game[]
+  teams Team[]
+}
+
+model Bracket {
+  bracketId Int @id @default(autoincrement())
+  division Division @relation(fields: [divisionId], references: [divisionId])
+  divisionId Int @unique
+  games Game[]
+}
+
+model Game {
+  gameId Int @id @default(autoincrement())
+  teams TeamInGame[] 
+  referees Team @relation( fields: [refereeId], references: [teamId])
+  refereeId Int 
+  pool Pool @relation(fields: [poolId], references: [poolId])
+  poolId Int
+  bracket Bracket? @relation(fields: [bracketId], references: [bracketId])
+  bracketId Int
+}
+
+model TeamInGame {
+  game Game @relation(fields: [gameId], references: [gameId])
+  gameId Int
+  Team Team @relation(fields: [teamId], references: [teamId])
+  teamId Int
+  @@id([gameId,teamId])
 }

@@ -335,8 +335,8 @@ function PartnerHistoryItem(props: PHIProps) {
   return (
     <div className="ml-6 flex flex-row items-center space-x-2 py-3 px-4 text-2xl font-semibold tracking-wider">
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#2196F3]">
-        {props.name.split(" ")[0].charAt(0) +
-          props.name.split(" ")[1].charAt(0)}
+        {props?.name?.split(" ")[0].charAt(0) +
+          props?.name?.split(" ")[1].charAt(0)}
       </div>
       <p className="px-4">{props.name + " |"}</p>
       <p className="pr-2">{props.playerRatingDelta + " |"}</p>

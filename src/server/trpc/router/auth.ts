@@ -7,7 +7,4 @@ export const authRouter = router({
   getSecretMessage: protectedProcedure.query(() => {
     return "You are logged in and can see this secret message!";
   }),
-  getCurrentUser: protectedProcedure.query(({ ctx }) => {
-    return ctx.session.user;
-  }),
 });

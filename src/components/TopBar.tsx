@@ -1,8 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
 import { useSession } from "next-auth/react";
+import { trpc } from "../utils/trpc";
 
 export default function TopBar(props: any) {
   const { data: session } = useSession();
+  const toggleTDStatus = trpc.user.toggleTournamentDirectorRole.useMutation();
+  const toggleAdminStatus = trpc.user.toggleAdminRole.useMutation();
 
   return (
     <div className="flex w-full flex-col bg-white">
@@ -20,6 +23,36 @@ export default function TopBar(props: any) {
           <p className="pl-4 text-xl font-bold">Search...</p>
         </div>
         <div className="flex h-full flex-row items-center pr-2">
+          {session?.user?.id === "cl9vnga1u0000vkykypjqp51g" && (
+            <>
+              <div className="flex h-full items-center justify-center border-l-2 px-4">
+                <button
+                  className="h-14 rounded-3xl bg-[#2196F3] p-2 text-xl font-semibold"
+                  onClick={() =>
+                    toggleTDStatus.mutate(
+                      { userId: session?.user?.id as string },
+                      { onSuccess: () => window.location.reload() }
+                    )
+                  }
+                >
+                  Toggle TD Status
+                </button>
+              </div>
+              <div className="flex h-full items-center justify-center border-l-2 px-4">
+                <button
+                  className="h-14 rounded-3xl bg-[#F24E1E] p-2 text-xl font-semibold"
+                  onClick={() =>
+                    toggleAdminStatus.mutate(
+                      { userId: session?.user?.id as string },
+                      { onSuccess: () => window.location.reload() }
+                    )
+                  }
+                >
+                  Toggle Admin Status
+                </button>
+              </div>
+            </>
+          )}
           <div className="flex h-full items-center justify-center border-l-2 px-4">
             <button>
               <svg
@@ -55,7 +88,7 @@ export default function TopBar(props: any) {
 }
 
 export function splitName(name: string | null | undefined): string {
-    if (!name) return "";
+  if (!name) return "";
   const names = name.split(" ");
   return names[0]?.charAt(0) + " " + names[1]?.charAt(0);
 }

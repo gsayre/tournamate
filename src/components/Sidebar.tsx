@@ -42,8 +42,8 @@ export default function SidePannel() {
           </Link>
           <Link href="./director">
             <TextWithIcon
-              routePath="./director"
-              text="Tournament Director"
+              routePath="./admin"
+              text="Admin"
               iconURL="/icons/icons8-automation-50.png"
             />
           </Link>
