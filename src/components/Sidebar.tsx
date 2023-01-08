@@ -12,28 +12,28 @@ export default function SidePannel() {
       </Link>
       <div className="flex h-full flex-col justify-between pb-8">
         <div className="flex flex-col space-y-8 pt-10">
-          <Link href="./dashboard/tournaments">
+          <Link href="/dashboard/tournaments">
             <TextWithIcon
               text="Tournaments"
               iconURL="/icons/icons8-trophy-30.png"
             />
           </Link>
-          <Link href="./dashboard/about">
+          <Link href="/dashboard/about">
             <TextWithIcon
               text="About"
               iconURL="/icons/icons8-question-mark-30.png"
             />
           </Link>
-          <Link href="./dashboard/pricing">
+          <Link href="/dashboard/pricing">
             <TextWithIcon
               text="Pricing"
               iconURL="/icons/icons8-us-dollar-circled-30.png"
             />
           </Link>
-          <Link href="./dashboard/profile">
+          <Link href="/dashboard/profile">
             <TextWithIcon text="Profile" iconURL="/icons/icons8-user-30.png" />
           </Link>
-          <Link href="./dashboard/admin">
+          <Link href="/dashboard/admin">
             <TextWithIcon
               text="Admin"
               iconURL="/icons/icons8-automation-50.png"
