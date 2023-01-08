@@ -12,37 +12,29 @@ export default function SidePannel() {
       </Link>
       <div className="flex h-full flex-col justify-between pb-8">
         <div className="flex flex-col space-y-8 pt-10">
-          <Link href="./tournaments">
+          <Link href="./dashboard/tournaments">
             <TextWithIcon
               text="Tournaments"
               iconURL="/icons/icons8-trophy-30.png"
-              routePath="./tournaments"
             />
           </Link>
-          <Link href="./about">
+          <Link href="./dashboard/about">
             <TextWithIcon
               text="About"
               iconURL="/icons/icons8-question-mark-30.png"
-              routePath="./about"
             />
           </Link>
-          <Link href="./pricing">
+          <Link href="./dashboard/pricing">
             <TextWithIcon
               text="Pricing"
               iconURL="/icons/icons8-us-dollar-circled-30.png"
-              routePath="./pricing"
             />
           </Link>
-          <Link href="./profile">
-            <TextWithIcon
-              text="Profile"
-              iconURL="/icons/icons8-user-30.png"
-              routePath="./profile"
-            />
+          <Link href="./dashboard/profile">
+            <TextWithIcon text="Profile" iconURL="/icons/icons8-user-30.png" />
           </Link>
-          <Link href="./director">
+          <Link href="./dashboard/admin">
             <TextWithIcon
-              routePath="./admin"
               text="Admin"
               iconURL="/icons/icons8-automation-50.png"
             />
@@ -54,7 +46,7 @@ export default function SidePannel() {
             className="flex w-full flex-row items-center justify-center space-x-4"
             onClick={() => signOut()}
           >
-            <TextWithIcon text="Logout" iconURL="/icons/icons8-logout-50.png" routePath="./" />
+            <TextWithIcon text="Logout" iconURL="/icons/icons8-logout-50.png" />
           </button>
         </div>
       </div>
@@ -62,25 +54,12 @@ export default function SidePannel() {
   );
 }
 
-const TextWithIcon = ({
-  text,
-  iconURL,
-  routePath,
-}: {
-  text: string;
-  iconURL: string;
-  routePath: string;
-}) => {
+const TextWithIcon = ({ text, iconURL }: { text: string; iconURL: string }) => {
   return (
-    <a
-      className="flex flex-row items-center space-x-3 p-2 text-2xl font-bold text-[#2196F3]"
-      href={routePath}
-    >
-      <div className="flex flex-row items-center space-x-3 p-2">
-        <img src={iconURL} alt="" className="h-10 w-10" />
-        <p className="text-2xl font-bold">{text}</p>
-      </div>
-    </a>
+    <div className="flex flex-row items-center space-x-3 p-2 text-2xl font-bold text-[#2196F3]">
+      <img src={iconURL} alt="" className="h-10 w-10" />
+      <p className="text-2xl font-bold">{text}</p>
+    </div>
   );
 };
 

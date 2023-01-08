@@ -49,12 +49,40 @@ export const tournamentRouter = router({
         return tournament;
       }
     }),
-    getOwnedTournaments: protectedProcedure.query(async ({ ctx }) => {
-        const tournaments = await ctx.prisma.tournament.findMany({
-            where: {
-            tournamentDirectorId: ctx.session.user.id,
-            },
-        });
-        return tournaments;
+  getOwnedTournaments: protectedProcedure.query(async ({ ctx }) => {
+    const tournaments = await ctx.prisma.tournament.findMany({
+      where: {
+        tournamentDirectorId: ctx.session.user.id,
+      },
+    });
+    return tournaments;
+  }),
+  getTournament: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const tournament = await ctx.prisma.tournament.findUnique({
+        where: {
+          tournamentId: input.id,
+        },
+      });
+      if (!tournament) {
+        throw new Error("Tournament not found");
+      }
+      const tournamentDirector = await ctx.prisma.user.findUnique({
+        where: {
+          id: tournament.tournamentDirectorId,
+        },
+      });
+      return {tournament, tournamentDirector};
+    }),
+
+    createDivision: protectedProcedure.input(z.object({name: z.string(), tournamentId: z.number()})).mutation(async ({ctx, input}) => {
+      const division = await ctx.prisma.division.create({
+        data: {
+          name: input.name,
+          tournament: {connect: {tournamentId: input.tournamentId}}
+        }
+      })
+      return division;
     }),
 });

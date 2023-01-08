@@ -126,6 +126,7 @@ model Tournament {
 
 model Division {
   divisionId Int @id @default(autoincrement())
+  name String
   pools Pool[]
   entries Team[]
   tournament Tournament @relation(fields: [tournamentId], references: [tournamentId])

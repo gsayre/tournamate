@@ -119,14 +119,26 @@ const TournamentDirectorPannel = () => {
           <div className="flex flex-col pt-8">
             <h1 className="text-xl font-semibold">Your Upcoming Tournaments</h1>
             <div className="flex flex-row space-x-8 pt-2">
-                {ownedTournaments.data?.map((tournament) => (<TournamentCard key={tournament.tournamentId } tournament={tournament} />))}
+              {ownedTournaments.data?.map((tournament) => (
+                <TournamentCard
+                  key={tournament.tournamentId}
+                  tournament={tournament}
+                />
+              ))}
               <AddTournamentCard setModalOpen={setModalOpen} />
             </div>
           </div>
           <div className="flex flex-col pt-8">
             <h1 className="text-xl font-semibold">Your Finished Tournaments</h1>
-              <div className="flex flex-row space-x-8 pt-2">
-                {ownedTournaments.data?.filter(isPastCurrentDate).map((tournament) => (<TournamentCard key={tournament.tournamentId } tournament={tournament} />))}
+            <div className="flex flex-row space-x-8 pt-2">
+              {ownedTournaments.data
+                ?.filter(isPastCurrentDate)
+                .map((tournament) => (
+                  <TournamentCard
+                    key={tournament.tournamentId}
+                    tournament={tournament}
+                  />
+                ))}
             </div>
           </div>
         </div>
@@ -137,7 +149,10 @@ const TournamentDirectorPannel = () => {
 
 function isPastCurrentDate(tournament: Tournament) {
   if (tournament.dayTwo) {
-    return new Date(tournament.dayTwoDate.toDateString()) < new Date(new Date().toDateString());
+    return (
+      new Date(tournament.dayTwoDate.toDateString()) <
+      new Date(new Date().toDateString())
+    );
   } else {
     return (
       new Date(tournament.dayOneDate.toDateString()) <
@@ -197,30 +212,28 @@ interface tournamentCardProps {
 
 const TournamentCard = (props: tournamentCardProps) => {
   return (
-    <Link href={`./${props.tournament.tournamentId}`}>
-      <a href={`./${props.tournament.tournamentId}`}>
-        <div className="flex w-56 flex-col  space-x-4 rounded-md bg-white p-4 drop-shadow-lg">
-          <p className="text-2xl font-semibold">{props.tournament.name}</p>
-          <div className="flex flex-col space-y-2 pt-2">
-            {props.tournament.dayTwo ? (
-              <>
-                <p>
-                  {props.tournament.dayOneDate.toDateString() +
-                    " - " +
-                    props.tournament.dayTwoDate?.toDateString()}
-                </p>
-              </>
-            ) : (
-              <>{props.tournament.dayOneDate.toDateString()}</>
-            )}
-            <div className="flex flex-row justify-end pt-4">
-              <button className="h-10 w-28 rounded-3xl bg-green-500 p-2 text-xl font-semibold text-white">
-                View
-              </button>
-            </div>
+    <Link href={`./admin/${props.tournament.tournamentId}`}>
+      <div className="flex w-56 flex-col  space-x-4 rounded-md bg-white p-4 drop-shadow-lg">
+        <p className="text-2xl font-semibold">{props.tournament.name}</p>
+        <div className="flex flex-col space-y-2 pt-2">
+          {props.tournament.dayTwo ? (
+            <>
+              <p>
+                {props.tournament.dayOneDate.toDateString() +
+                  " - " +
+                  props.tournament.dayTwoDate?.toDateString()}
+              </p>
+            </>
+          ) : (
+            <>{props.tournament.dayOneDate.toDateString()}</>
+          )}
+          <div className="flex flex-row justify-end pt-4">
+            <button className="h-10 w-28 rounded-3xl bg-green-500 p-2 text-xl font-semibold text-white">
+              View
+            </button>
           </div>
         </div>
-      </a>
+      </div>
     </Link>
   );
 };
