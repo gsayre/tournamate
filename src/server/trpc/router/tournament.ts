@@ -76,13 +76,28 @@ export const tournamentRouter = router({
       return {tournament, tournamentDirector};
     }),
 
-    createDivision: protectedProcedure.input(z.object({name: z.string(), tournamentId: z.number()})).mutation(async ({ctx, input}) => {
+  createDivision: protectedProcedure.input(
+    z.object({ divisionName: z.string(), tournamentId: z.number(), type: z.string() }))
+    .mutation(async ({ ctx, input }) => {
       const division = await ctx.prisma.division.create({
         data: {
-          name: input.name,
-          tournament: {connect: {tournamentId: input.tournamentId}}
+          name: input.divisionName,
+          tournamentId: input.tournamentId,
+          type: input.type,
         }
       })
       return division;
+    }),
+  
+  getDivisions: protectedProcedure
+    .input(z.object({ tournamentId: z.number(), type: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const divisions = await ctx.prisma.division.findMany({
+        where: {
+          tournamentId: input.tournamentId,
+          type: input.type
+        }
+      })
+      return divisions;
     }),
 });

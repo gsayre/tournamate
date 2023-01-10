@@ -106,6 +106,8 @@ enum Type {
   INDOOR
 }
 
+
+
 model Tournament {
   tournamentId Int @id @default(autoincrement())
   name String
@@ -127,6 +129,7 @@ model Tournament {
 model Division {
   divisionId Int @id @default(autoincrement())
   name String
+  type String
   pools Pool[]
   entries Team[]
   tournament Tournament @relation(fields: [tournamentId], references: [tournamentId])
