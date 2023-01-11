@@ -135,7 +135,7 @@ model Division {
   tournament Tournament @relation(fields: [tournamentId], references: [tournamentId])
   tournamentId Int
   bracket Bracket?
-  
+  @@unique([tournamentId, type, name])
 }
 
 model Pool {

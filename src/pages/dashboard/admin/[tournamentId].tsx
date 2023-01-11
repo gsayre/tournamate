@@ -2,17 +2,16 @@ import Sidebar from "../../../components/Sidebar";
 import TopBar from "../../../components/TopBar";
 import { trpc } from "../../../utils/trpc";
 import { useRouter } from "next/router";
-import { ClassRegistry } from "superjson/dist/class-registry";
 import { Division } from "@prisma/client";
 import { useState } from "react";
 
 export default function AdminTuornamentView() {
   const router = useRouter();
   const { tournamentId } = router.query;
+  const tId: number = parseInt(tournamentId as string);
   const tournamentData = trpc.tournament.getTournament.useQuery({
-    id: Number(tournamentId),
+    id: tId,
   }).data;
-  console.log(tournamentData);
   return (
     <div className="flex h-screen w-screen">
       <div className="flex h-full w-full flex-row">
@@ -35,19 +34,20 @@ export default function AdminTuornamentView() {
                 <p className="pb-4 text-3xl">Day One</p>
                 <DivisionPannel
                   format={tournamentData.tournament.dayOneFormat}
-                  id={Number(tournamentId)}
+                  id={tId}
                 />
               </div>
             )}
-            {tournamentData?.tournament.dayTwoDate && (
-              <div className="p-4">
-                <p>Day Two</p>
-                <DivisionPannel
-                  format={tournamentData.tournament.dayTwoFormat}
-                  id={Number(tournamentId)}
-                />
-              </div>
-            )}
+            {tournamentData?.tournament.dayTwoDate &&
+              tournamentData.tournament.dayTwoFormat && (
+                <div className="p-4">
+                  <p>Day Two</p>
+                  <DivisionPannel
+                    format={tournamentData.tournament.dayTwoFormat}
+                    id={tId}
+                  />
+                </div>
+              )}
           </div>
         </div>
       </div>
@@ -56,20 +56,34 @@ export default function AdminTuornamentView() {
 }
 
 type DivisionPannelProps = {
-  format: string ;
+  format: string;
   id: number;
 };
 
+
 function DivisionPannel(props: DivisionPannelProps) {
-  let divisions:Array<Division> = []
-  if (props.format.includes("SAME_SEX")) { 
-    const divMen = trpc.tournament.getDivisions.useQuery({ tournamentId: props.id, type: "MENS" })
-    const divWom = trpc.tournament.getDivisions.useQuery({ tournamentId: props.id, type: "WOMENS" })
-    console.log(divMen.data)
+  const divisions: Division[] = [];
+  if (props.format.includes("SAME_SEX")) {
+    const divMen = trpc.tournament.getDivisions.useQuery({
+      tournamentId: props.id,
+      type: "MENS",
+    });
+    const divWom = trpc.tournament.getDivisions.useQuery({
+      tournamentId: props.id,
+      type: "WOMENS",
+    });
+    console.log(divMen.data);
   } else {
-    const divCoed = trpc.tournament.getDivisions.useQuery({ tournamentId: props.id, type: "COED" })
-   console.log(divCoed.data)
-};
+    const divCoed = trpc.tournament.getDivisions.useQuery({
+      tournamentId: props.id,
+      type: "COED",
+    });
+    if (divCoed.data) {
+      for (let i = 0; i < divCoed.data.length; i++) {
+        divisions.push(divCoed.data[i]);
+      }
+    }
+    console.log(divisions)
   }
 
   return (
@@ -82,6 +96,11 @@ function DivisionPannel(props: DivisionPannelProps) {
               <div className="flex flex-col">
                 <p className="pb-2 text-lg">Mens</p>
                 <div className="flex flex-row">
+                  {divisions.map((div) => (
+                    <div key={div.divisionId} className="text-3xl">
+                      {div.name}
+                    </div>
+                  ))}
                   <NewDivisionForm type={props.format} sex={"MENS"} />
                 </div>
               </div>
@@ -95,8 +114,8 @@ function DivisionPannel(props: DivisionPannelProps) {
           ) : (
             <div>
               <p className="pb-2 text-lg">Not Same Sex</p>
-                <div className="flex flex-row">
-                  {division.map((div) => (<div>{div.name}</div>)}
+              <div className="flex flex-row">
+                {/* {divisions.map((div) => (<div key={div.divisionId} className='text-3xl'>{div.name}</div>))} */}
                 <NewDivisionForm type={props.format} sex={"COED"} />
               </div>
             </div>
@@ -117,13 +136,13 @@ function division() {
 
 type divisionFormProps = {
   type: string;
-  sex: GenderType;
+  sex: string;
 };
 
 function NewDivisionForm(props: divisionFormProps) {
   const createDivision = trpc.tournament.createDivision.useMutation();
   const router = useRouter();
-  const { tournamentId } = router.query;
+  const tournamentId = router.query.tournamentId;
   const [divisionType, setDivisionType] = useState<string>(props.sex);
   const [divisionName, setDivisionName] = useState<string>("");
   return (
@@ -146,11 +165,24 @@ function NewDivisionForm(props: divisionFormProps) {
           <button
             className="h-8 w-20 rounded-lg bg-blue-400 text-xl hover:bg-blue-500"
             onClick={() => {
-              createDivision.mutate({
-                divisionName: divisionName,
-                tournamentId: Number(tournamentId),
-                type: divisionType,
-              }, { onSuccess: () => { router.reload()} });
+              createDivision.mutate(
+                {
+                  divisionName: divisionName,
+                  tournamentId: Number(tournamentId),
+                  type: divisionType,
+                },
+                {
+                  onSuccess: () => {
+                    router.reload();
+                  },
+                  onError: (err) => {
+                    console.log(
+                      "Create Division Error... Prob already exists dumbass"
+                    );
+                    console.log(err);
+                  },
+                }
+              );
             }}
           >
             {" "}
