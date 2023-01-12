@@ -114,8 +114,10 @@ function DivisionPannel(props: DivisionPannelProps) {
           ) : (
             <div>
               <p className="pb-2 text-lg">Not Same Sex</p>
-              <div className="flex flex-row">
-                {/* {divisions.map((div) => (<div key={div.divisionId} className='text-3xl'>{div.name}</div>))} */}
+              <div className="flex flex-row space-x-4">
+                  {divisions.map((div) => (
+                  <DivisionCard division={div} key={div.name}/>
+                ))}
                 <NewDivisionForm type={props.format} sex={"COED"} />
               </div>
             </div>
@@ -126,10 +128,19 @@ function DivisionPannel(props: DivisionPannelProps) {
   );
 }
 
-function division() {
+type DivisionCardProps = {
+  key: string;
+  division: Division;
+}
+
+
+function DivisionCard(props: DivisionCardProps) {
   return (
-    <div>
-      <p>Division</p>
+    <div className="flex h-80 w-64 flex-col items-center rounded-md bg-white p-4 drop-shadow-lg">
+      <p className="text-3xl">{props.division.name}</p>
+      <p>Entries</p>
+      <p>Pools</p>
+      <p>Bracket</p>
     </div>
   );
 }
