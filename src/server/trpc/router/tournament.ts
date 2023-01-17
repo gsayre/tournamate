@@ -100,4 +100,12 @@ export const tournamentRouter = router({
       })
       return divisions;
     }),
+  getDivision: protectedProcedure.input(z.object({ divisionId: z.number() })).query(async ({ ctx, input }) => {
+    const division = await ctx.prisma.division.findUnique({
+      where: {
+        divisionId: input.divisionId
+      }
+    })
+    return division;
+  }),
 });

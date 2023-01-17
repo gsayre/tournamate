@@ -148,7 +148,7 @@ const TournamentDirectorPannel = () => {
 };
 
 function isPastCurrentDate(tournament: Tournament) {
-  if (tournament.dayTwo) {
+  if (tournament.dayTwo && tournament.dayTwoDate) {
     return (
       new Date(tournament.dayTwoDate.toDateString()) <
       new Date(new Date().toDateString())

@@ -1,9 +1,10 @@
-import Sidebar from "../../../components/Sidebar";
-import TopBar from "../../../components/TopBar";
-import { trpc } from "../../../utils/trpc";
+import Sidebar from "../../../../components/Sidebar";
+import TopBar from "../../../../components/TopBar";
+import { trpc } from "../../../../utils/trpc";
 import { useRouter } from "next/router";
 import { Division } from "@prisma/client";
 import { useState } from "react";
+import Link from "next/link";
 
 export default function AdminTuornamentView() {
   const router = useRouter();
@@ -60,7 +61,6 @@ type DivisionPannelProps = {
   id: number;
 };
 
-
 function DivisionPannel(props: DivisionPannelProps) {
   const divisions: Division[] = [];
   if (props.format.includes("SAME_SEX")) {
@@ -83,7 +83,7 @@ function DivisionPannel(props: DivisionPannelProps) {
         divisions.push(divCoed.data[i]);
       }
     }
-    console.log(divisions)
+    console.log(divisions);
   }
 
   return (
@@ -115,8 +115,8 @@ function DivisionPannel(props: DivisionPannelProps) {
             <div>
               <p className="pb-2 text-lg">Not Same Sex</p>
               <div className="flex flex-row space-x-4">
-                  {divisions.map((div) => (
-                  <DivisionCard division={div} key={div.name}/>
+                {divisions.map((div) => (
+                  <DivisionCard division={div} key={div.name} />
                 ))}
                 <NewDivisionForm type={props.format} sex={"COED"} />
               </div>
@@ -131,17 +131,23 @@ function DivisionPannel(props: DivisionPannelProps) {
 type DivisionCardProps = {
   key: string;
   division: Division;
-}
-
+};
 
 function DivisionCard(props: DivisionCardProps) {
   return (
-    <div className="flex h-80 w-64 flex-col items-center rounded-md bg-white p-4 drop-shadow-lg">
-      <p className="text-3xl">{props.division.name}</p>
-      <p>Entries</p>
-      <p>Pools</p>
-      <p>Bracket</p>
-    </div>
+    <Link
+      href={`./${props.division.tournamentId}/${props.division.divisionId}`}
+    >
+      <div className="flex h-80 w-64 flex-col items-center justify-center rounded-md bg-white p-4 drop-shadow-lg hover:bg-slate-100">
+        <div className="flex flex-col h-5/6 justify-center items-center w-full">
+          <p className="pb-2 text-5xl font-bold">{props.division.name}</p>
+          <p className="text-xl font-semibold">69 Entries</p>
+        </div>
+              <div className="flex items-end h-1/6 w-full justify-center italic">
+                  Click for more information
+        </div>
+      </div>
+    </Link>
   );
 }
 
@@ -186,7 +192,7 @@ function NewDivisionForm(props: divisionFormProps) {
                   onSuccess: () => {
                     router.reload();
                   },
-                  onError: (err) => {
+                  onError: (err:any) => {
                     console.log(
                       "Create Division Error... Prob already exists dumbass"
                     );
