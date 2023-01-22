@@ -79,13 +79,20 @@ const DivisionAccordian = (props: divAccordianProps) => {
         )}
         <p className="text-2xl font-semibold">{props.division.name}</p>
       </div>
+
       {isOpen && (
         <div className="flex h-12 w-full flex-col p-4">
-          <div className="flex flex-row">
-            <PoolTable />
-            <PoolTable />
-            <PoolTable />
-            <PoolTable />
+          <div className="flex flex-col">
+            <p className="text-2xl pb-2">Pools</p>
+            <div className="flex flex-row space-x-4">
+              <PoolTable />
+              <PoolTable />
+              <PoolTable />
+              <PoolTable />
+            </div>
+          </div>
+          <div className="flex flex-col pt-4">
+            <p className="text-2xl pb-2">Bracket</p>
           </div>
         </div>
       )}
@@ -96,7 +103,7 @@ const DivisionAccordian = (props: divAccordianProps) => {
 const PoolTable = (props: any) => {
   return (
     <div className="flex h-full w-full flex-col rounded-xl bg-slate-200">
-      <div>Header</div>
+      <div className="w-full text-center bg-green-500 rounded-t-xl">Header</div>
       <div>Team 1</div>
       <div>Team 2</div>
       <div>Team 3</div>
