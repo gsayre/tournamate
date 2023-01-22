@@ -5,8 +5,13 @@ import { useRouter } from "next/router";
 import { Division } from "@prisma/client";
 import { useState } from "react";
 import Link from "next/link";
+import { requireAuth } from "../../../../utils/requireAuth";
 
-export default function AdminTuornamentView() {
+export async function getServerSideProps(context: any) {
+  return requireAuth(context);
+}
+
+export default function AdminTournamentView() {
   const router = useRouter();
   const { tournamentId } = router.query;
   const tId: number = parseInt(tournamentId as string);
@@ -64,17 +69,17 @@ type DivisionPannelProps = {
 function DivisionPannel(props: DivisionPannelProps) {
   const divisions: Division[] = [];
   if (props.format.includes("SAME_SEX")) {
-    const divMen = trpc.tournament.getDivisions.useQuery({
+    const divMen = trpc.tournament.getDivisionsByType.useQuery({
       tournamentId: props.id,
       type: "MENS",
     });
-    const divWom = trpc.tournament.getDivisions.useQuery({
+    const divWom = trpc.tournament.getDivisionsByType.useQuery({
       tournamentId: props.id,
       type: "WOMENS",
     });
     console.log(divMen.data);
   } else {
-    const divCoed = trpc.tournament.getDivisions.useQuery({
+    const divCoed = trpc.tournament.getDivisionsByType.useQuery({
       tournamentId: props.id,
       type: "COED",
     });

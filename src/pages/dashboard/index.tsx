@@ -2,6 +2,11 @@ import type { NextPage } from "next";
 import { PropsWithChildren } from "react";
 import Sidebar from "../../components/Sidebar";
 import TopBar from "../../components/TopBar";
+import { requireAuth } from "../../utils/requireAuth";
+
+export async function getServerSideProps(context: any) {
+  return requireAuth(context);
+}
 
 const Dashboard: NextPage = ({ children }: PropsWithChildren) => {
   return (

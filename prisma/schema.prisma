@@ -144,6 +144,8 @@ model Pool {
   divisionId Int
   games Game[]
   teams Team[]
+
+  @@unique([poolId, divisionId])
 }
 
 model Bracket {
@@ -151,6 +153,8 @@ model Bracket {
   division Division @relation(fields: [divisionId], references: [divisionId])
   divisionId Int @unique
   games Game[]
+
+  @@unique([bracketId, divisionId])
 }
 
 model Game {
@@ -158,10 +162,11 @@ model Game {
   teams TeamInGame[] 
   referees Team @relation( fields: [refereeId], references: [teamId])
   refereeId Int 
-  pool Pool @relation(fields: [poolId], references: [poolId])
-  poolId Int
+  pool Pool? @relation(fields: [poolId], references: [poolId])
+  poolId Int?
   bracket Bracket? @relation(fields: [bracketId], references: [bracketId])
-  bracketId Int
+  bracketId Int?
+
 }
 
 model TeamInGame {

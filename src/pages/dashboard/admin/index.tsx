@@ -6,6 +6,11 @@ import TopBar from "../../../components/TopBar";
 import { trpc } from "../../../utils/trpc";
 import { Format, Tournament, Type } from "@prisma/client";
 import Link from "next/link";
+import { requireAuth } from "../../../utils/requireAuth";
+
+export async function getServerSideProps(context: any) {
+  return requireAuth(context);
+}
 
 export default function Admin() {
   return (

@@ -73,39 +73,70 @@ export const tournamentRouter = router({
           id: tournament.tournamentDirectorId,
         },
       });
-      return {tournament, tournamentDirector};
+      return { tournament, tournamentDirector };
     }),
-
-  createDivision: protectedProcedure.input(
-    z.object({ divisionName: z.string(), tournamentId: z.number(), type: z.string() }))
+  getTournaments: protectedProcedure.query(async ({ ctx }) => {
+    const tournaments = await ctx.prisma.tournament.findMany();
+    return tournaments;
+  }),
+  createDivision: protectedProcedure
+    .input(
+      z.object({
+        divisionName: z.string(),
+        tournamentId: z.number(),
+        type: z.string(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const division = await ctx.prisma.division.create({
         data: {
           name: input.divisionName,
           tournamentId: input.tournamentId,
           type: input.type,
-        }
-      })
+        },
+      });
       return division;
     }),
-  
-  getDivisions: protectedProcedure
+
+  getDivisionsByType: protectedProcedure
     .input(z.object({ tournamentId: z.number(), type: z.string() }))
     .query(async ({ ctx, input }) => {
       const divisions = await ctx.prisma.division.findMany({
         where: {
           tournamentId: input.tournamentId,
-          type: input.type
-        }
-      })
+          type: input.type,
+        },
+      });
       return divisions;
     }),
-  getDivision: protectedProcedure.input(z.object({ divisionId: z.number() })).query(async ({ ctx, input }) => {
-    const division = await ctx.prisma.division.findUnique({
-      where: {
-        divisionId: input.divisionId
-      }
-    })
-    return division;
-  }),
+  getDivision: protectedProcedure
+    .input(z.object({ divisionId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const division = await ctx.prisma.division.findUnique({
+        where: {
+          divisionId: input.divisionId,
+        },
+      });
+      return division;
+    }),
+  getPools: protectedProcedure
+    .input(z.object({ divisionId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const pools = await ctx.prisma.pool.findMany({
+        where: {
+          divisionId: input.divisionId,
+        },
+      });
+      return pools;
+    }),
+  getDivisions: protectedProcedure
+    .input(z.object({ tournamentId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const divisions = await ctx.prisma.division.findMany({
+        where: {
+          tournamentId: input.tournamentId,
+        },
+      });
+      return divisions;
+    }),
 });

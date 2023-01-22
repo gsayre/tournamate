@@ -1,10 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { signOut } from "next-auth/react";
-import Image from "next/image";
-import { string } from "zod";
+import { useRouter } from "next/router";
 
 export default function SidePannel() {
+  const router = useRouter();
   return (
     <div className="flex h-full w-80 flex-col items-center bg-white pt-4 shadow-md">
       <Link href="/" className="flex flex-row  gap-2 px-6 py-4 ">

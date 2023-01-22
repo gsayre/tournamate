@@ -3,6 +3,12 @@ import type { NextPage } from "next";
 import { useSession } from "next-auth/react";
 import Sidebar from "../../components/Sidebar";
 import TopBar from "../../components/TopBar";
+import { requireAuth } from "../../utils/requireAuth";
+
+export async function getServerSideProps(context: any) {
+  return requireAuth(context)
+}
+
 
 const Profile: NextPage = () => {
   return (

@@ -1,5 +1,14 @@
 import Sidebar from "../../components/Sidebar";
 import TopBar from "../../components/TopBar";
+import { requireAuth } from "../../utils/requireAuth";
+
+export async function getServerSideProps(context: any) {
+  return requireAuth(context, ({ session }: any) => {
+    return {
+      props: { session },
+    };
+  });
+}
 
 export default function Pricing() {
   return (

@@ -1,5 +1,10 @@
 import Sidebar from "../../components/Sidebar";
 import TopBar from "../../components/TopBar";
+import { requireAuth } from "../../utils/requireAuth";
+
+export async function getServerSideProps(context: any) {
+  return requireAuth(context);
+}
 
 export default function About() {
   return (

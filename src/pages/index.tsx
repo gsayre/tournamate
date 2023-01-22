@@ -4,6 +4,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { trpc } from "../utils/trpc";
 import Link from "next/link";
 
+
 const Home: NextPage = () => {
   const hello = trpc.example.hello.useQuery({ text: "from tRPC" });
 
@@ -37,15 +38,21 @@ const AuthShowcase: React.FC = () => {
         </p>
       )}
       <div className="flex flex-row space-x-4">
-      <Link className='rounded-md p-2 border-black border bg-violet-50 hover:bg-violet-100 text-xl shadow-lg' href={'./dashboard'}>To Application</Link>
-      <button
-        className="rounded-md border border-black bg-violet-50 px-4 py-2 text-xl shadow-lg hover:bg-violet-100"
-        onClick={sessionData ? () => signOut() : () => signIn()}
-      >
-        {sessionData ? "Sign out" : "Sign in"}
-      </button>
+        {sessionData && (
+          <Link
+            className="rounded-md border border-black bg-violet-50 p-2 text-xl shadow-lg hover:bg-violet-100"
+            href={"./dashboard"}
+          >
+            To Application
+          </Link>
+        )}
+        <button
+          className="rounded-md border border-black bg-violet-50 px-4 py-2 text-xl shadow-lg hover:bg-violet-100"
+          onClick={sessionData ? () => signOut() : () => signIn()}
+        >
+          {sessionData ? "Sign out" : "Sign in"}
+        </button>
       </div>
-      
     </div>
   );
 };

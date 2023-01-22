@@ -1,9 +1,12 @@
 import { useRouter } from "next/router";
 import Sidebar from "../../../../components/Sidebar";
 import TopBar from "../../../../components/TopBar";
+import { requireAuth } from "../../../../utils/requireAuth";
 import { trpc } from "../../../../utils/trpc";
 
-
+export async function getServerSideProps(context: any) {
+  return requireAuth(context);
+}
 
 export default function Admin() {
     let divisionData;
