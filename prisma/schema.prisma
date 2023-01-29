@@ -170,9 +170,9 @@ model Game {
 }
 
 model TeamInGame {
-  game Game @relation(fields: [gameId], references: [gameId])
   gameId Int
-  Team Team @relation(fields: [teamId], references: [teamId])
   teamId Int
+  game Game @relation(fields: [gameId], references: [gameId])
+  Team Team @relation(fields: [teamId], references: [teamId])
   @@id([gameId,teamId])
 }

@@ -1,6 +1,7 @@
 import { router, protectedProcedure } from "../trpc";
 import { z } from "zod";
-import { Type, Format } from "@prisma/client";
+import { Type, Format, Game } from "@prisma/client";
+import { create } from "domain";
 
 export const tournamentRouter = router({
   createTournament: protectedProcedure
@@ -139,4 +140,33 @@ export const tournamentRouter = router({
       });
       return divisions;
     }),
-});
+    createPools: protectedProcedure.input(z.object({ divisionId: z.number() })).mutation(async ({ ctx, input }) => {
+      const division = await ctx.prisma.division.findUnique({
+        where: {
+          divisionId: input.divisionId,
+        },
+        select: {
+          entries: true,
+        }
+      });
+      if (!division) {
+        throw new Error("Division not found");
+      }
+
+      if (division.entries.length < 4) {
+       const pool =  await ctx.prisma.pool.create({
+          data: {
+            divisionId: input.divisionId,
+          },
+        })
+        switch (division.entries.length) {
+          case 3:
+          
+          case 4:
+
+        }
+    }else{
+
+      }
+}),
+})
