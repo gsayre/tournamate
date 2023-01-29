@@ -1,25 +1,32 @@
 {
+  "compilerOptions": {
+    "target": "es2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "resolveJsonModule": true,
+    "incremental": true
+  },
   "include": [
-    "remix.env.d.ts",
+    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "app/utils/firebase/db.server.ts"
-, "app/firebase.sessions.server.tsx"  ],
-  "compilerOptions": {
-    "lib": ["DOM", "DOM.Iterable", "ES2021"],
-    "esModuleInterop": true,
-    "jsx": "react-jsx",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "target": "ES2019",
-    "strict": true,
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["./app/*"]
-    },
-    "noEmit": true,
-    "allowJs": true,
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true
-  }
+    "**/*.cjs",
+    "**/*.mjs"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

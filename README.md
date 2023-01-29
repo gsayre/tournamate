@@ -1,53 +1,27 @@
-# Welcome to Remix!
+# Create T3 App
 
-- [Remix Docs](https://remix.run/docs)
+This is an app bootstrapped according to the [init.tips](https://init.tips) stack, also known as the T3-Stack.
 
-## Development
+## What's next? How do I make an app with this?
 
-From your terminal:
+We try to keep this project as simple as possible, so you can start with the most basic configuration and then move on to more advanced configuration.
 
-```sh
-npm run dev
-```
+If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
 
-This starts your app in development mode, rebuilding assets on file changes.
+- [Next-Auth.js](https://next-auth.js.org)
+- [Prisma](https://prisma.io)
+- [TailwindCSS](https://tailwindcss.com)
+- [tRPC](https://trpc.io)
 
-## Deployment
+We also [roll our own docs](https://beta.create.t3.gg) with some summary information and links to the respective documentation.
 
-First, build your app for production:
+Also checkout these awesome tutorials on `create-t3-app`.
 
-```sh
-npm run build
-```
+- [Build a Blog With the T3 Stack - tRPC, TypeScript, Next.js, Prisma & Zod](https://www.youtube.com/watch?v=syEWlxVFUrY)
+- [Build a Live Chat Application with the T3 Stack - TypeScript, Tailwind, tRPC](https://www.youtube.com/watch?v=dXRRY37MPuk)
+- [Build a full stack app with create-t3-app](https://www.nexxel.dev/blog/ct3a-guestbook)
+- [A first look at create-t3-app](https://dev.to/ajcwebdev/a-first-look-at-create-t3-app-1i8f)
 
-Then run the app in production mode:
+## How do I deploy this?
 
-```sh
-npm start
-```
-
-Now you'll need to pick a host to deploy it to.
-
-### DIY
-
-If you're familiar with deploying node applications, the built-in Remix app server is production-ready.
-
-Make sure to deploy the output of `remix build`
-
-- `build/`
-- `public/build/`
-
-### Using a Template
-
-When you ran `npx create-remix@latest` there were a few choices for hosting. You can run that again to create a new project, then copy over your `app/` folder to the new project that's pre-configured for your target server.
-
-```sh
-cd ..
-# create a new project, and pick a pre-configured host
-npx create-remix@latest
-cd my-new-remix-app
-# remove the new project's app (not the old one!)
-rm -rf app
-# copy your app over
-cp -R ../my-old-remix-app/app app
-```
+Follow our deployment guides for [Vercel](https://beta.create.t3.gg/en/deployment/vercel) and [Docker](https://beta.create.t3.gg/en/deployment/docker) for more information.
