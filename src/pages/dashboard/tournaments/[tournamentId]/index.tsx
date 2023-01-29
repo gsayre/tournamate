@@ -2,7 +2,7 @@
 import { Division } from "@prisma/client";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import Sidebar from "../../../../components/Sidebar";
 import TopBar from "../../../../components/TopBar";
 import { requireAuth } from "../../../../utils/requireAuth";
@@ -22,30 +22,33 @@ export default function TournamentView() {
   const divisionData = trpc.tournament.getDivisions.useQuery({
     tournamentId: tId,
   }).data;
+  const [modalOpen, setModalOpen] = useState(false);
 
   return (
-    <div className="flex h-screen w-screen">
-      <div className="flex h-full w-full flex-row">
-        <Sidebar />
-        <div className="flex h-full w-full flex-col ">
-          <TopBar />
-          <div className=" h-full w-full p-4">
-            <p className="text-2xl text-gray-500">
-              {tournamentData?.tournament.name}
-            </p>
-            <button className="rounded bg-green-500 py-2 px-4 font-bold text-white hover:bg-green-700">
-              Sign Up
-            </button>
-            {divisionData &&
-              divisionData.map((division) => {
-                return (
-                  <DivisionAccordian division={division} key={division.name} />
-                );
-              })}
-          </div>
+    <>
+    {modalOpen ? (<SignupModal setModalOpen={setModalOpen} />): (<div className="flex h-screen w-screen">
+    <div className="flex h-full w-full flex-row">
+      <Sidebar />
+      <div className="flex h-full w-full flex-col ">
+        <TopBar />
+        <div className=" h-full w-full p-4">
+          <p className="text-2xl text-gray-500">
+            {tournamentData?.tournament.name}
+          </p>
+          <button className="rounded bg-green-500 py-2 px-4 font-bold text-white hover:bg-green-700" onClick={() => setModalOpen(true)}>
+            Sign Up
+          </button>
+          {divisionData &&
+            divisionData.map((division) => {
+              return (
+                <DivisionAccordian division={division} key={division.name} />
+              );
+            })}
         </div>
       </div>
     </div>
+  </div>) }
+    </>
   );
 }
 
@@ -111,5 +114,48 @@ const PoolTable = (props: any) => {
     </div>
   );
 }
+type SignupModalProps = {
+  setModalOpen: Dispatch<SetStateAction<boolean>>;
+}
 
+const SignupModal: React.FC<SignupModalProps> = ({ setModalOpen }) =>  {
+  const [signupData, setSignupData] = useState({
+    daysToPlay:'',
+  });
 
+  return(
+    <div className="absolute inset-0 flex items-center justify-center bg-black/75">
+      <div className="flex w-10/12 flex-col space-y-4 bg-white p-4">
+        <p className="text-2xl font-semibold">Sign Up</p>
+        <div>
+        <label >
+            Which day would you like to play?
+          </label>
+        <select
+          name="type"
+          id="type"
+          className="border-2"
+          onChange={(e) =>
+            setSignupData({
+              ...signupData,
+              daysToPlay: e.target.value,
+            })
+          }
+        >
+          
+          <option value={'1'}>Day One</option>
+          <option value={'2'}>Day Two</option>
+          <option value={'B'}>Both</option>
+        </select>
+        {}
+        </div>
+        <button
+            onClick={() => setModalOpen(false)}
+            className="h-10 w-28 rounded-3xl bg-red-500 p-2 text-xl font-semibold text-white hover:bg-red-600"
+          >
+            Cancel
+          </button>
+      </div>
+    </div>
+  )
+}
