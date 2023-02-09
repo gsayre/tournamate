@@ -1,21 +1,21 @@
 // src/server/router/context.ts
 import type { inferAsyncReturnType } from "@trpc/server";
 import type { CreateNextContextOptions } from "@trpc/server/adapters/next";
-import type { Session } from "next-auth";
-import { getServerAuthSession } from "../common/get-server-auth-session";
 import { prisma } from "../db/client";
+import { clerkClient, User} from "@clerk/nextjs/api"
+import { getAuth } from "@clerk/nextjs/server";
 
-type CreateContextOptions = {
-  session: Session | null;
+type IUserProps = {
+  user: User | null;
 };
 
 /** Use this helper for:
  * - testing, so we dont have to mock Next.js' req/res
  * - trpc's `createSSGHelpers` where we don't have req/res
  **/
-export const createContextInner = async (opts: CreateContextOptions) => {
+export const createContextInner = async ({user}: IUserProps) => {
   return {
-    session: opts.session,
+    user,
     prisma,
   };
 };
@@ -25,13 +25,14 @@ export const createContextInner = async (opts: CreateContextOptions) => {
  * @link https://trpc.io/docs/context
  **/
 export const createContext = async (opts: CreateNextContextOptions) => {
-  const { req, res } = opts;
-
-  // Get the session from the server using the unstable_getServerSession wrapper function
-  const session = await getServerAuthSession({ req, res });
-
+  async function getUser() {
+    const { userId } = getAuth(opts.req)
+    const user = userId ? await clerkClient.users.getUser(userId) : null
+    return user
+  }
+  const user = await getUser()
   return await createContextInner({
-    session,
+    user,
   });
 };
 

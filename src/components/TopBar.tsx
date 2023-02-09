@@ -1,9 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
-import { useSession } from "next-auth/react";
 import { trpc } from "../utils/trpc";
 
 export default function TopBar(props: any) {
-  const { data: session } = useSession();
   const toggleTDStatus = trpc.user.toggleTournamentDirectorRole.useMutation();
   const toggleAdminStatus = trpc.user.toggleAdminRole.useMutation();
 
@@ -23,7 +21,7 @@ export default function TopBar(props: any) {
           <p className="pl-4 text-xl font-bold">Search...</p>
         </div>
         <div className="flex h-full flex-row items-center pr-2">
-          {session?.user?.id === "cl9vnga1u0000vkykypjqp51g" && (
+          {/* {session?.user?.id === "cl9vnga1u0000vkykypjqp51g" && (
             <>
               <div className="flex h-full items-center justify-center border-l-2 px-4">
                 <button
@@ -52,7 +50,7 @@ export default function TopBar(props: any) {
                 </button>
               </div>
             </>
-          )}
+          )} */}
           <div className="flex h-full items-center justify-center border-l-2 px-4">
             <button>
               <svg
@@ -77,9 +75,9 @@ export default function TopBar(props: any) {
           </div>
           <div className="flex h-full flex-row items-center space-x-3 border-l-2 p-2 pl-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#2196F3]">
-              {splitName(session?.user?.name)}
+              {/* {splitName(session?.user?.name)} */}
             </div>
-            <p className="text-2xl font-semibold">{session?.user?.name}</p>
+            {/* <p className="text-2xl font-semibold">{session?.user?.name}</p> */}
           </div>
         </div>
       </div>

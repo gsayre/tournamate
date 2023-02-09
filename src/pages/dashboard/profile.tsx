@@ -1,12 +1,22 @@
 /* eslint-disable @next/next/no-img-element */
+import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
 import type { NextPage } from "next";
 import { useSession } from "next-auth/react";
 import Sidebar from "../../components/Sidebar";
 import TopBar from "../../components/TopBar";
-import { requireAuth } from "../../utils/requireAuth";
 
 export async function getServerSideProps(context: any) {
-  return requireAuth(context)
+  const { userId } = getAuth(context.req);
+
+  if (!userId) {
+    return {
+      redirect: {
+        destination: "/sign-in",
+        permanent: false,
+      },
+    };
+  }
+  return { props: { ...buildClerkProps(context.req) } };
 }
 
 

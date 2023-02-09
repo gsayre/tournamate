@@ -1,9 +1,20 @@
+import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
 import Sidebar from "../../components/Sidebar";
 import TopBar from "../../components/TopBar";
-import { requireAuth } from "../../utils/requireAuth";
 
 export async function getServerSideProps(context: any) {
-  return requireAuth(context);
+  const { userId } = getAuth(context.req);
+
+  if (!userId) {
+    return {
+      redirect: {
+        destination: "/sign-in",
+        permanent: false,
+      },
+    };
+  }
+
+  return { props: { ...buildClerkProps(context.req) } };
 }
 
 export default function About() {

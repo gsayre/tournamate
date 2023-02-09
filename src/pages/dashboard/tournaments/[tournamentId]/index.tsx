@@ -1,15 +1,25 @@
 /* eslint-disable @next/next/no-img-element */
+import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
 import { Division } from "@prisma/client";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { Dispatch, SetStateAction, useState } from "react";
 import Sidebar from "../../../../components/Sidebar";
 import TopBar from "../../../../components/TopBar";
-import { requireAuth } from "../../../../utils/requireAuth";
 import { trpc } from "../../../../utils/trpc";
 
 export async function getServerSideProps(context: any) {
-  return requireAuth(context);
+  const { userId } = getAuth(context.req);
+
+  if (!userId) {
+    return {
+      redirect: {
+        destination: "/sign-in",
+        permanent: false,
+      },
+    };
+  }
+  return { props: { ...buildClerkProps(context.req) } };
 }
 
 export default function TournamentView() {

@@ -1,14 +1,33 @@
+import { useAuth } from "@clerk/nextjs";
 import type { NextPage } from "next";
-import { PropsWithChildren } from "react";
-import Sidebar from "../../components/Sidebar";
-import TopBar from "../../components/TopBar";
-import { requireAuth } from "../../utils/requireAuth";
+import { redirect } from "next/dist/server/api-utils";
+import { NextResponse } from "next/server";
+import { PropsWithChildren, useEffect } from "react";
+import Sidebar from "@components/Sidebar";
+import TopBar from "@components/TopBar";
+import { getAuth, buildClerkProps } from "@clerk/nextjs/server";
+import { trpc } from "../../utils/trpc";
+import { prisma } from "../../server/db/client";
 
 export async function getServerSideProps(context: any) {
-  return requireAuth(context);
+  const { userId } = getAuth(context.req);
+
+  if (!userId) {
+    return {
+      redirect: {
+        destination: "/sign-in",
+        permanent: false,
+      },
+    };
+  }
+  return { props: { ...buildClerkProps(context.req) } };
 }
 
-const Dashboard: NextPage = ({ children }: PropsWithChildren) => {
+export default function Dashboard({ children }: PropsWithChildren) {
+  const updateOrCreateUser = trpc.user.createOrFindUser.useMutation();
+  useEffect(() => {
+    updateOrCreateUser.mutate();
+  }, []);
   return (
     <div className="flex h-screen w-screen">
       <div className="flex h-full w-full flex-row">
@@ -26,6 +45,4 @@ const Dashboard: NextPage = ({ children }: PropsWithChildren) => {
       </div>
     </div>
   );
-};
-
-export default Dashboard;
+}
