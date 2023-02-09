@@ -5,10 +5,20 @@ import { useRouter } from "next/router";
 import { Division } from "@prisma/client";
 import { useState } from "react";
 import Link from "next/link";
-import { requireAuth } from "../../../../utils/requireAuth";
+import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
 
 export async function getServerSideProps(context: any) {
-  return requireAuth(context);
+  const { userId } = getAuth(context.req);
+
+  if (!userId) {
+    return {
+      redirect: {
+        destination: "/sign-in",
+        permanent: false,
+      },
+    };
+  }
+  return { props: { ...buildClerkProps(context.req) } };
 }
 
 export default function AdminTournamentView() {

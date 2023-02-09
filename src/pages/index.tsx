@@ -1,12 +1,10 @@
 import type { NextPage } from "next";
 import Head from "next/head";
-import { signIn, signOut, useSession } from "next-auth/react";
-import { trpc } from "../utils/trpc";
 import Link from "next/link";
+import { useAuth, UserButton } from "@clerk/nextjs";
 
 
 const Home: NextPage = () => {
-  const hello = trpc.example.hello.useQuery({ text: "from tRPC" });
 
   return (
     <>
@@ -29,30 +27,30 @@ const Home: NextPage = () => {
 export default Home;
 
 const AuthShowcase: React.FC = () => {
-  const { data: sessionData } = useSession();
+  const {isSignedIn, userId} = useAuth();
   return (
     <div className="flex flex-col items-center justify-center gap-2">
-      {sessionData && (
-        <p className="text-2xl text-blue-500">
-          Logged in as {sessionData?.user?.name}
+      {isSignedIn && (
+        <div className="flex flex-col">
+          <div className="flex flex-row">
+            <p className="text-2xl text-blue-500">Logged in as {userId}</p>
+            <UserButton />
+          </div>
+          <div className="flex space-x-4 justify-center pt-2">
+            <Link
+              className="rounded-md border border-black bg-violet-50 p-2 text-xl shadow-lg hover:bg-violet-100"
+              href={"./dashboard"}
+            >
+              To Application
+            </Link>
+          </div>
+        </div>
+      )}
+      {!isSignedIn && (
+        <p className="text-center text-2xl">
+          <Link href="/sign-in">Sign In</Link>
         </p>
       )}
-      <div className="flex flex-row space-x-4">
-        {sessionData && (
-          <Link
-            className="rounded-md border border-black bg-violet-50 p-2 text-xl shadow-lg hover:bg-violet-100"
-            href={"./dashboard"}
-          >
-            To Application
-          </Link>
-        )}
-        <button
-          className="rounded-md border border-black bg-violet-50 px-4 py-2 text-xl shadow-lg hover:bg-violet-100"
-          onClick={sessionData ? () => signOut() : () => signIn()}
-        >
-          {sessionData ? "Sign out" : "Sign in"}
-        </button>
-      </div>
     </div>
   );
 };
