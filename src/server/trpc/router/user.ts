@@ -4,12 +4,16 @@ import { z } from "zod";
 export const userRouter = router({
   createOrFindUser: protectedProcedure
     .mutation(async ({ ctx }) => {
-      const user = await ctx.prisma.user.upsert({
-        where: { id: ctx.user.id },
-        create: { id: ctx.user.id },
-        update: {},
-      });
-      return user;
+      if (ctx.user.firstName ){
+        const fullName = ctx.user.firstName + ctx.user.lastName
+        const user = await ctx.prisma.user.upsert({
+          where: { id: ctx.user.id },
+          create: { id: ctx.user.id ,
+          name: fullName},
+          update: {},
+        });
+        return user;
+      } 
     }),
   findUsername: protectedProcedure
     .input(
