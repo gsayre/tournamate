@@ -1,4 +1,3 @@
-import { useSession } from "next-auth/react";
 import { FC, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import Sidebar from "../../../components/Sidebar";
@@ -7,6 +6,7 @@ import { trpc } from "../../../utils/trpc";
 import { Format, Tournament, Type } from "@prisma/client";
 import Link from "next/link";
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
+import { useAuth } from "@clerk/nextjs";
 
 export async function getServerSideProps(context: any) {
   const { userId } = getAuth(context.req);
@@ -51,10 +51,10 @@ const CorrectPannel = () => {
 };
 
 const AdminPannel = () => {
-  const { data: session } = useSession();
   const tdRequests = trpc.user.getTournamentDirectorRequests.useQuery();
+  const { userId } = useAuth()
   const TDUsername = trpc.user.findUsername.useQuery({
-    id: session?.user?.id as string,
+    id: userId as string,
   });
   const approveTDRequest =
     trpc.user.approveTournamentDirectorRequest.useMutation();
@@ -105,7 +105,6 @@ const AdminPannel = () => {
 };
 
 const TournamentDirectorPannel = () => {
-  const { data: session } = useSession();
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const ownedTournaments = trpc.tournament.getOwnedTournaments.useQuery();
   return (
@@ -179,10 +178,10 @@ function isPastCurrentDate(tournament: Tournament) {
 
 const TournamentDirectorApplication = () => {
   const [formContent, setFormContent] = useState<string>("");
-  const { data: session } = useSession();
   const userData = trpc.user.getUserRoles.useQuery();
   const submitTDRequest =
     trpc.user.createTournamentDirectorRequest.useMutation();
+  const { userId } = useAuth();
   return (
     <div className="flex h-full w-full items-center justify-center rounded-md bg-white p-2">
       <form method="post" className="flex w-8/12 flex-col" id="TDForm">
@@ -209,7 +208,7 @@ const TournamentDirectorApplication = () => {
             className="h-14 w-32 rounded-full bg-[#2196F3] text-xl font-bold"
             onClick={() =>
               submitTDRequest.mutate({
-                userId: session?.user?.id as string,
+                userId: userId as string,
                 content: formContent,
               })
             }
@@ -229,24 +228,28 @@ interface tournamentCardProps {
 const TournamentCard = (props: tournamentCardProps) => {
   return (
     <Link href={`./admin/${props.tournament.tournamentId}`}>
-      <div className="flex w-56 flex-col  space-x-4 rounded-md bg-white p-4 drop-shadow-lg">
-        <p className="text-2xl font-semibold">{props.tournament.name}</p>
-        <div className="flex flex-col space-y-2 pt-2">
-          {props.tournament.dayTwo ? (
-            <>
-              <p>
-                {props.tournament.dayOneDate.toDateString() +
-                  " - " +
-                  props.tournament.dayTwoDate?.toDateString()}
-              </p>
-            </>
-          ) : (
-            <>{props.tournament.dayOneDate.toDateString()}</>
-          )}
-          <div className="flex flex-row justify-end pt-4">
-            <button className="h-10 w-28 rounded-3xl bg-green-500 p-2 text-xl font-semibold text-white">
-              View
-            </button>
+      <div className="flex h-72 w-56 flex-col  space-x-4 rounded-md bg-white p-4 drop-shadow-lg">
+        <div className="flex h-full flex-col p-2">
+          <p className="text-2xl font-semibold">{props.tournament.name}</p>
+          <div className="flex h-full flex-col space-y-2 pt-2">
+            <div className="flex flex-col h-full">
+              {props.tournament.dayTwo ? (
+                <>
+                  <p>
+                    {props.tournament.dayOneDate.toDateString() +
+                      " - " +
+                      props.tournament.dayTwoDate?.toDateString()}
+                  </p>
+                </>
+              ) : (
+                <>{props.tournament.dayOneDate.toDateString()}</>
+              )}
+            </div>
+            <div className="flex flex-row justify-end pt-4">
+              <button className="h-10 w-28 rounded-3xl bg-green-500 p-2 text-xl font-semibold text-white">
+                View
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -261,7 +264,7 @@ interface ATCProps {
 const AddTournamentCard: FC<ATCProps> = ({ setModalOpen }) => {
   return (
     <div
-      className="flex w-56 flex-col items-center justify-center rounded-md border-2 border-dashed border-black/20 bg-black/5 p-4 drop-shadow-lg hover:bg-black/10"
+      className="flex w-56 h-72 flex-col items-center justify-center rounded-md border-2 border-dashed border-black/20 bg-black/5 p-4 drop-shadow-lg hover:bg-black/10"
       onClick={() => setModalOpen(true)}
     >
       <div className="-mt-6 -mr-2 flex flex-col">

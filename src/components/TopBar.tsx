@@ -1,9 +1,29 @@
 /* eslint-disable @next/next/no-img-element */
+import { useAuth, UserButton, useUser } from "@clerk/nextjs";
+import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
 import { trpc } from "../utils/trpc";
+
+
+export async function getServerSideProps(context: any) {
+  const { userId } = getAuth(context.req);
+
+  if (!userId) {
+    return {
+      redirect: {
+        destination: "/sign-in",
+        permanent: false,
+      },
+    };
+  }
+
+  return { props: { ...buildClerkProps(context.req) } };
+}
 
 export default function TopBar(props: any) {
   const toggleTDStatus = trpc.user.toggleTournamentDirectorRole.useMutation();
   const toggleAdminStatus = trpc.user.toggleAdminRole.useMutation();
+  const { user } = useUser()
+  const { userId } = useAuth();
 
   return (
     <div className="flex w-full flex-col bg-white">
@@ -21,14 +41,14 @@ export default function TopBar(props: any) {
           <p className="pl-4 text-xl font-bold">Search...</p>
         </div>
         <div className="flex h-full flex-row items-center pr-2">
-          {/* {session?.user?.id === "cl9vnga1u0000vkykypjqp51g" && (
+          {userId === "user_2LLHHbvaSSvA4DOu1s20cAY7jTS" && (
             <>
               <div className="flex h-full items-center justify-center border-l-2 px-4">
                 <button
                   className="h-14 rounded-3xl bg-[#2196F3] p-2 text-xl font-semibold"
                   onClick={() =>
                     toggleTDStatus.mutate(
-                      { userId: session?.user?.id as string },
+                      { userId: userId as string },
                       { onSuccess: () => window.location.reload() }
                     )
                   }
@@ -41,7 +61,7 @@ export default function TopBar(props: any) {
                   className="h-14 rounded-3xl bg-[#F24E1E] p-2 text-xl font-semibold"
                   onClick={() =>
                     toggleAdminStatus.mutate(
-                      { userId: session?.user?.id as string },
+                      { userId: userId as string },
                       { onSuccess: () => window.location.reload() }
                     )
                   }
@@ -50,7 +70,7 @@ export default function TopBar(props: any) {
                 </button>
               </div>
             </>
-          )} */}
+          )}
           <div className="flex h-full items-center justify-center border-l-2 px-4">
             <button>
               <svg
@@ -74,19 +94,10 @@ export default function TopBar(props: any) {
             </button>
           </div>
           <div className="flex h-full flex-row items-center space-x-3 border-l-2 p-2 pl-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#2196F3]">
-              {/* {splitName(session?.user?.name)} */}
-            </div>
-            {/* <p className="text-2xl font-semibold">{session?.user?.name}</p> */}
+              <UserButton />
           </div>
         </div>
       </div>
     </div>
   );
-}
-
-export function splitName(name: string | null | undefined): string {
-  if (!name) return "";
-  const names = name.split(" ");
-  return names[0]?.charAt(0) + " " + names[1]?.charAt(0);
 }

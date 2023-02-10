@@ -28,7 +28,7 @@ export const tournamentRouter = router({
             dayOneFormat: input.dayOneFormat,
             dayOneDate: input.dayOneDate,
             location: input.location,
-            tournamentDirector: { connect: { id: ctx.session.user.id } },
+            tournamentDirector: { connect: { id: ctx.user.id } },
           },
         });
         return tournament;
@@ -44,7 +44,7 @@ export const tournamentRouter = router({
             dayOneDate: input.dayOneDate,
             dayTwoDate: input.dayTwoDate,
             location: input.location,
-            tournamentDirector: { connect: { id: ctx.session.user.id } },
+            tournamentDirector: { connect: { id: ctx.user.id } },
           },
         });
         return tournament;
@@ -53,7 +53,7 @@ export const tournamentRouter = router({
   getOwnedTournaments: protectedProcedure.query(async ({ ctx }) => {
     const tournaments = await ctx.prisma.tournament.findMany({
       where: {
-        tournamentDirectorId: ctx.session.user.id,
+        tournamentDirectorId: ctx.user.id,
       },
     });
     return tournaments;
@@ -83,7 +83,7 @@ export const tournamentRouter = router({
   createDivision: protectedProcedure
     .input(
       z.object({
-        divisionName: z.string(),
+        divisionName: z.string().min(1),
         tournamentId: z.number(),
         type: z.string(),
       })

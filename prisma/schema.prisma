@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["referentialIntegrity"]
+  previewFeatures = ["referentialIntegrity", "fullTextIndex", "fullTextSearch"]
 }
 
 datasource db {
@@ -11,6 +11,7 @@ datasource db {
 
 model User {
   id            String    @id
+  name         String
   isAdmin       Boolean   @default(false)
   isTournamentDirector Boolean @default(false)
   tdRequest TournamentDirectorRequest?

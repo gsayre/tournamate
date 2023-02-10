@@ -36,28 +36,41 @@ export default function TournamentView() {
 
   return (
     <>
-    {modalOpen ? (<SignupModal setModalOpen={setModalOpen} />): (<div className="flex h-screen w-screen">
-    <div className="flex h-full w-full flex-row">
-      <Sidebar />
-      <div className="flex h-full w-full flex-col ">
-        <TopBar />
-        <div className=" h-full w-full p-4">
-          <p className="text-2xl text-gray-500">
-            {tournamentData?.tournament.name}
-          </p>
-          <button className="rounded bg-green-500 py-2 px-4 font-bold text-white hover:bg-green-700" onClick={() => setModalOpen(true)}>
-            Sign Up
-          </button>
-          {divisionData &&
-            divisionData.map((division) => {
-              return (
-                <DivisionAccordian division={division} key={division.name} />
-              );
-            })}
+      {modalOpen ? (
+        <SignupModal setModalOpen={setModalOpen} />
+      ) : (
+        <div className="flex h-screen w-screen">
+          <div className="flex h-full w-full flex-row">
+            <Sidebar />
+            <div className="flex h-full w-full flex-col ">
+              <TopBar />
+              <div className=" h-full w-full p-4">
+                <div>
+                  <p className="text-2xl text-gray-500">
+                    {tournamentData?.tournament.name}
+                  </p>
+                  <button
+                    className="rounded bg-green-500 py-2 px-4 font-bold text-white hover:bg-green-700"
+                    onClick={() => setModalOpen(true)}
+                  >
+                    Sign Up
+                  </button>
+                </div>
+
+                {divisionData &&
+                  divisionData.map((division) => {
+                    return (
+                      <DivisionAccordian
+                        division={division}
+                        key={division.name + division.type}
+                      />
+                    );
+                  })}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>) }
+      )}
     </>
   );
 }
@@ -71,17 +84,17 @@ const DivisionAccordian = (props: divAccordianProps) => {
   
   return (
     <div
-      className="flex h-12 w-5/6 flex-col bg-slate-200"
+      className="flex h-fit w-5/6 flex-col odd:bg-[#5BA6A1] even:bg-[#374C64] text-white"
       onClick={() => {
         setIsOpen(!isOpen);
       }}
     >
-      <div className="flex flex-row items-center space-x-4 p-2">
+      <div className="flex h-fit flex-row items-center space-x-4 p-2">
         {isOpen ? (
           <img
             src="/icons/icons8-triangle-arrow-24.png"
             alt="arrow"
-            className="h-4 w-4"
+            className="h-4 w-4 fill-white"
           />
         ) : (
           <img
@@ -94,9 +107,9 @@ const DivisionAccordian = (props: divAccordianProps) => {
       </div>
 
       {isOpen && (
-        <div className="flex h-12 w-full flex-col p-4">
+        <div className="flex w-full flex-col bg-white p-4 text-black">
           <div className="flex flex-col">
-            <p className="text-2xl pb-2">Pools</p>
+            <p className="pb-2 text-2xl">Pools</p>
             <div className="flex flex-row space-x-4">
               <PoolTable />
               <PoolTable />
@@ -105,7 +118,7 @@ const DivisionAccordian = (props: divAccordianProps) => {
             </div>
           </div>
           <div className="flex flex-col pt-4">
-            <p className="text-2xl pb-2">Bracket</p>
+            <p className="pb-2 text-2xl">Bracket</p>
           </div>
         </div>
       )}

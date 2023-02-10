@@ -87,7 +87,14 @@ function DivisionPannel(props: DivisionPannelProps) {
       tournamentId: props.id,
       type: "WOMENS",
     });
-    console.log(divMen.data);
+    if (divMen.data && divWom.data) {
+      for (let i = 0; i < divMen.data.length; i++) {
+        divisions.push(divMen.data[i]);
+      }
+      for (let i = 0; i < divWom.data.length; i++) {
+        divisions.push(divWom.data[i]);
+      }
+    }
   } else {
     const divCoed = trpc.tournament.getDivisionsByType.useQuery({
       tournamentId: props.id,
@@ -98,7 +105,6 @@ function DivisionPannel(props: DivisionPannelProps) {
         divisions.push(divCoed.data[i]);
       }
     }
-    console.log(divisions);
   }
 
   return (
@@ -110,18 +116,19 @@ function DivisionPannel(props: DivisionPannelProps) {
             <div className="flex flex-col space-y-4">
               <div className="flex flex-col">
                 <p className="pb-2 text-lg">Mens</p>
-                <div className="flex flex-row">
-                  {divisions.map((div) => (
-                    <div key={div.divisionId} className="text-3xl">
-                      {div.name}
-                    </div>
+                <div className="flex flex-row space-x-4">
+                  {divisions.filter(isCorrectDivision("MENS")).map((div) => (
+                    <DivisionCard division={div} key={div.name} />
                   ))}
                   <NewDivisionForm type={props.format} sex={"MENS"} />
                 </div>
               </div>
               <div>
                 <p className="pb-2 text-lg">Womens</p>
-                <div className="flex flex-row">
+                <div className="flex flex-row space-x-4">
+                  {divisions.filter(isCorrectDivision("WOMENS")).map((div) => (
+                    <DivisionCard division={div} key={div.name} />
+                  ))}
                   <NewDivisionForm type={props.format} sex={"WOMENS"} />
                 </div>
               </div>
@@ -130,7 +137,7 @@ function DivisionPannel(props: DivisionPannelProps) {
             <div>
               <p className="pb-2 text-lg">Not Same Sex</p>
               <div className="flex flex-row space-x-4">
-                {divisions.map((div) => (
+                {divisions.filter(isCorrectDivision("COED")).map((div) => (
                   <DivisionCard division={div} key={div.name} />
                 ))}
                 <NewDivisionForm type={props.format} sex={"COED"} />
@@ -141,6 +148,12 @@ function DivisionPannel(props: DivisionPannelProps) {
       </div>
     </div>
   );
+}
+
+function isCorrectDivision(divisionToCompare: string) {
+  return function (element: Division) {
+    return element.type === divisionToCompare;
+  }
 }
 
 type DivisionCardProps = {
@@ -199,7 +212,7 @@ function NewDivisionForm(props: divisionFormProps) {
             onClick={() => {
               createDivision.mutate(
                 {
-                  divisionName: divisionName,
+                  divisionName: divisionName.toString(),
                   tournamentId: Number(tournamentId),
                   type: divisionType,
                 },
