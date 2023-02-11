@@ -17,6 +17,8 @@ model User {
   tdRequest TournamentDirectorRequest?
   teamsParticipation UsersInTeam[]
   tournamentDirected Tournament[] 
+
+  @@fulltext([name])
 }
 
 model VerificationToken {

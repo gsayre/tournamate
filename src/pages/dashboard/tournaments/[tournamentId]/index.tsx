@@ -1,8 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
-import { Division } from "@prisma/client";
+import { Division, User } from "@prisma/client";
 import Image from "next/image";
 import { useRouter } from "next/router";
+import React from "react";
 import { Dispatch, SetStateAction, useState } from "react";
 import Sidebar from "../../../../components/Sidebar";
 import TopBar from "../../../../components/TopBar";
@@ -45,22 +46,25 @@ export default function TournamentView() {
             <div className="flex h-full w-full flex-col ">
               <TopBar />
               <div className=" h-full w-full ">
-                <div className="flex h-2/6 flex-row from-[#5AA5A0] to-[#5AA5A0]/0 bg-gradient-to-b p-4 w-full justify-between">
-                  <div className="flex flex-col w-1/2 text-right p-2">
-                    <p className="text-4xl text-gray-500 pb-2">
+                <div className="flex h-2/6 w-full flex-row justify-between bg-gradient-to-b from-[#5AA5A0] to-[#5AA5A0]/0 p-4">
+                  <div className="flex w-1/2 flex-col p-2 text-right">
+                    <p className="pb-2 text-4xl text-gray-500">
                       {tournamentData?.tournament.name}
                     </p>
                     <p className="text-[#515151] ">
                       {tournamentData?.tournament.location.split(",")[0]}
                     </p>
                     <p className="text-[#515151]">
-                      {tournamentData?.tournament.location.split(",")[1] + ","+ tournamentData?.tournament.location.split(",")[2] + tournamentData?.tournament.location.split(",")[3]}
+                      {tournamentData?.tournament.location.split(",")[1] +
+                        "," +
+                        tournamentData?.tournament.location.split(",")[2] +
+                        tournamentData?.tournament.location.split(",")[3]}
                     </p>
                   </div>
                   <div className="h-5/6 w-0.5 bg-black" />
-                  <div className="flex flex-row w-1/2 p-2 justify-end">
+                  <div className="flex w-1/2 flex-row justify-end p-2">
                     <button
-                      className="rounded-xl bg-white py-2 px-4 text-sm hover:bg-green-700 w-32 h-8 justify-center items-center"
+                      className="h-8 w-32 items-center justify-center rounded-xl bg-white py-2 px-4 text-sm hover:bg-green-700"
                       onClick={() => setModalOpen(true)}
                     >
                       Register
@@ -115,7 +119,9 @@ const DivisionAccordian = (props: divAccordianProps) => {
             className="h-4 w-4 -rotate-90"
           />
         )}
-        <p className="text-2xl font-semibold">{props.division.type + " - "+props.division.name}</p>
+        <p className="text-2xl font-semibold">
+          {props.division.type + " - " + props.division.name}
+        </p>
       </div>
 
       {isOpen && (
@@ -153,61 +159,74 @@ type SignupModalProps = {
   setModalOpen: Dispatch<SetStateAction<boolean>>;
 };
 
-const SignupModal: React.FC<SignupModalProps> = ({ setModalOpen }) => {
-  const [signupData, setSignupData] = useState({
-    daysToPlay: "1",
-    playerOneName: '',
-    playerTwoName: '',
-  });
+function SignupModal({ setModalOpen }: SignupModalProps) {
+  const [daysToPlay, setDaysToPlay] = useState("1");
+  const [playerOneName, setPlayerOneName] = useState("");
+  const [playerTwoName, setPlayerTwoName] = useState("");
+  const [playerOneResults, setPlayerOneResults] = useState<Array<User>>();
+  const playerOneQuery = trpc.tournament.getTopFiveParnterResults;
 
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black/75">
       <div className="flex w-10/12 flex-col space-y-4 bg-white p-4">
         <p className="text-2xl font-semibold">Sign Up</p>
-        <p>{signupData.daysToPlay}</p>
-        <p>{signupData.playerOneName}</p>
-        <p>{signupData.playerTwoName}</p>
-        <div className="flex flex-col space-y-2 w-2/6">
+        <p>{daysToPlay}</p>
+        <p>{playerOneName}</p>
+        <p>{playerTwoName}</p>
+        <div className="flex w-1/2 flex-col space-y-2">
           <label>Which day would you like to play?</label>
           <select
             name="type"
             id="type"
             className="border-2"
-            onChange={(e) =>
-              setSignupData({
-                ...signupData,
-                daysToPlay: e.target.value,
-              })
-            }
+            onChange={(e) => setDaysToPlay(e.target.value)}
           >
             <option value={"1"}>Day One</option>
             <option value={"2"}>Day Two</option>
             <option value={"B"}>Both</option>
           </select>
-          {signupData.daysToPlay === "B" ? (<div className="flex flex-col">
-            <label >Who is your partner for day one?</label>
-            <input type='text' className="border-black border-b-2 focus:outline-none" onChange={(e) =>
-              setSignupData({
-                ...signupData,
-                playerOneName: e.target.value,
-              })
-            }></input>
-            <label className="mt-4">Who is your partner for day two?</label>
-            <input type='text' className="border-black border-b-2 focus:outline-none" onChange={(e) =>
-              setSignupData({
-                ...signupData,
-                playerTwoName: e.target.value,
-              })
-            }></input>
-          </div>) : (<div className="flex flex-col">
-            <label>Who is your partner for this day?</label>
-            <input type='text' className="border-black border-b-2 focus:outline-none" onChange={(e) =>
-              setSignupData({
-                ...signupData,
-                playerOneName: e.target.value,
-              })
-            }></input>
-          </div>) }
+          {daysToPlay === "B" ? (
+            <div className="flex flex-col">
+              <label>Who is your partner for day one?</label>
+              <input
+                type="text"
+                className="border-b-2 border-black focus:outline-none"
+                onChange={(e) => setPlayerOneName(e.target.value)}
+              ></input>
+              <label className="mt-4">Who is your partner for day two?</label>
+              <input
+                type="text"
+                className="border-b-2 border-black focus:outline-none"
+                onChange={(e) => setPlayerTwoName(e.target.value)}
+              ></input>
+            </div>
+          ) : (
+            <div className="flex flex-col">
+              <label>Who is your partner for this day?</label>
+              <div className="flex flex-row space-x-2">
+                <input
+                  type="text"
+                  className="border-b-2 border-black focus:outline-none"
+                  onChange={(e) => setPlayerOneName(e.target.value)}
+                ></input>
+                <button
+                  onClick={() =>
+                    setPlayerOneResults(
+                      playerOneQuery.useQuery({ partner: playerOneName }).data
+                    )
+                  }
+                >
+                  Search
+                </button>
+              </div>
+
+              {playerOneResults?.map((result) => {
+                <div>
+                  <p>{result.name}</p>
+                </div>;
+              })}
+            </div>
+          )}
         </div>
         <button
           onClick={() => setModalOpen(false)}
@@ -218,4 +237,4 @@ const SignupModal: React.FC<SignupModalProps> = ({ setModalOpen }) => {
       </div>
     </div>
   );
-};
+}
