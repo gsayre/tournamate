@@ -2,19 +2,17 @@ import { router, protectedProcedure, publicProcedure } from "../trpc";
 import { z } from "zod";
 
 export const userRouter = router({
-  createOrFindUser: protectedProcedure
-    .mutation(async ({ ctx }) => {
-      if (ctx.user.firstName ){
-        const fullName = ctx.user.firstName + ctx.user.lastName
-        const user = await ctx.prisma.user.upsert({
-          where: { id: ctx.user.id },
-          create: { id: ctx.user.id ,
-          name: fullName},
-          update: {},
-        });
-        return user;
-      } 
-    }),
+  createOrFindUser: protectedProcedure.mutation(async ({ ctx }) => {
+    if (ctx.user.firstName) {
+      const fullName = ctx.user.firstName + " " + ctx.user.lastName;
+      const user = await ctx.prisma.user.upsert({
+        where: { id: ctx.user.id },
+        create: { id: ctx.user.id, fullName: fullName },
+        update: {},
+      });
+      return user;
+    }
+  }),
   findUsername: protectedProcedure
     .input(
       z.object({
@@ -27,7 +25,7 @@ export const userRouter = router({
           id: input.id,
         },
       });
-      return user?.name;
+      return user?.fullName;
     }),
   getUserRoles: protectedProcedure.query(async ({ ctx }) => {
     const userResponse = await ctx.prisma.user.findFirst({

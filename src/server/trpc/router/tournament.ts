@@ -172,12 +172,12 @@ export const tournamentRouter = router({
 getTopFiveParnterResults: protectedProcedure.input(z.object({ partner: z.string() })).query(async ({ ctx, input }) => {
   const results = await ctx.prisma.user.findMany({
     where: {
-      name: {
+      fullName: {
         search: input.partner
       }
-    },
-    take: 5,
+    }
   });
   return results;
 }),
+
 })

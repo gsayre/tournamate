@@ -3,7 +3,7 @@ import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
 import { Division, User } from "@prisma/client";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import React from "react";
+import React, { useEffect } from "react";
 import { Dispatch, SetStateAction, useState } from "react";
 import Sidebar from "../../../../components/Sidebar";
 import TopBar from "../../../../components/TopBar";
@@ -163,8 +163,17 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
   const [daysToPlay, setDaysToPlay] = useState("1");
   const [playerOneName, setPlayerOneName] = useState("");
   const [playerTwoName, setPlayerTwoName] = useState("");
-  const [playerOneResults, setPlayerOneResults] = useState<Array<User>>();
-  const playerOneQuery = trpc.tournament.getTopFiveParnterResults;
+  const [partnerOneSelection, setPartnerOneSelection] = useState("");
+  const [partnerTwoSelection, setPartnerTwoSelection] = useState("");
+  const { data } = trpc.tournament.getTopFiveParnterResults.useQuery(
+    { partner: playerOneName },
+    { enabled: !!playerOneName }
+  );
+  const { data: data2 } = trpc.tournament.getTopFiveParnterResults.useQuery(
+    { partner: playerTwoName },
+    { enabled: !!playerTwoName }
+  );
+  console.log(data);
 
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black/75">
@@ -186,19 +195,47 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
             <option value={"B"}>Both</option>
           </select>
           {daysToPlay === "B" ? (
-            <div className="flex flex-col">
-              <label>Who is your partner for day one?</label>
-              <input
-                type="text"
-                className="border-b-2 border-black focus:outline-none"
-                onChange={(e) => setPlayerOneName(e.target.value)}
-              ></input>
-              <label className="mt-4">Who is your partner for day two?</label>
-              <input
-                type="text"
-                className="border-b-2 border-black focus:outline-none"
-                onChange={(e) => setPlayerTwoName(e.target.value)}
-              ></input>
+            <div className="flex flex-row">
+              <div className="flex flex-col">
+                <label>Who is your partner for day one?</label>
+                <input
+                  type="text"
+                  className="border-b-2 border-black focus:outline-none"
+                  onChange={(e) => setPlayerOneName(e.target.value)}
+                ></input>
+                <div>
+                  <p>Partner Results</p>
+                  {data && (
+                    <div>
+                      {data.map((partner) => {
+                        return (
+                          <PartnerCard key={partner.id} partner={partner} setPartnerSelection={setPartnerOneSelection} partnerSelection={ partnerOneSelection} />
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <label>Who is your partner for day two?</label>
+                <input
+                  type="text"
+                  className="border-b-2 border-black focus:outline-none"
+                  onChange={(e) => setPlayerTwoName(e.target.value)}
+                ></input>
+                <div>
+                  <p>Partner Results</p>
+                  {data2 && (
+                    <div>
+                      {data2.map((partner) => {
+                        return (
+                          <PartnerCard key={partner.id} partner={partner} setPartnerSelection={setPartnerTwoSelection} partnerSelection={ partnerTwoSelection} />
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           ) : (
             <div className="flex flex-col">
@@ -209,22 +246,19 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
                   className="border-b-2 border-black focus:outline-none"
                   onChange={(e) => setPlayerOneName(e.target.value)}
                 ></input>
-                <button
-                  onClick={() =>
-                    setPlayerOneResults(
-                      playerOneQuery.useQuery({ partner: playerOneName }).data
-                    )
-                  }
-                >
-                  Search
-                </button>
               </div>
-
-              {playerOneResults?.map((result) => {
-                <div>
-                  <p>{result.name}</p>
-                </div>;
-              })}
+              <div>
+                <p>Partner Results</p>
+                {data && (
+                  <div className="flex flex-col space-y-2">
+                    {data.map((partner) => {
+                      return (
+                        <PartnerCard key={partner.id} partner={partner} setPartnerSelection={setPartnerOneSelection} partnerSelection={partnerOneSelection } />
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -235,6 +269,44 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
           Cancel
         </button>
       </div>
+    </div>
+  );
+}
+
+type PartnerCardProps = {
+  partner: User;
+  partnerSelection: string;
+  setPartnerSelection: React.Dispatch<React.SetStateAction<string>>;
+};
+
+const PartnerCard = (props: PartnerCardProps) => {
+  return (
+    <div className="flex flex-row space-x-2 rounded-lg bg-white p-4 drop-shadow-lg">
+      <p className="text-xl font-semibold">{props.partner.id}</p>
+      <p className="text-xl font-semibold">{props.partner.fullName}</p>
+      <button onClick={() => {
+        if (props.partnerSelection === props.partner.fullName) {
+          props.setPartnerSelection("")
+        } else {
+          props.setPartnerSelection(props.partner.fullName);
+        }
+      }}>
+        {props.partnerSelection === props.partner.fullName ? (
+          <div>
+            <img
+              src={"/icons/icons8-checked-checkbox-48.png"}
+              alt=""
+              className="h-14 w-14"
+            />
+          </div>
+        ) : (
+          <img
+            src={"/icons/icons8-unchecked-checkbox-50.png"}
+            alt=""
+            className="h-10 w-10"
+          />
+        )}
+      </button>
     </div>
   );
 }

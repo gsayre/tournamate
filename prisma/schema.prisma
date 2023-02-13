@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["referentialIntegrity", "fullTextIndex", "fullTextSearch"]
+  previewFeatures = ["fullTextIndex", "fullTextSearch"]
 }
 
 datasource db {
@@ -11,14 +11,14 @@ datasource db {
 
 model User {
   id            String    @id
-  name         String
+  fullName         String
   isAdmin       Boolean   @default(false)
   isTournamentDirector Boolean @default(false)
   tdRequest TournamentDirectorRequest?
   teamsParticipation UsersInTeam[]
   tournamentDirected Tournament[] 
 
-  @@fulltext([name])
+  @@fulltext([fullName])
 }
 
 model VerificationToken {
