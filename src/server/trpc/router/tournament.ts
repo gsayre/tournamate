@@ -1,7 +1,6 @@
 import { router, protectedProcedure } from "../trpc";
 import { z } from "zod";
 import { Type, Format, Game } from "@prisma/client";
-import { create } from "domain";
 
 export const tournamentRouter = router({
   createTournament: protectedProcedure
@@ -179,5 +178,21 @@ getTopFiveParnterResults: protectedProcedure.input(z.object({ partner: z.string(
   });
   return results;
 }),
-
+  createTeamInvitation: protectedProcedure.input(z.object({ teammateId: z.string() })).mutation(async ({ ctx, input }) => {
+    const teamInvitation = await ctx.prisma.teamInvitation.create({
+      data: {
+        inviterId: ctx.user.id,
+        invitees: {
+          create: [
+            {
+              User: {
+                connect: { id: input.teammateId }
+              }
+            }
+          ]
+        }
+      },
+    });
+    return teamInvitation;
+  }),
 })

@@ -17,6 +17,8 @@ model User {
   tdRequest TournamentDirectorRequest?
   teamsParticipation UsersInTeam[]
   tournamentDirected Tournament[] 
+  invitationsSent TeamInvitation[] @relation("inviter")
+  teamInvitations UserInInvitation[]
 
   @@fulltext([fullName])
 }
@@ -27,6 +29,22 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model TeamInvitation {
+  inviteId Int @id @default(autoincrement())
+  inviter User @relation(fields: [inviterId], references: [id], name: "inviter")
+  inviterId String
+  invitees UserInInvitation[] 
+  @@unique([inviteId, inviterId])
+}
+
+model UserInInvitation {
+  inviteeId Int
+  userId String
+  TeamInvitation TeamInvitation @relation(fields: [inviteeId], references: [inviteId])
+  User User @relation(fields: [userId], references: [id])
+  @@id([inviteeId, userId])
 }
 
 model TournamentDirectorRequest {
