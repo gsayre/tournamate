@@ -33,6 +33,7 @@ export default function TournamentView() {
   const divisionData = trpc.tournament.getDivisions.useQuery({
     tournamentId: tId,
   }).data;
+  const inviteData = trpc.tournament.getTeamInvitations.useQuery().data
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
@@ -62,13 +63,20 @@ export default function TournamentView() {
                     </p>
                   </div>
                   <div className="h-5/6 w-0.5 bg-black" />
-                  <div className="flex w-1/2 flex-row justify-end p-2">
-                    <button
-                      className="h-8 w-32 items-center justify-center rounded-xl bg-white py-2 px-4 text-sm hover:bg-green-700"
-                      onClick={() => setModalOpen(true)}
-                    >
-                      Register
-                    </button>
+                  <div className="flex w-1/2 flex-col">
+                    <div className="flex w-1/2 flex-row justify-end p-2">
+                      <button
+                        className="h-8 w-32 items-center justify-center rounded-xl bg-white py-2 px-4 text-sm hover:bg-green-700"
+                        onClick={() => setModalOpen(true)}
+                      >
+                        Register
+                      </button>
+                    </div>
+                    <div className="flex flex-row p-4 space-x-4">
+                      {inviteData?.map((invite) => {
+                        return <InvitationCard key={invite.inviterId} inviter={invite.inviterId } />;
+                      })}
+                    </div>
                   </div>
                 </div>
                 <div className="p-4">
@@ -90,6 +98,25 @@ export default function TournamentView() {
     </>
   );
 }
+
+type invitationCardProps = {
+  inviter: string
+}
+
+const InvitationCard = (props: invitationCardProps) => {
+  return (
+    <div className="flex h-32 w-72 flex-col justify-between bg-white rounded-xl p-4">
+      <div className="flex flex-col">
+        <p className="text-sm font-semibold">{props.inviter}</p>
+        <p className="text-[#515151] text-xs">Invited you to play this tournament</p>
+      </div>
+      <div className="flex flex-row space-x-4">
+        <button className="h-8 w-32 items-center justify-center rounded-xl bg-white py-2 px-4 text-sm hover:bg-green-700">  Accept</button>
+        <button className="h-8 w-32 items-center justify-center rounded-xl bg-white py-2 px-4 text-sm hover:bg-red-700">  Decline</button>
+      </div>
+    </div>
+  );
+};
 
 type divAccordianProps = {
   division: Division;
@@ -160,6 +187,9 @@ type SignupModalProps = {
 };
 
 function SignupModal({ setModalOpen }: SignupModalProps) {
+  const router = useRouter();
+  const { tournamentId } = router.query;
+  const tId: number = parseInt(tournamentId as string);
   const [daysToPlay, setDaysToPlay] = useState("1");
   const [playerOneName, setPlayerOneName] = useState("");
   const [playerTwoName, setPlayerTwoName] = useState("");
@@ -173,7 +203,9 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
     { partner: playerTwoName },
     { enabled: !!playerTwoName }
   );
-  console.log(data);
+  const submitTeamInvitation =
+    trpc.tournament.createTeamInvitation.useMutation();
+ 
 
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black/75">
@@ -188,7 +220,13 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
             name="type"
             id="type"
             className="border-2"
-            onChange={(e) => setDaysToPlay(e.target.value)}
+            onChange={(e) => {
+              setDaysToPlay(e.target.value)
+              setPlayerOneName("")
+              setPlayerTwoName("")
+              setPartnerOneSelection("")
+              setPartnerTwoSelection("")
+            }}
           >
             <option value={"1"}>Day One</option>
             <option value={"2"}>Day Two</option>
@@ -201,6 +239,7 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
                 <input
                   type="text"
                   className="border-b-2 border-black focus:outline-none"
+                  value={playerOneName}
                   onChange={(e) => setPlayerOneName(e.target.value)}
                 ></input>
                 <div>
@@ -209,7 +248,12 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
                     <div>
                       {data.map((partner) => {
                         return (
-                          <PartnerCard key={partner.id} partner={partner} setPartnerSelection={setPartnerOneSelection} partnerSelection={ partnerOneSelection} />
+                          <PartnerCard
+                            key={partner.id}
+                            partner={partner}
+                            setPartnerSelection={setPartnerOneSelection}
+                            partnerSelection={partnerOneSelection}
+                          />
                         );
                       })}
                     </div>
@@ -221,6 +265,7 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
                 <input
                   type="text"
                   className="border-b-2 border-black focus:outline-none"
+                  value={playerTwoName}
                   onChange={(e) => setPlayerTwoName(e.target.value)}
                 ></input>
                 <div>
@@ -229,7 +274,12 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
                     <div>
                       {data2.map((partner) => {
                         return (
-                          <PartnerCard key={partner.id} partner={partner} setPartnerSelection={setPartnerTwoSelection} partnerSelection={ partnerTwoSelection} />
+                          <PartnerCard
+                            key={partner.id}
+                            partner={partner}
+                            setPartnerSelection={setPartnerTwoSelection}
+                            partnerSelection={partnerTwoSelection}
+                          />
                         );
                       })}
                     </div>
@@ -243,7 +293,8 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
               <div className="flex flex-row space-x-2">
                 <input
                   type="text"
-                  className="border-b-2 border-black focus:outline-none"
+                    className="border-b-2 border-black focus:outline-none"
+                    value={playerOneName}
                   onChange={(e) => setPlayerOneName(e.target.value)}
                 ></input>
               </div>
@@ -253,7 +304,12 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
                   <div className="flex flex-col space-y-2">
                     {data.map((partner) => {
                       return (
-                        <PartnerCard key={partner.id} partner={partner} setPartnerSelection={setPartnerOneSelection} partnerSelection={partnerOneSelection } />
+                        <PartnerCard
+                          key={partner.id}
+                          partner={partner}
+                          setPartnerSelection={setPartnerOneSelection}
+                          partnerSelection={partnerOneSelection}
+                        />
                       );
                     })}
                   </div>
@@ -262,12 +318,32 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
             </div>
           )}
         </div>
-        <button
-          onClick={() => setModalOpen(false)}
-          className="h-10 w-28 rounded-3xl bg-red-500 p-2 text-xl font-semibold text-white hover:bg-red-600"
-        >
-          Cancel
-        </button>
+        <div className="flex w-full justify-end space-x-2">
+          <button
+            onClick={() => {
+              partnerOneSelection !== ''
+                ? submitTeamInvitation.mutate({
+                  teammateId: partnerOneSelection,
+                  tournamentId: tId
+                })
+                : null;
+              partnerTwoSelection !== ''
+                ? submitTeamInvitation.mutate({
+                  teammateId: partnerTwoSelection,
+                  tournamentId: tId
+                }) : null;
+              setModalOpen(false);
+            }}
+            className="h-10 w-28 rounded-3xl bg-green-500 p-2 text-xl font-semibold text-white hover:bg-green-600">
+            Submit
+          </button>
+          <button
+            onClick={() => setModalOpen(false)}
+            className="h-10 w-28 rounded-3xl bg-red-500 p-2 text-xl font-semibold text-white hover:bg-red-600"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -285,13 +361,13 @@ const PartnerCard = (props: PartnerCardProps) => {
       <p className="text-xl font-semibold">{props.partner.id}</p>
       <p className="text-xl font-semibold">{props.partner.fullName}</p>
       <button onClick={() => {
-        if (props.partnerSelection === props.partner.fullName) {
+        if (props.partnerSelection === props.partner.id) {
           props.setPartnerSelection("")
         } else {
-          props.setPartnerSelection(props.partner.fullName);
+          props.setPartnerSelection(props.partner.id);
         }
       }}>
-        {props.partnerSelection === props.partner.fullName ? (
+        {props.partnerSelection === props.partner.id ? (
           <div>
             <img
               src={"/icons/icons8-checked-checkbox-48.png"}

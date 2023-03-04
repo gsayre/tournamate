@@ -178,14 +178,15 @@ getTopFiveParnterResults: protectedProcedure.input(z.object({ partner: z.string(
   });
   return results;
 }),
-  createTeamInvitation: protectedProcedure.input(z.object({ teammateId: z.string() })).mutation(async ({ ctx, input }) => {
+  createTeamInvitation: protectedProcedure.input(z.object({ teammateId: z.string(), tournamentId: z.coerce.number() })).mutation(async ({ ctx, input }) => {
     const teamInvitation = await ctx.prisma.teamInvitation.create({
       data: {
         inviterId: ctx.user.id,
+        tournamentId: input.tournamentId,
         invitees: {
           create: [
             {
-              User: {
+              Invitee: {
                 connect: { id: input.teammateId }
               }
             }
@@ -194,5 +195,49 @@ getTopFiveParnterResults: protectedProcedure.input(z.object({ partner: z.string(
       },
     });
     return teamInvitation;
+  }),
+  getTeamInvitations: protectedProcedure.query(async ({ ctx }) => {
+    const teamInvitations = await ctx.prisma.teamInvitation.findMany({
+      where: {
+        invitees: {
+          some: {
+            Invitee: {
+              id: ctx.user.id
+            }
+          }
+        }
+      }
+    })
+    return teamInvitations;
+  }),
+  acceptTeamInvitation: protectedProcedure.input(z.object({ teamInvitationId: z.number(), inviterId: z.string() })).mutation(async ({ ctx, input }) => {
+    const teamInvitation = await ctx.prisma.teamInvitation.delete({
+      where: {
+        inviteId: input.teamInvitationId
+      }
+    });
+    //delete the users in invitation field
+    if (!teamInvitation) {
+      throw new Error("Team invitation not found");
+    }
+    //create a team
+    // const team = await ctx.prisma.team.create({
+    //   data: {
+    //     tournamentId: teamInvitation.tournamentId,
+    //     divisionId:
+    //   }
+    // })
+    return null;
+  }),
+  declineTeamInvitation: protectedProcedure.input(z.object({ teamInvitationId: z.number() })).mutation(async ({ ctx, input }) => {
+    const teamInvitation = await ctx.prisma.teamInvitation.delete({
+      where: {
+        inviteId: input.teamInvitationId
+      }
+    });
+    if (!teamInvitation) {
+      throw new Error("Team invitation not found");
+    }
+    return null;
   }),
 })

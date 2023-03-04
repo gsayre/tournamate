@@ -36,15 +36,17 @@ model TeamInvitation {
   inviter User @relation(fields: [inviterId], references: [id], name: "inviter")
   inviterId String
   invitees UserInInvitation[] 
+  tournamentId Int
+  tournament Tournament @relation(fields: [tournamentId], references: [tournamentId])
   @@unique([inviteId, inviterId])
 }
 
 model UserInInvitation {
-  inviteeId Int
-  userId String
-  TeamInvitation TeamInvitation @relation(fields: [inviteeId], references: [inviteId])
-  User User @relation(fields: [userId], references: [id])
-  @@id([inviteeId, userId])
+  invitationId Int
+  inviteeId String
+  TeamInvitation TeamInvitation @relation(fields: [invitationId], references: [inviteId])
+  Invitee User @relation(fields: [inviteeId], references: [id])
+  @@id([inviteeId, invitationId])
 }
 
 model TournamentDirectorRequest {
@@ -111,6 +113,7 @@ model Tournament {
   tournamentDirector User @relation(fields: [tournamentDirectorId], references: [id])
   tournamentDirectorId String 
   divisions Division[]
+  teamInvitations TeamInvitation[]
   @@unique([tournamentDirectorId, tournamentId])
 }
 
