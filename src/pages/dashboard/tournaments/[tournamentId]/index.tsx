@@ -35,11 +35,13 @@ export default function TournamentView() {
   }).data;
   const inviteData = trpc.tournament.getTeamInvitations.useQuery().data
   const [modalOpen, setModalOpen] = useState(false);
+  const firstDayDivisions = divisionData?.filter(division => division.type == tournamentData?.tournament.dayOneFormat) 
+  const secondDayDivisions = divisionData?.filter(division => division.type == tournamentData?.tournament.dayTwoFormat)
 
   return (
     <>
-      {modalOpen ? (
-        <SignupModal setModalOpen={setModalOpen} />
+      {modalOpen && firstDayDivisions && secondDayDivisions  ? (
+        <SignupModal setModalOpen={setModalOpen} divisionsPerDay={[firstDayDivisions, secondDayDivisions]}/>
       ) : (
         <div className="flex h-screen w-screen">
           <div className="flex h-full w-full flex-row">
@@ -184,9 +186,10 @@ const PoolTable = (props: any) => {
 };
 type SignupModalProps = {
   setModalOpen: Dispatch<SetStateAction<boolean>>;
+  divisionsPerDay: Array<Division[]>
 };
 
-function SignupModal({ setModalOpen }: SignupModalProps) {
+function SignupModal({ setModalOpen, divisionsPerDay }: SignupModalProps) {
   const router = useRouter();
   const { tournamentId } = router.query;
   const tId: number = parseInt(tournamentId as string);
@@ -195,6 +198,8 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
   const [playerTwoName, setPlayerTwoName] = useState("");
   const [partnerOneSelection, setPartnerOneSelection] = useState("");
   const [partnerTwoSelection, setPartnerTwoSelection] = useState("");
+  const [partnerOneDivisionSelection, setPartnerOneDivisionSelection] = useState(0);
+  const [partnerTwoDivisionSelection, setPartnerTwoDivisionSelection] = useState(0);
   const { data } = trpc.tournament.getTopFiveParnterResults.useQuery(
     { partner: playerOneName },
     { enabled: !!playerOneName }
@@ -205,6 +210,7 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
   );
   const submitTeamInvitation =
     trpc.tournament.createTeamInvitation.useMutation();
+    console.log(divisionsPerDay)
  
 
   return (
@@ -213,7 +219,11 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
         <p className="text-2xl font-semibold">Sign Up</p>
         <p>{daysToPlay}</p>
         <p>{playerOneName}</p>
+        <p>{partnerOneSelection}</p>
+        <p>{partnerOneDivisionSelection}</p>
         <p>{playerTwoName}</p>
+        <p>{partnerTwoSelection}</p>
+        <p>{partnerTwoDivisionSelection}</p>
         <div className="flex w-1/2 flex-col space-y-2">
           <label>Which day would you like to play?</label>
           <select
@@ -259,6 +269,7 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
                     </div>
                   )}
                 </div>
+                <DivisionSelector divisionSelections={divisionsPerDay[0]} setPartnerDivision={setPartnerOneDivisionSelection}/>
               </div>
               <div className="flex flex-col">
                 <label>Who is your partner for day two?</label>
@@ -285,6 +296,7 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
                     </div>
                   )}
                 </div>
+                <DivisionSelector divisionSelections={divisionsPerDay[0]} setPartnerDivision={setPartnerTwoDivisionSelection}/>
               </div>
             </div>
           ) : (
@@ -315,6 +327,7 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
                   </div>
                 )}
               </div>
+              <DivisionSelector divisionSelections={divisionsPerDay[0]} setPartnerDivision={setPartnerOneDivisionSelection}/>
             </div>
           )}
         </div>
@@ -324,13 +337,15 @@ function SignupModal({ setModalOpen }: SignupModalProps) {
               partnerOneSelection !== ''
                 ? submitTeamInvitation.mutate({
                   teammateId: partnerOneSelection,
-                  tournamentId: tId
+                  tournamentId: tId,
+                  divisionId: partnerOneDivisionSelection
                 })
                 : null;
               partnerTwoSelection !== ''
                 ? submitTeamInvitation.mutate({
                   teammateId: partnerTwoSelection,
-                  tournamentId: tId
+                  tournamentId: tId,
+                  divisionId: partnerTwoDivisionSelection
                 }) : null;
               setModalOpen(false);
             }}
@@ -385,4 +400,29 @@ const PartnerCard = (props: PartnerCardProps) => {
       </button>
     </div>
   );
+}
+
+type DivisionSelectorProps = {
+  divisionSelections: Division[];
+  setPartnerDivision: React.Dispatch<React.SetStateAction<number>>
+};
+
+const DivisionSelector = ({divisionSelections, setPartnerDivision}: DivisionSelectorProps) => {
+  return(
+    <div className="flex flex-col">
+      <label>What division are you playing in?</label>
+      <select
+        className="border-b-2 border-black focus:outline-none"
+        onChange={(e) => {
+          setPartnerDivision(Number(e.target.value))
+        }}
+      >
+        {divisionSelections.map(divisionSelection => {
+          return(
+            <option key={divisionSelection.divisionId} value={divisionSelection.divisionId}>{divisionSelection.name}</option>
+          )})}
+      </select>
+    </div>
+
+  )
 }

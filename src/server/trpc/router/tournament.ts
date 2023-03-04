@@ -178,11 +178,21 @@ getTopFiveParnterResults: protectedProcedure.input(z.object({ partner: z.string(
   });
   return results;
 }),
-  createTeamInvitation: protectedProcedure.input(z.object({ teammateId: z.string(), tournamentId: z.coerce.number() })).mutation(async ({ ctx, input }) => {
+getDivisionsForPartner: protectedProcedure.input(z.object({ tournamentId: z.number(), type: z.string() })).query(async ({ ctx, input }) => {
+  const divisions = await ctx.prisma.division.findMany({
+    where: {
+      tournamentId: input.tournamentId,
+      type: input.type
+    },
+  });
+  return divisions;
+}),
+  createTeamInvitation: protectedProcedure.input(z.object({ teammateId: z.string(), tournamentId: z.coerce.number(), divisionId: z.number() })).mutation(async ({ ctx, input }) => {
     const teamInvitation = await ctx.prisma.teamInvitation.create({
       data: {
         inviterId: ctx.user.id,
         tournamentId: input.tournamentId,
+        divisionId: input.divisionId,
         invitees: {
           create: [
             {

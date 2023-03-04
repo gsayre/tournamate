@@ -38,6 +38,7 @@ model TeamInvitation {
   invitees UserInInvitation[] 
   tournamentId Int
   tournament Tournament @relation(fields: [tournamentId], references: [tournamentId])
+  divisionId Int
   @@unique([inviteId, inviterId])
 }
 
