@@ -2,6 +2,14 @@ import { router, protectedProcedure, publicProcedure } from "../trpc";
 import { z } from "zod";
 
 export const userRouter = router({
+  getUser: protectedProcedure
+    .input(z.object({ inviterId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const user = await ctx.prisma.user.findUnique({
+        where: { id: input.inviterId },
+      });
+      return user;
+    }),
   createOrFindUser: protectedProcedure.mutation(async ({ ctx }) => {
     if (ctx.user.firstName) {
       const fullName = ctx.user.firstName + " " + ctx.user.lastName;

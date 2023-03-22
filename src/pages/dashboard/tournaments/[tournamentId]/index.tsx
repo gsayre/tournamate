@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
-import { Division, User } from "@prisma/client";
+import { Division, Team, TeamInvitation, User, UsersInTeam } from "@prisma/client";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import React, { useEffect } from "react";
@@ -33,15 +33,34 @@ export default function TournamentView() {
   const divisionData = trpc.tournament.getDivisions.useQuery({
     tournamentId: tId,
   }).data;
-  const inviteData = trpc.tournament.getTeamInvitations.useQuery().data
+  const inviteData = trpc.tournament.getTeamInvitations.useQuery().data;
   const [modalOpen, setModalOpen] = useState(false);
-  const firstDayDivisions = divisionData?.filter(division => division.type == tournamentData?.tournament.dayOneFormat) 
-  const secondDayDivisions = divisionData?.filter(division => division.type == tournamentData?.tournament.dayTwoFormat)
+  let firstDayDivisions;
+  let secondDayDivisions;
+  if (
+    divisionData &&
+    tournamentData &&
+    tournamentData.tournament.dayOneFormat
+  ) {
+    firstDayDivisions = filterDivisions(
+      divisionData,
+      tournamentData.tournament.dayOneFormat
+    );
+    if (tournamentData.tournament.dayTwoFormat) {
+      secondDayDivisions = filterDivisions(
+        divisionData,
+        tournamentData.tournament.dayTwoFormat
+      );
+    }
+  }
 
   return (
     <>
-      {modalOpen && firstDayDivisions && secondDayDivisions  ? (
-        <SignupModal setModalOpen={setModalOpen} divisionsPerDay={[firstDayDivisions, secondDayDivisions]}/>
+      {modalOpen && firstDayDivisions && secondDayDivisions ? (
+        <SignupModal
+          setModalOpen={setModalOpen}
+          divisionsPerDay={[firstDayDivisions, secondDayDivisions]}
+        />
       ) : (
         <div className="flex h-screen w-screen">
           <div className="flex h-full w-full flex-row">
@@ -74,9 +93,16 @@ export default function TournamentView() {
                         Register
                       </button>
                     </div>
-                    <div className="flex flex-row p-4 space-x-4">
+                    <div className="flex flex-row space-x-4 p-4">
                       {inviteData?.map((invite) => {
-                        return <InvitationCard key={invite.inviterId} inviter={invite.inviterId } />;
+                        return (
+                          <InvitationCard
+                            key={invite.inviterId}
+                            inviterId={invite.inviterId}
+                            inviteDetails={invite}
+                            tournamentId={tId}
+                          />
+                        );
                       })}
                     </div>
                   </div>
@@ -101,31 +127,80 @@ export default function TournamentView() {
   );
 }
 
-type invitationCardProps = {
-  inviter: string
+function filterDivisions(divisions: Division[], dayFormat: string) {
+  return divisions.filter((div) => {
+    if (div.type == "MENS" || div.type == "WOMENS") {
+      if (dayFormat == "SAME_SEX_DOUBLES" || dayFormat == "SAME_SEX_SIXES" || dayFormat == "SAME_SEX_TRIPLES") {
+        return true;
+      }
+    }
+    if (div.type == "COED") {
+      if (dayFormat == "COED_DOUBLES" || dayFormat == "COED_SIXES" || dayFormat == "REVERSE_COED_DOUBLES" || dayFormat == "REVERSE_COED_QUADS") {
+        return true;
+      }
+    }
+  });
 }
 
-const InvitationCard = (props: invitationCardProps) => {
+type invitationCardProps = {
+  inviterId: string;
+  inviteDetails: TeamInvitation;
+  tournamentId: number
+};
+
+const InvitationCard = ({ inviterId, inviteDetails, tournamentId }: invitationCardProps) => {
+  const inviterData = trpc.user.getUser.useQuery({ inviterId: inviterId }).data;
+  const divisionData = trpc.tournament.getDivision.useQuery({ divisionId: inviteDetails.divisionId }).data;
+  const acceptInvitation = trpc.tournament.acceptTeamInvitation.useMutation()
+  const declineInvitation = trpc.tournament.declineTeamInvitation.useMutation()
   return (
-    <div className="flex h-32 w-72 flex-col justify-between bg-white rounded-xl p-4">
-      <div className="flex flex-col">
-        <p className="text-sm font-semibold">{props.inviter}</p>
-        <p className="text-[#515151] text-xs">Invited you to play this tournament</p>
+    <div className="flex h-32 w-72 flex-col justify-between rounded-xl bg-white p-4">
+      <div className="flex flex-col ">
+        <p className="pb-2 text-center text-lg font-semibold">
+          {inviterData?.fullName}
+        </p>
+        <p className="text-xs text-[#515151]">
+          Invited you to play{" "}
+          <span className="font-bold capitalize">
+            {divisionData?.type.toLocaleLowerCase() + " " + divisionData?.name}
+          </span>{" "}
+          in this tournament
+        </p>
       </div>
       <div className="flex flex-row space-x-4">
-        <button className="h-8 w-32 items-center justify-center rounded-xl bg-white py-2 px-4 text-sm hover:bg-green-700">  Accept</button>
-        <button className="h-8 w-32 items-center justify-center rounded-xl bg-white py-2 px-4 text-sm hover:bg-red-700">  Decline</button>
+        <button
+          className="h-8 w-32 items-center justify-center rounded-xl bg-white py-2 px-4 text-sm hover:bg-green-700"
+          onClick={() => acceptInvitation.mutate({ teamInvitationId: inviteDetails.inviteId, inviterId: inviterId, tournamentId: tournamentId})}
+        >
+          {" "}
+          Accept
+        </button>
+        <button
+          className="h-8 w-32 items-center justify-center rounded-xl bg-white py-2 px-4 text-sm hover:bg-red-700"
+          onClick={() => declineInvitation.mutate({teamInvitationId: inviteDetails.inviteId})}
+        >
+          {" "}
+          Decline
+        </button>
       </div>
     </div>
   );
 };
 
 type divAccordianProps = {
-  division: Division;
+  division: (Division & {
+    entries: (Team & {
+      players: (UsersInTeam & {
+        user: User;
+      })[];
+    })[];
+  });
 };
 
-const DivisionAccordian = (props: divAccordianProps) => {
+const DivisionAccordian = ({division} : divAccordianProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDayOf, setIsDayOf] = useState(true);
+  console.log(division)
 
   return (
     <div
@@ -149,25 +224,68 @@ const DivisionAccordian = (props: divAccordianProps) => {
           />
         )}
         <p className="text-2xl font-semibold">
-          {props.division.type + " - " + props.division.name}
+          {division.type + " - " + division.name}
         </p>
+        <button
+          className="rounded-lg bg-white p-2 font-semibold text-black"
+          onClick={() => {
+            setIsDayOf(!isDayOf);
+          }}
+        >
+          Toggle Day Of
+        </button>
       </div>
 
       {isOpen && (
-        <div className="flex w-full flex-col bg-white p-4 text-black">
-          <div className="flex flex-col">
-            <p className="pb-2 text-2xl">Pools</p>
-            <div className="flex flex-row space-x-4">
-              <PoolTable />
-              <PoolTable />
-              <PoolTable />
-              <PoolTable />
+        <>
+          {isDayOf ? (
+            <div className="flex w-full flex-col bg-white p-4 text-black">
+              <div className="flex flex-col">
+                <p className="pb-2 text-2xl">Pools</p>
+                <div className="flex flex-row space-x-4">
+                  <PoolTable />
+                  <PoolTable />
+                  <PoolTable />
+                  <PoolTable />
+                </div>
+              </div>
+              <div className="flex flex-col pt-4">
+                <p className="pb-2 text-2xl">Bracket</p>
+              </div>
             </div>
-          </div>
-          <div className="flex flex-col pt-4">
-            <p className="pb-2 text-2xl">Bracket</p>
-          </div>
-        </div>
+          ) : (
+            <div className="flex w-full flex-col bg-white p-4 text-black">
+              <div className="flex flex-col">
+                <p className="pb-2 text-2xl">Entries</p>
+                <div className="flex flex-row space-x-4">
+                  {division.entries &&
+                    division.entries.map((entry) => {
+                      return (
+                        <div key={entry.teamId}>
+                          {entry.players.map((player) => {
+                            return (
+                              <div key={player.userId}>
+                                {player.user.fullName}{" "}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                </div>
+                <div className="flex flex-col pt-2">
+                  <p className="pb-2 text-2xl">Pools</p>
+                  <div className="flex flex-row space-x-4">
+                    <PoolTable />
+                    <PoolTable />
+                    <PoolTable />
+                    <PoolTable />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -186,7 +304,7 @@ const PoolTable = (props: any) => {
 };
 type SignupModalProps = {
   setModalOpen: Dispatch<SetStateAction<boolean>>;
-  divisionsPerDay: Array<Division[]>
+  divisionsPerDay: Array<Division[]>;
 };
 
 function SignupModal({ setModalOpen, divisionsPerDay }: SignupModalProps) {
@@ -198,8 +316,10 @@ function SignupModal({ setModalOpen, divisionsPerDay }: SignupModalProps) {
   const [playerTwoName, setPlayerTwoName] = useState("");
   const [partnerOneSelection, setPartnerOneSelection] = useState("");
   const [partnerTwoSelection, setPartnerTwoSelection] = useState("");
-  const [partnerOneDivisionSelection, setPartnerOneDivisionSelection] = useState(0);
-  const [partnerTwoDivisionSelection, setPartnerTwoDivisionSelection] = useState(0);
+  const [partnerOneDivisionSelection, setPartnerOneDivisionSelection] =
+    useState(0);
+  const [partnerTwoDivisionSelection, setPartnerTwoDivisionSelection] =
+    useState(0);
   const { data } = trpc.tournament.getTopFiveParnterResults.useQuery(
     { partner: playerOneName },
     { enabled: !!playerOneName }
@@ -210,32 +330,25 @@ function SignupModal({ setModalOpen, divisionsPerDay }: SignupModalProps) {
   );
   const submitTeamInvitation =
     trpc.tournament.createTeamInvitation.useMutation();
-    console.log(divisionsPerDay)
- 
 
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black/75">
-      <div className="flex w-10/12 flex-col space-y-4 bg-white p-4">
+      <div className="flex w-fit flex-col space-y-4 rounded-lg bg-white p-8">
         <p className="text-2xl font-semibold">Sign Up</p>
-        <p>{daysToPlay}</p>
-        <p>{playerOneName}</p>
-        <p>{partnerOneSelection}</p>
-        <p>{partnerOneDivisionSelection}</p>
-        <p>{playerTwoName}</p>
-        <p>{partnerTwoSelection}</p>
-        <p>{partnerTwoDivisionSelection}</p>
-        <div className="flex w-1/2 flex-col space-y-2">
+        <div className="flex w-full flex-col space-y-2">
           <label>Which day would you like to play?</label>
           <select
             name="type"
             id="type"
             className="border-2"
             onChange={(e) => {
-              setDaysToPlay(e.target.value)
-              setPlayerOneName("")
-              setPlayerTwoName("")
-              setPartnerOneSelection("")
-              setPartnerTwoSelection("")
+              setDaysToPlay(e.target.value);
+              setPlayerOneName("");
+              setPlayerTwoName("");
+              setPartnerOneSelection("");
+              setPartnerTwoSelection("");
+              setPartnerOneDivisionSelection(0);
+              setPartnerTwoDivisionSelection(0);
             }}
           >
             <option value={"1"}>Day One</option>
@@ -243,8 +356,8 @@ function SignupModal({ setModalOpen, divisionsPerDay }: SignupModalProps) {
             <option value={"B"}>Both</option>
           </select>
           {daysToPlay === "B" ? (
-            <div className="flex flex-row">
-              <div className="flex flex-col">
+            <div className="flex flex-row space-x-8">
+              <div className="flex w-1/2 flex-col">
                 <label>Who is your partner for day one?</label>
                 <input
                   type="text"
@@ -269,9 +382,13 @@ function SignupModal({ setModalOpen, divisionsPerDay }: SignupModalProps) {
                     </div>
                   )}
                 </div>
-                <DivisionSelector divisionSelections={divisionsPerDay[0]} setPartnerDivision={setPartnerOneDivisionSelection}/>
+                <DivisionSelector
+                  divisionSelections={divisionsPerDay[0]}
+                  divisionSelected={partnerOneDivisionSelection}
+                  setPartnerDivision={setPartnerOneDivisionSelection}
+                />
               </div>
-              <div className="flex flex-col">
+              <div className="flex w-1/2 flex-col">
                 <label>Who is your partner for day two?</label>
                 <input
                   type="text"
@@ -296,7 +413,11 @@ function SignupModal({ setModalOpen, divisionsPerDay }: SignupModalProps) {
                     </div>
                   )}
                 </div>
-                <DivisionSelector divisionSelections={divisionsPerDay[0]} setPartnerDivision={setPartnerTwoDivisionSelection}/>
+                <DivisionSelector
+                  divisionSelections={divisionsPerDay[1]}
+                  divisionSelected={partnerTwoDivisionSelection}
+                  setPartnerDivision={setPartnerTwoDivisionSelection}
+                />
               </div>
             </div>
           ) : (
@@ -305,8 +426,8 @@ function SignupModal({ setModalOpen, divisionsPerDay }: SignupModalProps) {
               <div className="flex flex-row space-x-2">
                 <input
                   type="text"
-                    className="border-b-2 border-black focus:outline-none"
-                    value={playerOneName}
+                  className="border-b-2 border-black focus:outline-none"
+                  value={playerOneName}
                   onChange={(e) => setPlayerOneName(e.target.value)}
                 ></input>
               </div>
@@ -327,29 +448,35 @@ function SignupModal({ setModalOpen, divisionsPerDay }: SignupModalProps) {
                   </div>
                 )}
               </div>
-              <DivisionSelector divisionSelections={divisionsPerDay[0]} setPartnerDivision={setPartnerOneDivisionSelection}/>
+              <DivisionSelector
+                divisionSelections={divisionsPerDay[0]}
+                divisionSelected={partnerOneDivisionSelection}
+                setPartnerDivision={setPartnerOneDivisionSelection}
+              />
             </div>
           )}
         </div>
         <div className="flex w-full justify-end space-x-2">
           <button
             onClick={() => {
-              partnerOneSelection !== ''
+              partnerOneSelection !== ""
                 ? submitTeamInvitation.mutate({
-                  teammateId: partnerOneSelection,
-                  tournamentId: tId,
-                  divisionId: partnerOneDivisionSelection
-                })
+                    teammateId: partnerOneSelection,
+                    tournamentId: tId,
+                    divisionId: partnerOneDivisionSelection,
+                  })
                 : null;
-              partnerTwoSelection !== ''
+              partnerTwoSelection !== ""
                 ? submitTeamInvitation.mutate({
-                  teammateId: partnerTwoSelection,
-                  tournamentId: tId,
-                  divisionId: partnerTwoDivisionSelection
-                }) : null;
+                    teammateId: partnerTwoSelection,
+                    tournamentId: tId,
+                    divisionId: partnerTwoDivisionSelection,
+                  })
+                : null;
               setModalOpen(false);
             }}
-            className="h-10 w-28 rounded-3xl bg-green-500 p-2 text-xl font-semibold text-white hover:bg-green-600">
+            className="h-10 w-28 rounded-3xl bg-green-500 p-2 text-xl font-semibold text-white hover:bg-green-600"
+          >
             Submit
           </button>
           <button
@@ -373,15 +500,16 @@ type PartnerCardProps = {
 const PartnerCard = (props: PartnerCardProps) => {
   return (
     <div className="flex flex-row space-x-2 rounded-lg bg-white p-4 drop-shadow-lg">
-      <p className="text-xl font-semibold">{props.partner.id}</p>
       <p className="text-xl font-semibold">{props.partner.fullName}</p>
-      <button onClick={() => {
-        if (props.partnerSelection === props.partner.id) {
-          props.setPartnerSelection("")
-        } else {
-          props.setPartnerSelection(props.partner.id);
-        }
-      }}>
+      <button
+        onClick={() => {
+          if (props.partnerSelection === props.partner.id) {
+            props.setPartnerSelection("");
+          } else {
+            props.setPartnerSelection(props.partner.id);
+          }
+        }}
+      >
         {props.partnerSelection === props.partner.id ? (
           <div>
             <img
@@ -400,29 +528,35 @@ const PartnerCard = (props: PartnerCardProps) => {
       </button>
     </div>
   );
-}
+};
 
 type DivisionSelectorProps = {
   divisionSelections: Division[];
-  setPartnerDivision: React.Dispatch<React.SetStateAction<number>>
+  divisionSelected: number;
+  setPartnerDivision: React.Dispatch<React.SetStateAction<number>>;
 };
 
-const DivisionSelector = ({divisionSelections, setPartnerDivision}: DivisionSelectorProps) => {
-  return(
-    <div className="flex flex-col">
-      <label>What division are you playing in?</label>
-      <select
-        className="border-b-2 border-black focus:outline-none"
-        onChange={(e) => {
-          setPartnerDivision(Number(e.target.value))
-        }}
-      >
-        {divisionSelections.map(divisionSelection => {
-          return(
-            <option key={divisionSelection.divisionId} value={divisionSelection.divisionId}>{divisionSelection.name}</option>
-          )})}
-      </select>
+const DivisionSelector = ({
+  divisionSelections,
+  divisionSelected,
+  setPartnerDivision,
+}: DivisionSelectorProps) => {
+  return (
+    <div className="flex flex-col ">
+      <label className="pb-2">What division are you playing in?</label>
+      <div className="flex flex-row flex-wrap gap-2">
+        {divisionSelections.map((divisionSelection) => {
+          return (
+            <div
+              key={divisionSelection.divisionId}
+              onClick={() => setPartnerDivision(divisionSelection.divisionId)}
+              className={"flex h-28 w-28 rounded-lg bg-white p-4 drop-shadow-lg text-xl text-center font-semibold items-center" + (divisionSelection.divisionId === divisionSelected ? " bg-green-500 text-white" : "")}
+            >
+              {divisionSelection.type + " - " + divisionSelection.name}
+            </div>
+          );
+        })}
+      </div>
     </div>
-
-  )
-}
+  );
+};

@@ -14,6 +14,7 @@ model User {
   fullName         String
   isAdmin       Boolean   @default(false)
   isTournamentDirector Boolean @default(false)
+  playerRating  Int       @default(1000)
   tdRequest TournamentDirectorRequest?
   teamsParticipation UsersInTeam[]
   tournamentDirected Tournament[] 
@@ -45,7 +46,7 @@ model TeamInvitation {
 model UserInInvitation {
   invitationId Int
   inviteeId String
-  TeamInvitation TeamInvitation @relation(fields: [invitationId], references: [inviteId])
+  TeamInvitation TeamInvitation @relation(fields: [invitationId], references: [inviteId], onDelete: Cascade)
   Invitee User @relation(fields: [inviteeId], references: [id])
   @@id([inviteeId, invitationId])
 }
@@ -59,6 +60,7 @@ model TournamentDirectorRequest {
 
 model Team {
   teamId Int @id @default(autoincrement())
+  teamRating Int @default(1000)
   division Division @relation(fields: [divisionId], references: [divisionId])
   divisionId Int
   tournament Tournament @relation(fields: [tournamentId], references: [tournamentId])
@@ -66,15 +68,15 @@ model Team {
   players UsersInTeam[]
   games TeamInGame[]
   gamesReffed Game[]
-  pool Pool @relation(fields: [poolId], references: [poolId])
-  poolId Int
+  pool Pool? @relation(fields: [poolId], references: [poolId])
+  poolId String?
   @@unique([teamId, tournamentId])
 }
 
 model UsersInTeam {
   user User @relation(fields: [userId], references: [id])
   userId String
-  Team Team @relation(fields: [teamId], references: [teamId])
+  Team Team @relation(fields: [teamId], references: [teamId], onDelete: Cascade)
   teamId Int
   @@id([userId, teamId])
 }
@@ -96,8 +98,6 @@ enum Type {
   SAND
   INDOOR
 }
-
-
 
 model Tournament {
   tournamentId Int @id @default(autoincrement())
@@ -131,7 +131,7 @@ model Division {
 }
 
 model Pool {
-  poolId Int @id @default(autoincrement())
+  poolId String @id 
   division Division @relation(fields: [divisionId], references: [divisionId])
   divisionId Int
   games Game[]
@@ -155,7 +155,7 @@ model Game {
   referees Team @relation( fields: [refereeId], references: [teamId])
   refereeId Int 
   pool Pool? @relation(fields: [poolId], references: [poolId])
-  poolId Int?
+  poolId String?
   bracket Bracket? @relation(fields: [bracketId], references: [bracketId])
   bracketId Int?
 
