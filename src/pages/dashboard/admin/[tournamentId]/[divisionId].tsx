@@ -98,59 +98,91 @@ export default function Admin() {
               <div className="flex w-full flex-col space-y-8">
                 <div className="flex h-2/6 w-full flex-col bg-white p-2 drop-shadow-xl">
                   <p>Pools</p>
-                  <div className="flex flex-rows space-x-4">
+                  <div className="flex-rows flex space-x-4">
                     {pools.map((pool, i) => {
                       return (
                         <>
-                          <div className="w-96 flex flex-col">
-                            <div className="flex">Pool {i}</div>
-
-                            <div className="flex flex-row">
-                              <div className="flex">Place</div>
-                              <div className="flex">Team</div>
-                              <div className="flex">Record</div>
+                          <div className="flex flex-col w-auto rounded-xl bg-slate-200">
+                            <div className="flex justify-center rounded-t-lg bg-[#0ACF83] py-2 text-2xl font-bold text-white">
+                              Pool {i}
                             </div>
-                            {pool.map((team, i) => {
-                              return (
-                                <>
-                                  <div className="flex flex-row space-x-2">
-                                    <div >{i + 1}</div>
-                                    <div>
-                                      {team.players.map((player, j, arr) => {
-                                        return (
-                                          <>
-                                            {j == arr.length - 1 ? (
-                                              <span key={player.userId}>
-                                                {player.user.fullName}
-                                              </span>
-                                            ) : (
-                                              <span key={player.userId}>
-                                                {player.user.fullName} {" - "}
-                                              </span>
-                                            )}
-                                          </>
-                                        );
-                                      })}
-                                    </div>
-                                    <div>{team.teamRating}</div>
-                                    <div> {isSwapping ? (<>{pools.map((nothing, t) => {
-                                      return (
-                                        <>
-                                          <button
-                                            onClick={() => {
-                                              setIsSwapping(!isSwapping);
-                                            }}
-                                          >
-                                            { t+1}
-                                          </button>
-                                        </>
-                                      );
-                          
-                                    }) }</>) :( <><button onClick={()=>{setIsSwapping(!isSwapping)}}>Swap</button></>) }</div>
-                                  </div>
-                                </>
-                              );
-                            })}
+
+                            <div className="flex flex-row space-x-2 p-2">
+                              <div className="flex w-1/6 flex-col">
+                                <div className="flex">Place</div>
+                                {pool.map((team, i) => {
+                                  return (
+                                    <>
+                                      <div>{i + 1}</div>
+                                    </>
+                                  );
+                                })}
+                              </div>
+
+                              <div className="grid grid-cols-6">
+                                <div className="col-span-6">Team</div>
+                                {pool.map((team, i) => {
+                                  return (
+                                    <>
+                                      <div className="col-span-6">
+                                        <div className="col-span-6 whitespace-nowrap">
+                                          {team.players.map(
+                                            (player, j, arr) => {
+                                              return (
+                                                <>
+                                                  {j == arr.length - 1 ? (
+                                                    <span key={player.userId}>
+                                                      {player.user.fullName}
+                                                    </span>
+                                                  ) : (
+                                                    <span key={player.userId}>
+                                                      {player.user.fullName}{" "}
+                                                      {" - "}
+                                                    </span>
+                                                  )}
+                                                </>
+                                              );
+                                            }
+                                          )}
+                                        </div>
+                                        <div>{team.teamRating}</div>
+                                        <div className="flex justify-items-end">
+                                          {isSwapping ? (
+                                            <>
+                                              {pools.map((nothing, t) => {
+                                                return (
+                                                  <>
+                                                    <button
+                                                      onClick={() => {
+                                                        setIsSwapping(
+                                                          !isSwapping
+                                                        );
+                                                      }}
+                                                    >
+                                                      {t + 1}
+                                                    </button>
+                                                  </>
+                                                );
+                                              })}
+                                            </>
+                                          ) : (
+                                            <>
+                                              <button
+                                                onClick={() => {
+                                                  setIsSwapping(!isSwapping);
+                                                }}
+                                              >
+                                                Swap
+                                              </button>
+                                            </>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </>
+                                  );
+                                })}
+                              </div>
+                            </div>
                           </div>
                         </>
                       );
