@@ -109,6 +109,8 @@ model Tournament {
   dayTwoFormat         Format?
   dayOneDate           DateTime
   dayTwoDate           DateTime?
+  dayOneStarted        Boolean     @default(false)
+  dayTwoStarted        Boolean?     @default(false)
   location String      
   participants Team[] 
   tournamentDirector User @relation(fields: [tournamentDirectorId], references: [id])

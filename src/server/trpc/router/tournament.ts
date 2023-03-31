@@ -1,6 +1,15 @@
 import { router, protectedProcedure } from "../trpc";
 import { z } from "zod";
-import { Type, Format, Game, Division, User, Tournament, TeamInvitation, Team } from "@prisma/client";
+import {
+  Type,
+  Format,
+  Game,
+  Division,
+  User,
+  Tournament,
+  TeamInvitation,
+  Team,
+} from "@prisma/client";
 
 export const tournamentRouter = router({
   //Tournament Queries/Mutations
@@ -94,13 +103,15 @@ export const tournamentRouter = router({
     }),
 
   //Division Queries/Mutations
-  createDivision: protectedProcedure.input(
+  createDivision: protectedProcedure
+    .input(
       z.object({
         divisionName: z.string().min(1),
         tournamentId: z.number(),
         type: z.string(),
       })
-    ).mutation(async ({ ctx, input }) => {
+    )
+    .mutation(async ({ ctx, input }) => {
       const division = await ctx.prisma.division.create({
         data: {
           name: input.divisionName,
@@ -110,7 +121,8 @@ export const tournamentRouter = router({
       });
       return division;
     }),
-  getDivision: protectedProcedure.input(z.object({ divisionId: z.number() }))
+  getDivision: protectedProcedure
+    .input(z.object({ divisionId: z.number() }))
     .query(async ({ ctx, input }) => {
       const division = await ctx.prisma.division.findUnique({
         where: {
@@ -315,5 +327,30 @@ export const tournamentRouter = router({
         },
       });
       return results;
+    }),
+  startTournamentDay: protectedProcedure
+    .input(z.object({ tournamentId: z.number(), tournamentDay: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      let tournament;
+      if (input.tournamentDay === 1) {
+        tournament = await ctx.prisma.tournament.update({
+          where: {
+            tournamentId: input.tournamentId,
+          },
+          data: {
+            dayOneStarted: true,
+          },
+        });
+      } else {
+        tournament = await ctx.prisma.tournament.update({
+          where: {
+            tournamentId: input.tournamentId,
+          },
+          data: {
+            dayTwoStarted: true,
+          },
+        });
+      }
+      return tournament;
     }),
 });

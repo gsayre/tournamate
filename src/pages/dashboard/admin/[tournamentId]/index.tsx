@@ -28,6 +28,8 @@ export default function AdminTournamentView() {
   const tournamentData = trpc.tournament.getTournament.useQuery({
     id: tId,
   }).data;
+   const startTournamentForDay =
+     trpc.tournament.startTournamentDay.useMutation();
   return (
     <div className="flex h-screen w-screen">
       <div className="flex h-full w-full flex-row">
@@ -48,16 +50,26 @@ export default function AdminTournamentView() {
             {tournamentData?.tournament.dayOneDate && (
               <div className="p-4">
                 <p className="pb-4 text-3xl">Day One</p>
-                <DivisionPannel
+                <button className="rounded-lg bg-green-500 p-2 text-lg font-semibold text-white" onClick={()=> {startTournamentForDay.mutate({tournamentId: tId, tournamentDay: 1})
+                }}>
+                  Start Tournament Day
+                </button>
+                {tournamentData?.tournament.dayOneStarted ? (<div>Day Started</div>): (
+                  <DivisionPannel
                   format={tournamentData.tournament.dayOneFormat}
                   id={tId}
                 />
+                )}
+                
               </div>
             )}
             {tournamentData?.tournament.dayTwoDate &&
               tournamentData.tournament.dayTwoFormat && (
                 <div className="p-4">
-                  <p>Day Two</p>
+                  <p className="pb-4 text-3xl">Day Two</p>
+                  <button className="rounded-lg bg-green-500 p-2 text-lg font-semibold text-white" onClick={()=>{startTournamentForDay.mutate({tournamentId: tId, tournamentDay:2})}}>
+                    Start Tournament Day
+                  </button>
                   <DivisionPannel
                     format={tournamentData.tournament.dayTwoFormat}
                     id={tId}

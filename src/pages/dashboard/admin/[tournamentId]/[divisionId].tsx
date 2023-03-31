@@ -1,7 +1,7 @@
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
 import { Team, User, UsersInTeam } from "@prisma/client";
 import { useRouter } from "next/router";
-import { Fragment, useEffect, useState } from "react";
+import { Dispatch, Fragment, SetStateAction, useEffect, useState } from "react";
 import Sidebar from "../../../../components/Sidebar";
 import TopBar from "../../../../components/TopBar";
 import { trpc } from "../../../../utils/trpc";
@@ -35,7 +35,7 @@ export default function Admin() {
     []
   );
   const [pools, setPools] = useState<Array<FakeEntriesTeamArr>>([]);
-  const [isSwapping, setIsSwapping] = useState(false);
+
   useEffect(() => {
     setFakeEntriesToUse(createFakeEntriesAnyTeams(8));
   }, []);
@@ -97,96 +97,17 @@ export default function Admin() {
               </div>
               <div className="flex w-full flex-col space-y-8">
                 <div className="flex h-2/6 w-full flex-col bg-white p-2 drop-shadow-xl">
-                  <p>Pools</p>
+                  <p className="font-semibold text-3xl pb-2">Pools</p>
                   <div className="flex-rows flex space-x-4">
-                    {pools.map((pool, i) => {
-                      return (
-                        <>
-                          <div className="flex flex-col w-auto rounded-xl bg-slate-200">
-                            <div className="flex justify-center rounded-t-lg bg-[#0ACF83] py-2 text-2xl font-bold text-white">
-                              Pool {i}
-                            </div>
-
-                            <div className="flex flex-row space-x-2 p-2">
-                              <div className="flex w-1/6 flex-col">
-                                <div className="flex">Place</div>
-                                {pool.map((team, i) => {
-                                  return (
-                                    <>
-                                      <div>{i + 1}</div>
-                                    </>
-                                  );
-                                })}
-                              </div>
-
-                              <div className="grid grid-cols-6">
-                                <div className="col-span-6">Team</div>
-                                {pool.map((team, i) => {
-                                  return (
-                                    <>
-                                      <div className="col-span-6">
-                                        <div className="col-span-6 whitespace-nowrap">
-                                          {team.players.map(
-                                            (player, j, arr) => {
-                                              return (
-                                                <>
-                                                  {j == arr.length - 1 ? (
-                                                    <span key={player.userId}>
-                                                      {player.user.fullName}
-                                                    </span>
-                                                  ) : (
-                                                    <span key={player.userId}>
-                                                      {player.user.fullName}{" "}
-                                                      {" - "}
-                                                    </span>
-                                                  )}
-                                                </>
-                                              );
-                                            }
-                                          )}
-                                        </div>
-                                        <div>{team.teamRating}</div>
-                                        <div className="flex justify-items-end">
-                                          {isSwapping ? (
-                                            <>
-                                              {pools.map((nothing, t) => {
-                                                return (
-                                                  <>
-                                                    <button
-                                                      onClick={() => {
-                                                        setIsSwapping(
-                                                          !isSwapping
-                                                        );
-                                                      }}
-                                                    >
-                                                      {t + 1}
-                                                    </button>
-                                                  </>
-                                                );
-                                              })}
-                                            </>
-                                          ) : (
-                                            <>
-                                              <button
-                                                onClick={() => {
-                                                  setIsSwapping(!isSwapping);
-                                                }}
-                                              >
-                                                Swap
-                                              </button>
-                                            </>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </>
-                                  );
-                                })}
-                              </div>
-                            </div>
+                    <div className="flex flex-row space-x-4">
+                      {pools.map((pool, i, arr) => {
+                        return (
+                          <div key={i}>
+                            <PoolTable pool={pool} poolNumber={i + 1} pools={arr} setPools={setPools} />
                           </div>
-                        </>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
                 <div className="flex h-2/6 bg-white p-2 drop-shadow-xl">
@@ -343,3 +264,112 @@ function createFakeTeam({
   };
   return fakeTeam;
 }
+
+type PoolTableProps = {
+  pool: FakeEntriesTeamArr;
+  poolNumber: number;
+  pools: FakeEntriesTeamArr[];
+  setPools: Dispatch<SetStateAction<FakeEntriesTeamArr[]>>;
+};
+
+const PoolTable = ({ pool, poolNumber, pools, setPools }: PoolTableProps) => {
+  const swapArray = pools.map((pool) => { return false });
+  const [isSwapping, setIsSwapping] = useState(swapArray);
+
+  const updateSwap = (index: number) => {
+    const newArr = [...isSwapping];
+    newArr[index] = !newArr[index];
+    setIsSwapping(newArr);
+  }
+
+  const updatePoolLogic = (poolDelIndex: number, poolInsIndex: number ,teamIndex: number, pools:FakeEntriesTeamArr[]) => {
+    const newArr = [...pools];
+    const poolToDelFrom = newArr[poolDelIndex];
+    const temp = poolToDelFrom.splice(teamIndex, 1)[0];
+    newArr[poolInsIndex].push(temp);
+    newArr[poolInsIndex].sort(function (a, b) {
+      return b.teamRating - a.teamRating;
+    });
+    setPools(newArr);
+  }
+
+  return (
+    <>
+      <table className="border-seperate border-none">
+        <thead className="justify-center bg-[#0ACF83] py-2 text-2xl font-bold text-white">
+          <tr>
+            <th colSpan={4} className="rounded-t-lg">
+              Pool {poolNumber}
+            </th>
+          </tr>
+        </thead>
+        <tr>
+          <td colSpan={1} className="p-1 text-center font-semibold">
+            Place
+          </td>
+          <td colSpan={3} className="p-1 text-center font-semibold">
+            Team
+          </td>
+        </tr>
+        {pool.map((team, i) => {
+          return (
+            <tr key={i}>
+              <td colSpan={1} className="border-r-2 p-1">{i + 1}</td>
+              <td colSpan={2} className='px-4'>
+                {team.players.map((player, j, arr) => {
+                  return (
+                    <>
+                      {j == arr.length - 1 ? (
+                        <span key={player.userId}>{player.user.fullName}</span>
+                      ) : (
+                        <span key={player.userId}>
+                          {player.user.fullName} {" - "}
+                        </span>
+                      )}
+                    </>
+                  );
+                })}
+                <span className="pl-2">{ team.teamRating }</span>
+              </td>
+              <td colSpan={1} className="pl-4 pr-1">
+                {isSwapping[i] ? (
+                  <>
+                    {pools.map((pool, j) => {
+                      return (
+                        <>
+                          {j !== poolNumber - 1 && (
+                            <button
+                              onClick={() => {
+                                updateSwap(i);
+                                updatePoolLogic(poolNumber - 1, j, i, pools);
+                              }}
+                              key={j}
+                              className="p-1"
+                            >
+                              Pool {j + 1}
+                            </button>
+                          )}
+                        </>
+                      );
+                    })
+                    }
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => {
+                        updateSwap(i);
+                      }}
+                    >
+                      Swap
+                    </button>
+                  </>
+                )}
+              </td>
+            </tr>
+          );
+        })}
+      </table>
+    </>
+  );
+};

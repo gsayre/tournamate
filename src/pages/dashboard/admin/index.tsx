@@ -134,12 +134,14 @@ const TournamentDirectorPannel = () => {
           <div className="flex flex-col pt-8">
             <h1 className="text-xl font-semibold">Your Upcoming Tournaments</h1>
             <div className="flex flex-row space-x-8 pt-2">
-              {ownedTournaments.data?.map((tournament) => (
-                <TournamentCard
-                  key={tournament.tournamentId}
-                  tournament={tournament}
-                />
-              ))}
+              {ownedTournaments.data
+                ?.filter(isNotPastCurrentDate)
+                .map((tournament) => (
+                  <TournamentCard
+                    key={tournament.tournamentId}
+                    tournament={tournament}
+                  />
+                ))}
               <AddTournamentCard setModalOpen={setModalOpen} />
             </div>
           </div>
@@ -165,13 +167,24 @@ const TournamentDirectorPannel = () => {
 function isPastCurrentDate(tournament: Tournament) {
   if (tournament.dayTwo && tournament.dayTwoDate) {
     return (
-      new Date(tournament.dayTwoDate.toDateString()) <
-      new Date(new Date().toDateString())
+      tournament.dayTwoDate.toDateString() > new Date().toDateString()
+    );
+  } else {
+    console.log(tournament.dayOneDate.toDateString());
+    return (
+      tournament.dayOneDate.toDateString() > new Date().toDateString()
+    );
+  }
+}
+
+function isNotPastCurrentDate(tournament: Tournament) {
+  if (tournament.dayTwo && tournament.dayTwoDate) {
+    return (
+      tournament.dayTwoDate.toDateString() < new Date().toDateString()
     );
   } else {
     return (
-      new Date(tournament.dayOneDate.toDateString()) <
-      new Date(new Date().toDateString())
+      tournament.dayOneDate.toDateString() < new Date().toDateString()
     );
   }
 }
