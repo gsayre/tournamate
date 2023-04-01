@@ -122,7 +122,7 @@ export default function Admin() {
   );
 }
 
-const createPoolsFromEntries = (
+export const createPoolsFromEntries = (
   teams: FakeEntriesTeamArr
 ): Array<FakeEntriesTeamArr> => {
   const returnArr: Array<FakeEntriesTeamArr> = [];
@@ -186,7 +186,7 @@ export type FakeEntriesTeamArr = (Team & {
   })[];
 })[];
 
-const createFakeEntriesAnyTeams = (numTeams: number): FakeEntriesTeamArr => {
+export const createFakeEntriesAnyTeams = (numTeams: number): FakeEntriesTeamArr => {
   const fakeEntries: FakeEntriesTeamArr = [];
   for (let i = 0; i < numTeams; i++) {
     fakeEntries.push(
@@ -206,7 +206,7 @@ const createFakeEntriesAnyTeams = (numTeams: number): FakeEntriesTeamArr => {
   return fakeEntries;
 };
 
-type FakeEntriesTeam = Team & {
+export type FakeEntriesTeam = Team & {
   players: (UsersInTeam & {
     user: User;
   })[];
@@ -222,7 +222,7 @@ type FakeTeamCriteria = {
   userOneName: string;
   userTwoName: string;
 };
-function createFakeTeam({
+export function createFakeTeam({
   teamId,
   teamRating,
   divisionId,
@@ -272,7 +272,7 @@ type PoolTableProps = {
   setPools: Dispatch<SetStateAction<FakeEntriesTeamArr[]>>;
 };
 
-const PoolTable = ({ pool, poolNumber, pools, setPools }: PoolTableProps) => {
+export const PoolTable = ({ pool, poolNumber, pools, setPools }: PoolTableProps) => {
   const swapArray = pools.map((pool) => { return false });
   const [isSwapping, setIsSwapping] = useState(swapArray);
 

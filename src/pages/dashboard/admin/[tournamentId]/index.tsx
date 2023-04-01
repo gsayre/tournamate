@@ -2,11 +2,11 @@ import Sidebar from "../../../../components/Sidebar";
 import TopBar from "../../../../components/TopBar";
 import { trpc } from "../../../../utils/trpc";
 import { useRouter } from "next/router";
-import { Division, Game } from "@prisma/client";
-import { useState } from "react";
+import { Division, Team } from "@prisma/client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
-import { FakeEntriesTeamArr } from "./[divisionId]";
+import { createFakeEntriesAnyTeams, createPoolsFromEntries, FakeEntriesTeam, FakeEntriesTeamArr } from "./[divisionId]";
 
 export async function getServerSideProps(context: any) {
   const { userId } = getAuth(context.req);
@@ -29,8 +29,18 @@ export default function AdminTournamentView() {
   const tournamentData = trpc.tournament.getTournament.useQuery({
     id: tId,
   }).data;
-   const startTournamentForDay =
-     trpc.tournament.startTournamentDay.useMutation();
+  const startTournamentForDay =
+    trpc.tournament.startTournamentDay.useMutation();
+    const [fakeEntriesToUse, setFakeEntriesToUse] =
+      useState<FakeEntriesTeamArr>([]);
+    const [pools, setPools] = useState<Array<FakeEntriesTeamArr>>([]);
+
+    useEffect(() => {
+      setFakeEntriesToUse(createFakeEntriesAnyTeams(8));
+    }, []);
+    useEffect(() => {
+      setPools(createPoolsFromEntries(fakeEntriesToUse));
+    }, [fakeEntriesToUse]);
   return (
     <div className="flex h-screen w-screen">
       <div className="flex h-full w-full flex-row">
@@ -51,24 +61,55 @@ export default function AdminTournamentView() {
             {tournamentData?.tournament.dayOneDate && (
               <div className="p-4">
                 <p className="pb-4 text-3xl">Day One</p>
-                <button className="rounded-lg bg-green-500 p-2 text-lg font-semibold text-white" onClick={()=> {startTournamentForDay.mutate({tournamentId: tId, tournamentDay: 1})
-                }}>
+                <button
+                  className="rounded-lg bg-green-500 p-2 text-lg font-semibold text-white"
+                  onClick={() => {
+                    startTournamentForDay.mutate({
+                      tournamentId: tId,
+                      tournamentDay: 1,
+                    });
+                  }}
+                >
                   Start Tournament Day
                 </button>
-                {tournamentData?.tournament.dayOneStarted ? (<div>Day Started</div>): (
+                {tournamentData?.tournament.dayOneStarted ? (
+                  <div className="flex flex-col">
+                    <div className="flex flex-row">
+                      <div className="flex flex-col">
+                        <p>Pool</p>
+                      </div>
+                      <div className="flex flex-col">
+                        <p>Pool Schedule</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p>Other Pools</p>
+                      <div className="flex flex-row">
+
+                      </div>
+                    </div>
+                  </div>
+                ) : (
                   <DivisionPannel
-                  format={tournamentData.tournament.dayOneFormat}
-                  id={tId}
-                />
+                    format={tournamentData.tournament.dayOneFormat}
+                    id={tId}
+                  />
                 )}
-                
               </div>
             )}
             {tournamentData?.tournament.dayTwoDate &&
               tournamentData.tournament.dayTwoFormat && (
                 <div className="p-4">
                   <p className="pb-4 text-3xl">Day Two</p>
-                  <button className="rounded-lg bg-green-500 p-2 text-lg font-semibold text-white" onClick={()=>{startTournamentForDay.mutate({tournamentId: tId, tournamentDay:2})}}>
+                  <button
+                    className="rounded-lg bg-green-500 p-2 text-lg font-semibold text-white"
+                    onClick={() => {
+                      startTournamentForDay.mutate({
+                        tournamentId: tId,
+                        tournamentDay: 2,
+                      });
+                    }}
+                  >
                     Start Tournament Day
                   </button>
                   <DivisionPannel
@@ -166,7 +207,7 @@ function DivisionPannel(props: DivisionPannelProps) {
 function isCorrectDivision(divisionToCompare: string) {
   return function (element: Division) {
     return element.type === divisionToCompare;
-  }
+  };
 }
 
 type DivisionCardProps = {
@@ -180,12 +221,12 @@ function DivisionCard(props: DivisionCardProps) {
       href={`./${props.division.tournamentId}/${props.division.divisionId}`}
     >
       <div className="flex h-80 w-64 flex-col items-center justify-center rounded-md bg-white p-4 drop-shadow-lg hover:bg-slate-100">
-        <div className="flex flex-col h-5/6 justify-center items-center w-full">
+        <div className="flex h-5/6 w-full flex-col items-center justify-center">
           <p className="pb-2 text-5xl font-bold">{props.division.name}</p>
           <p className="text-xl font-semibold">69 Entries</p>
         </div>
-              <div className="flex items-end h-1/6 w-full justify-center italic">
-                  Click for more information
+        <div className="flex h-1/6 w-full items-end justify-center italic">
+          Click for more information
         </div>
       </div>
     </Link>
@@ -233,7 +274,7 @@ function NewDivisionForm(props: divisionFormProps) {
                   onSuccess: () => {
                     router.reload();
                   },
-                  onError: (err:any) => {
+                  onError: (err: any) => {
                     console.log(
                       "Create Division Error... Prob already exists dumbass"
                     );
@@ -252,49 +293,363 @@ function NewDivisionForm(props: divisionFormProps) {
   );
 }
 
-type GameConfigurations = {
-  scoreCap: number,
-  isScoreCapped: boolean,
+type gameScheduleOptions = {
+  numNets: number;
+};
 
-}
-
-function createPoolSchedule(pool: FakeEntriesTeamArr,{scoreCap, isScoreCapped}:GameConfigurations): Array<Game> {
+function createGameSchedule(pool: FakeEntriesTeamArr, {}: gameScheduleOptions) {
+  let gamesToInsert: gameCreationProps[] = [];
   switch (pool.length) {
     case 3: {
-      
+      const [firstTeam, secondTeam, thirdTeam] = [
+        pool[0],
+        pool[1],
+        pool[2],
+      ];
+      gamesToInsert = [
+        {
+          teamOne: firstTeam,
+          teamTwo: thirdTeam,
+          refs: secondTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+        },
+        {
+          teamOne: secondTeam,
+          teamTwo: thirdTeam,
+          refs: firstTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+        },
+        {
+          teamOne: firstTeam,
+          teamTwo: secondTeam,
+          refs: thirdTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+        },
+        {
+          teamOne: firstTeam,
+          teamTwo: thirdTeam,
+          refs: secondTeam,
+          gameOneScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 1,
+          currentSet: 1,
+          poolId: "123",
+        },
+        {
+          teamOne: secondTeam,
+          teamTwo: thirdTeam,
+          refs: firstTeam,
+          gameOneScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 1,
+          currentSet: 1,
+          poolId: "123",
+        },
+        {
+          teamOne: firstTeam,
+          teamTwo: secondTeam,
+          refs: thirdTeam,
+          gameOneScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 1,
+          currentSet: 1,
+          poolId: "123",
+        },
+      ];
+      console.log(
+        gamesToInsert.map((game) => {
+          return createGame(game);
+        })
+      );
     }
     case 4: {
-      
+      const [firstTeam, secondTeam, thirdTeam, fourthTeam] = [
+        pool[0],
+        pool[1],
+        pool[2],
+        pool[3],
+      ];
+      gamesToInsert = [
+        {
+          teamOne: firstTeam,
+          teamTwo: fourthTeam,
+          refs: secondTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+        },
+        {
+          teamOne: secondTeam,
+          teamTwo: thirdTeam,
+          refs: fourthTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+        },
+        {
+          teamOne: secondTeam,
+          teamTwo: fourthTeam,
+          refs: firstTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+        },
+        {
+          teamOne: firstTeam,
+          teamTwo: thirdTeam,
+          refs: secondTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+        },
+        {
+          teamOne: thirdTeam,
+          teamTwo: fourthTeam,
+          refs: firstTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+        },
+        {
+          teamOne: firstTeam,
+          teamTwo: secondTeam,
+          refs: thirdTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+        },
+      ];
+      console.log(
+        gamesToInsert.map((game) => {
+          return createGame(game);
+        })
+      );
     }
     case 5: {
-      
+      const [firstTeam, secondTeam, thirdTeam, fourthTeam, fifthTeam] = [
+        pool[0],
+        pool[1],
+        pool[2],
+        pool[3],
+        pool[4],
+      ];
+      gamesToInsert = [
+        {
+          teamOne: firstTeam,
+          teamTwo: fifthTeam,
+          refs: secondTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+        },
+        {
+          teamOne: secondTeam,
+          teamTwo: fourthTeam,
+          refs: fifthTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+        },
+        {
+          teamOne: secondTeam,
+          teamTwo: fifthTeam,
+          refs: firstTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+        },
+        {
+          teamOne: firstTeam,
+          teamTwo: thirdTeam,
+          refs: secondTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+        },
+        {
+          teamOne: thirdTeam,
+          teamTwo: fifthTeam,
+          refs: firstTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+        },
+        {
+          teamOne: firstTeam,
+          teamTwo: fourthTeam,
+          refs: thirdTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+        }
+        ,{
+          teamOne: thirdTeam,
+          teamTwo: fourthTeam,
+          refs: firstTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+        }
+        ,{
+          teamOne: firstTeam,
+          teamTwo: secondTeam,
+          refs: fourthTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+        }
+      ]
+      console.log(
+        gamesToInsert.map((game) => {
+          return createGame(game);
+        })
+      );
     }
-  } 
-    
-  return []
-}
-
-type gameCreationProps =  {
-    gameId: number;
-    refereeId: number;
-    poolId: string | null;
-  bracketId?: number | null;
-    isBracketGame?: boolean
-}
-
-function createGame({ gameId, refereeId, poolId, bracketId, isBracketGame }: gameCreationProps): Game {
-  if (isBracketGame && bracketId) {
-    return {
-      gameId,
-      refereeId,
-      poolId,
-      bracketId,
+    case 6: {
+    }
+    case 7: {
+    }
+    case 8: {
     }
   }
-  return  {
-    gameId,
-    refereeId,
-    poolId,
-    bracketId:  null,
 }
+
+type gameCreationProps = {
+  gameOneScoreCap: number;
+  gameTwoScoreCap?: number;
+  gameThreeScoreCap?: number;
+  isScoreCapped: boolean;
+  numSets: number;
+  currentSet: number;
+  teamOne: Team;
+  teamTwo: Team;
+  refs: Team;
+  poolId?: string;
+  isBracket?: boolean;
+  bracketId?: boolean;
+};
+
+function createGame({
+  numSets,
+  isBracket,
+  gameOneScoreCap,
+  gameTwoScoreCap,
+  gameThreeScoreCap,
+  isScoreCapped,
+  currentSet,
+  teamOne,
+  teamTwo,
+  refs,
+  poolId,
+  bracketId,
+}: gameCreationProps) {
+  if (isBracket) {
+  }
+  switch (numSets) {
+    case 1: {
+      return {
+        poolId,
+        gameOneScoreCap,
+        currentSet,
+        teamOne,
+        teamTwo,
+        refs,
+        gameOneTeamOneScore: 0,
+        gameOneTeamTwoScore: 0,
+        isScoreCapped,
+      };
+    }
+    case 2: {
+      return {
+        poolId,
+        gameOneScoreCap,
+        gameTwoScoreCap,
+        currentSet,
+        teamOne,
+        teamTwo,
+        refs,
+        gameOneTeamOneScore: 0,
+        gameOneTeamTwoScore: 0,
+        gameTwoTeamOneScore: 0,
+        gameTwoTeamTwoScore: 0,
+        isScoreCapped,
+      };
+    }
+    case 3: {
+      return {
+        poolId,
+        gameOneScoreCap,
+        gameTwoScoreCap,
+        gameThreeScoreCap,
+        currentSet,
+        teamOne,
+        teamTwo,
+        refs,
+        gameOneTeamOneScore: 0,
+        gameOneTeamTwoScore: 0,
+        gameTwoTeamOneScore: 0,
+        gameTwoTeamTwoScore: 0,
+        gameThreeTeamOneScore: 0,
+        gameThreeTeamTwoScore: 0,
+        isScoreCapped,
+      };
+    }
+  }
 }
