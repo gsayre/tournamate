@@ -2,10 +2,11 @@ import Sidebar from "../../../../components/Sidebar";
 import TopBar from "../../../../components/TopBar";
 import { trpc } from "../../../../utils/trpc";
 import { useRouter } from "next/router";
-import { Division } from "@prisma/client";
+import { Division, Game } from "@prisma/client";
 import { useState } from "react";
 import Link from "next/link";
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
+import { FakeEntriesTeamArr } from "./[divisionId]";
 
 export async function getServerSideProps(context: any) {
   const { userId } = getAuth(context.req);
@@ -249,4 +250,51 @@ function NewDivisionForm(props: divisionFormProps) {
       </div>
     </div>
   );
+}
+
+type GameConfigurations = {
+  scoreCap: number,
+  isScoreCapped: boolean,
+
+}
+
+function createPoolSchedule(pool: FakeEntriesTeamArr,{scoreCap, isScoreCapped}:GameConfigurations): Array<Game> {
+  switch (pool.length) {
+    case 3: {
+      
+    }
+    case 4: {
+      
+    }
+    case 5: {
+      
+    }
+  } 
+    
+  return []
+}
+
+type gameCreationProps =  {
+    gameId: number;
+    refereeId: number;
+    poolId: string | null;
+  bracketId?: number | null;
+    isBracketGame?: boolean
+}
+
+function createGame({ gameId, refereeId, poolId, bracketId, isBracketGame }: gameCreationProps): Game {
+  if (isBracketGame && bracketId) {
+    return {
+      gameId,
+      refereeId,
+      poolId,
+      bracketId,
+    }
+  }
+  return  {
+    gameId,
+    refereeId,
+    poolId,
+    bracketId:  null,
+}
 }
