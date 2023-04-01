@@ -180,7 +180,7 @@ const createPoolsFromEntries = (
   return returnArr;
 };
 
-type FakeEntriesTeamArr = (Team & {
+export type FakeEntriesTeamArr = (Team & {
   players: (UsersInTeam & {
     user: User;
   })[];
