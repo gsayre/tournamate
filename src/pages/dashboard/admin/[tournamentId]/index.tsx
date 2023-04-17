@@ -3,10 +3,16 @@ import TopBar from "../../../../components/TopBar";
 import { trpc } from "../../../../utils/trpc";
 import { useRouter } from "next/router";
 import { Division, Team } from "@prisma/client";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Link from "next/link";
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
-import { createFakeEntriesAnyTeams, createPoolsFromEntries, FakeEntriesTeam, FakeEntriesTeamArr } from "./[divisionId]";
+import {
+  createFakeEntriesAnyTeams,
+  createPoolsFromEntries,
+  FakeEntriesTeam,
+  FakeEntriesTeamArr,
+  PoolTable,
+} from "./[divisionId]";
 
 export async function getServerSideProps(context: any) {
   const { userId } = getAuth(context.req);
@@ -31,16 +37,17 @@ export default function AdminTournamentView() {
   }).data;
   const startTournamentForDay =
     trpc.tournament.startTournamentDay.useMutation();
-    const [fakeEntriesToUse, setFakeEntriesToUse] =
-      useState<FakeEntriesTeamArr>([]);
-    const [pools, setPools] = useState<Array<FakeEntriesTeamArr>>([]);
+  const [fakeEntriesToUse, setFakeEntriesToUse] = useState<FakeEntriesTeamArr>(
+    []
+  );
+  const [pools, setPools] = useState<Array<FakeEntriesTeamArr>>([]);
 
-    useEffect(() => {
-      setFakeEntriesToUse(createFakeEntriesAnyTeams(8));
-    }, []);
-    useEffect(() => {
-      setPools(createPoolsFromEntries(fakeEntriesToUse));
-    }, [fakeEntriesToUse]);
+  useEffect(() => {
+    setFakeEntriesToUse(createFakeEntriesAnyTeams(8));
+  }, []);
+  useEffect(() => {
+    setPools(createPoolsFromEntries(fakeEntriesToUse));
+  }, [fakeEntriesToUse]);
   return (
     <div className="flex h-screen w-screen">
       <div className="flex h-full w-full flex-row">
@@ -73,19 +80,32 @@ export default function AdminTournamentView() {
                   Start Tournament Day
                 </button>
                 {tournamentData?.tournament.dayOneStarted ? (
-                  <div className="flex flex-col">
-                    <div className="flex flex-row">
-                      <div className="flex flex-col">
-                        <p>Pool</p>
+                  <div className="flex w-full flex-col">
+                    <div className="flex w-full flex-row space-x-4 py-4">
+                      <div className="flex w-1/2 flex-col">
+                        <p className="text-3xl">Pool:</p>
+                        {/* <PoolTable /> */}
                       </div>
-                      <div className="flex flex-col">
-                        <p>Pool Schedule</p>
+                      <div className="flex w-1/2 flex-col">
+                        <p className="text-3xl">Pool Schedule:</p>
                       </div>
                     </div>
                     <div>
-                      <p>Other Pools</p>
-                      <div className="flex flex-row">
-
+                      <p className="text-3xl pb-4">Other Pools:</p>
+                      <div className="flex flex-row space-x-6">
+                        {pools.map((pool, index, arr) => {
+                          return (
+                            <div className="flex w-80 flex-col" key={index}>
+                              <p className="text-xl pb-2">Pool {index + 1}</p>
+                              <OtherPoolTable
+                                pool={pool}
+                                poolNumber={index + 1}
+                                pools={arr}
+                                setPools={setPools}
+                              />
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -112,10 +132,27 @@ export default function AdminTournamentView() {
                   >
                     Start Tournament Day
                   </button>
-                  <DivisionPannel
-                    format={tournamentData.tournament.dayTwoFormat}
-                    id={tId}
-                  />
+                  {tournamentData.tournament.dayTwoStarted ? (
+                    <div className="flex flex-col">
+                      <div className="flex flex-row">
+                        <div className="flex flex-col">
+                          <p>Pool</p>
+                        </div>
+                        <div className="flex flex-col">
+                          <p>Pool Schedule</p>
+                        </div>
+                      </div>
+                      <div>
+                        <p>Other Pools</p>
+                        <div className="flex flex-row"></div>
+                      </div>
+                    </div>
+                  ) : (
+                    <DivisionPannel
+                      format={tournamentData.tournament.dayTwoFormat}
+                      id={tId}
+                    />
+                  )}
                 </div>
               )}
           </div>
@@ -301,11 +338,7 @@ function createGameSchedule(pool: FakeEntriesTeamArr, {}: gameScheduleOptions) {
   let gamesToInsert: gameCreationProps[] = [];
   switch (pool.length) {
     case 3: {
-      const [firstTeam, secondTeam, thirdTeam] = [
-        pool[0],
-        pool[1],
-        pool[2],
-      ];
+      const [firstTeam, secondTeam, thirdTeam] = [pool[0], pool[1], pool[2]];
       gamesToInsert = [
         {
           teamOne: firstTeam,
@@ -532,8 +565,8 @@ function createGameSchedule(pool: FakeEntriesTeamArr, {}: gameScheduleOptions) {
           numSets: 2,
           currentSet: 1,
           poolId: "123",
-        }
-        ,{
+        },
+        {
           teamOne: thirdTeam,
           teamTwo: fourthTeam,
           refs: firstTeam,
@@ -543,8 +576,8 @@ function createGameSchedule(pool: FakeEntriesTeamArr, {}: gameScheduleOptions) {
           numSets: 2,
           currentSet: 1,
           poolId: "123",
-        }
-        ,{
+        },
+        {
           teamOne: firstTeam,
           teamTwo: secondTeam,
           refs: fourthTeam,
@@ -554,8 +587,8 @@ function createGameSchedule(pool: FakeEntriesTeamArr, {}: gameScheduleOptions) {
           numSets: 2,
           currentSet: 1,
           poolId: "123",
-        }
-      ]
+        },
+      ];
       console.log(
         gamesToInsert.map((game) => {
           return createGame(game);
@@ -653,3 +686,79 @@ function createGame({
     }
   }
 }
+
+type OtherPoolTableProps = {
+  pool: FakeEntriesTeamArr;
+  poolNumber: number;
+  pools: FakeEntriesTeamArr[];
+  setPools: Dispatch<SetStateAction<FakeEntriesTeamArr[]>>;
+};
+
+export const OtherPoolTable = ({ pool, poolNumber, pools, setPools }: OtherPoolTableProps) => {
+  const swapArray = pools.map((pool) => { return false });
+  const [isSwapping, setIsSwapping] = useState(swapArray);
+
+  const updateSwap = (index: number) => {
+    const newArr = [...isSwapping];
+    newArr[index] = !newArr[index];
+    setIsSwapping(newArr);
+  }
+
+  const updatePoolLogic = (poolDelIndex: number, poolInsIndex: number ,teamIndex: number, pools:FakeEntriesTeamArr[]) => {
+    const newArr = [...pools];
+    const poolToDelFrom = newArr[poolDelIndex];
+    const temp = poolToDelFrom.splice(teamIndex, 1)[0];
+    newArr[poolInsIndex].push(temp);
+    newArr[poolInsIndex].sort(function (a, b) {
+      return b.teamRating - a.teamRating;
+    });
+    setPools(newArr);
+  }
+
+  return (
+    <>
+      <table className="border-seperate border-none">
+        <thead className="justify-center bg-[#575757] py-2 text-2xl font-bold text-white">
+          <tr>
+            <th colSpan={4} className="rounded-t-lg">
+              Pool {poolNumber}
+            </th>
+          </tr>
+        </thead>
+        <tr>
+          <td colSpan={1} className="p-1 text-center font-semibold">
+            Place
+          </td>
+          <td colSpan={3} className="p-1 text-center font-semibold">
+            Team
+          </td>
+        </tr>
+        {pool.map((team, i) => {
+          return (
+            <tr key={i}>
+              <td colSpan={1} className="border-r-2 p-1">{i + 1}</td>
+              <td colSpan={2} className='px-4'>
+                {team.players.map((player, j, arr) => {
+                  return (
+                    <>
+                      {j == arr.length - 1 ? (
+                        <span key={player.userId}>{player.user.fullName}</span>
+                      ) : (
+                        <span key={player.userId}>
+                          {player.user.fullName} {" - "}
+                        </span>
+                      )}
+                    </>
+                  );
+                })}
+              </td>
+              <td colSpan={1} className="border-l-2 p-1">
+                <p>{}</p>
+                </td>
+            </tr>
+          );
+        })}
+      </table>
+    </>
+  );
+};
