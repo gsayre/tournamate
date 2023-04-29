@@ -2,18 +2,16 @@ import Sidebar from "../../../../components/Sidebar";
 import TopBar from "../../../../components/TopBar";
 import { trpc } from "../../../../utils/trpc";
 import { useRouter } from "next/router";
-import { Division, Team, User, UsersInTeam } from "@prisma/client";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Division } from "@prisma/client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
-import {
-  createFakeEntriesAnyTeams,
-  createPoolsFromEntries,
-  FakeEntriesTeam,
-  FakeEntriesTeamArr,
-  PoolTable,
-} from "./[divisionId]";
 import { useAuth } from "@clerk/nextjs";
+import { MyPoolTable } from "@components/MyPoolTable";
+import { PoolSchedule } from "@components/PoolSchedule";
+import { FakeEntriesTeamArr } from "../../../../utils/types/team";
+import { amIInThePool } from "utils/lib/am-i-in-utils";
+import { createFakeEntriesAnyTeams, createPoolsFromEntries } from "utils/lib/team-utils";
 
 export async function getServerSideProps(context: any) {
   const { userId } = getAuth(context.req);
@@ -27,26 +25,6 @@ export async function getServerSideProps(context: any) {
     };
   }
   return { props: { ...buildClerkProps(context.req) } };
-}
-
-type myFakeTeam = Team & {
-  players: (UsersInTeam & {
-    user: User;
-  })[];
-  poolWins: number;
-  poolLosses: number;
-};
-
-function amIInThePool(element: FakeEntriesTeamArr, currentUserName: string) {
-  for (let i = 0; i < element.length; i++) {
-    for (const player of element[i].players) {
-      if (currentUserName === player.user.fullName) {
-        console.log(currentUserName, player.user.fullName);
-        return true;
-      }
-    }
-  }
-  return false;
 }
 
 export default function AdminTournamentView() {
@@ -68,18 +46,10 @@ export default function AdminTournamentView() {
   );
   const [pools, setPools] = useState<Array<FakeEntriesTeamArr>>([]);
   const [myPool, setMyPool] = useState<FakeEntriesTeamArr>([]);
-  const [myEntry, setMyEntry] = useState<myFakeTeam>();
-  const [mySchedule, setMySchedule] = useState<[]>([]);
 
   useEffect(() => {
-    setFakeEntriesToUse(createFakeEntriesAnyTeams(11));
-  }, []);
-  useEffect(() => {
-    setMySchedule(createGameSchedule(myPool));
-  }, [myPool]);
-  useEffect(() => {
     if (currentUserName && userId) {
-      setMyEntry({
+      const myEntry = {
         teamId: 69, //nice
         divisionId: 1,
         tournamentId: tId,
@@ -111,13 +81,13 @@ export default function AdminTournamentView() {
             },
           },
         ],
-      });
+      };
+      const fakeEntriesToInsert = [...createFakeEntriesAnyTeams(11), myEntry];
+      setFakeEntriesToUse(fakeEntriesToInsert);
     }
   }, [currentUserName, userId]);
+
   useEffect(() => {
-    if (currentUserName && userId && myEntry) {
-      fakeEntriesToUse.push(myEntry);
-    }
     const poolsFromEntries = createPoolsFromEntries(fakeEntriesToUse);
     const poolWithMe = poolsFromEntries.filter(function (element) {
       return amIInThePool(element, currentUserName as string);
@@ -125,10 +95,11 @@ export default function AdminTournamentView() {
     const poolsWithoutMe = poolsFromEntries.filter(function (element) {
       return !amIInThePool(element, currentUserName as string);
     });
-    console.log(poolWithMe[0]);
+    console.log("Pool with me", poolWithMe);
+    console.log("Pools without me", poolsWithoutMe);
     setMyPool(poolWithMe[0]);
     setPools(poolsWithoutMe);
-  }, [fakeEntriesToUse, myEntry]);
+  }, [fakeEntriesToUse]);
 
   return (
     <div className="flex h-screen w-screen">
@@ -167,19 +138,24 @@ export default function AdminTournamentView() {
                       <div className="flex w-1/2 flex-col">
                         <p className="text-3xl">Pool:</p>
                         <div className="flex justify-center py-2">
-                          <OtherPoolTable
+                          <MyPoolTable
                             pool={myPool}
                             poolNumber={1}
                             pools={pools}
                             setPools={setPools}
                             isMyPool={true}
+                            currentUserName={currentUserName as string}
                           />
                         </div>
                       </div>
                       <div className="flex w-1/2 flex-col">
                         <p className="text-3xl">Pool Schedule:</p>
                         <div>
-                          <PoolSchedule schedule={mySchedule} />
+                          <PoolSchedule
+                            pool={myPool}
+                            currentUserName={currentUserName as string}
+                            setMyPool={setMyPool}
+                          />
                         </div>
                       </div>
                     </div>
@@ -190,12 +166,13 @@ export default function AdminTournamentView() {
                           return (
                             <div className="flex w-80 flex-col" key={index}>
                               <p className="pb-2 text-xl">Pool {index + 1}</p>
-                              <OtherPoolTable
+                              <MyPoolTable
                                 pool={pool}
                                 poolNumber={index + 1}
                                 pools={arr}
                                 setPools={setPools}
                                 isMyPool={false}
+                                currentUserName={currentUserName as string}
                               />
                             </div>
                           );
@@ -235,7 +212,7 @@ export default function AdminTournamentView() {
                         <div className="flex flex-col">
                           <p>Pool Schedule</p>
                           <div>
-                            <PoolSchedule schedule={mySchedule} />
+                            {/* <PoolSchedule pool={myPool}  currentUserName={currentUserName as string}/> */}
                           </div>
                         </div>
                       </div>
@@ -429,481 +406,4 @@ function NewDivisionForm(props: divisionFormProps) {
 
 type gameScheduleOptions = {
   numNets: number;
-};
-
-function createGameSchedule(pool: FakeEntriesTeamArr) {
-  let gamesToInsert: gameCreationProps[] = [];
-  let gamesToReturn = [];
-  switch (pool?.length) {
-    case 3: {
-      const [firstTeam, secondTeam, thirdTeam] = [pool[0], pool[1], pool[2]];
-      gamesToInsert = [
-        {
-          teamOne: firstTeam,
-          teamTwo: thirdTeam,
-          refs: secondTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-        },
-        {
-          teamOne: secondTeam,
-          teamTwo: thirdTeam,
-          refs: firstTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-        },
-        {
-          teamOne: firstTeam,
-          teamTwo: secondTeam,
-          refs: thirdTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-        },
-        {
-          teamOne: firstTeam,
-          teamTwo: thirdTeam,
-          refs: secondTeam,
-          gameOneScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 1,
-          currentSet: 1,
-          poolId: "123",
-        },
-        {
-          teamOne: secondTeam,
-          teamTwo: thirdTeam,
-          refs: firstTeam,
-          gameOneScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 1,
-          currentSet: 1,
-          poolId: "123",
-        },
-        {
-          teamOne: firstTeam,
-          teamTwo: secondTeam,
-          refs: thirdTeam,
-          gameOneScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 1,
-          currentSet: 1,
-          poolId: "123",
-        },
-      ];
-      console.log(
-        gamesToInsert.map((game) => {
-          return createGame(game);
-        })
-      );
-    }
-    case 4: {
-      const [firstTeam, secondTeam, thirdTeam, fourthTeam] = [
-        pool[0],
-        pool[1],
-        pool[2],
-        pool[3],
-      ];
-      gamesToInsert = [
-        {
-          teamOne: firstTeam,
-          teamTwo: fourthTeam,
-          refs: secondTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-        },
-        {
-          teamOne: secondTeam,
-          teamTwo: thirdTeam,
-          refs: fourthTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-        },
-        {
-          teamOne: secondTeam,
-          teamTwo: fourthTeam,
-          refs: firstTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-        },
-        {
-          teamOne: firstTeam,
-          teamTwo: thirdTeam,
-          refs: secondTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-        },
-        {
-          teamOne: thirdTeam,
-          teamTwo: fourthTeam,
-          refs: firstTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-        },
-        {
-          teamOne: firstTeam,
-          teamTwo: secondTeam,
-          refs: thirdTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-        },
-      ];
-      console.log(
-        gamesToInsert.map((game) => {
-          return createGame(game);
-        })
-      );
-    }
-    case 5: {
-      const [firstTeam, secondTeam, thirdTeam, fourthTeam, fifthTeam] = [
-        pool[0],
-        pool[1],
-        pool[2],
-        pool[3],
-        pool[4],
-      ];
-      gamesToInsert = [
-        {
-          teamOne: firstTeam,
-          teamTwo: fifthTeam,
-          refs: secondTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-        },
-        {
-          teamOne: secondTeam,
-          teamTwo: fourthTeam,
-          refs: fifthTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-        },
-        {
-          teamOne: secondTeam,
-          teamTwo: fifthTeam,
-          refs: firstTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-        },
-        {
-          teamOne: firstTeam,
-          teamTwo: thirdTeam,
-          refs: secondTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-        },
-        {
-          teamOne: thirdTeam,
-          teamTwo: fifthTeam,
-          refs: firstTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-        },
-        {
-          teamOne: firstTeam,
-          teamTwo: fourthTeam,
-          refs: thirdTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-        },
-        {
-          teamOne: thirdTeam,
-          teamTwo: fourthTeam,
-          refs: firstTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-        },
-        {
-          teamOne: firstTeam,
-          teamTwo: secondTeam,
-          refs: fourthTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-        },
-      ];
-      console.log(
-        gamesToInsert.map((game) => {
-          return gamesToReturn.push(createGame(game));
-        })
-      );
-      console.log("Games Returned", gamesToReturn);
-      return gamesToReturn;
-    }
-    case 6: {
-    }
-    case 7: {
-    }
-    case 8: {
-    }
-  }
-}
-
-type gameCreationProps = {
-  gameOneScoreCap: number;
-  gameTwoScoreCap?: number;
-  gameThreeScoreCap?: number;
-  isScoreCapped: boolean;
-  numSets: number;
-  currentSet: number;
-  teamOne: Team;
-  teamTwo: Team;
-  refs: Team;
-  poolId?: string;
-  isBracket?: boolean;
-  bracketId?: boolean;
-};
-
-function createGame({
-  numSets,
-  isBracket,
-  gameOneScoreCap,
-  gameTwoScoreCap,
-  gameThreeScoreCap,
-  isScoreCapped,
-  currentSet,
-  teamOne,
-  teamTwo,
-  refs,
-  poolId,
-  bracketId,
-}: gameCreationProps) {
-  if (isBracket) {
-  }
-  switch (numSets) {
-    case 1: {
-      return {
-        poolId,
-        gameOneScoreCap,
-        currentSet,
-        teamOne,
-        teamTwo,
-        refs,
-        gameOneTeamOneScore: 0,
-        gameOneTeamTwoScore: 0,
-        isScoreCapped,
-      };
-    }
-    case 2: {
-      return {
-        poolId,
-        gameOneScoreCap,
-        gameTwoScoreCap,
-        currentSet,
-        teamOne,
-        teamTwo,
-        refs,
-        gameOneTeamOneScore: 0,
-        gameOneTeamTwoScore: 0,
-        gameTwoTeamOneScore: 0,
-        gameTwoTeamTwoScore: 0,
-        isScoreCapped,
-      };
-    }
-    case 3: {
-      return {
-        poolId,
-        gameOneScoreCap,
-        gameTwoScoreCap,
-        gameThreeScoreCap,
-        currentSet,
-        teamOne,
-        teamTwo,
-        refs,
-        gameOneTeamOneScore: 0,
-        gameOneTeamTwoScore: 0,
-        gameTwoTeamOneScore: 0,
-        gameTwoTeamTwoScore: 0,
-        gameThreeTeamOneScore: 0,
-        gameThreeTeamTwoScore: 0,
-        isScoreCapped,
-      };
-    }
-  }
-}
-
-type OtherPoolTableProps = {
-  pool: FakeEntriesTeamArr;
-  poolNumber: number;
-  pools: FakeEntriesTeamArr[];
-  setPools: Dispatch<SetStateAction<FakeEntriesTeamArr[]>>;
-  isMyPool: boolean;
-};
-
-export const OtherPoolTable = ({
-  pool,
-  poolNumber,
-  pools,
-  setPools,
-  isMyPool,
-}: OtherPoolTableProps) => {
-  const swapArray = pools.map((pool) => {
-    return false;
-  });
-  const [isSwapping, setIsSwapping] = useState(swapArray);
-
-  const updateSwap = (index: number) => {
-    const newArr = [...isSwapping];
-    newArr[index] = !newArr[index];
-    setIsSwapping(newArr);
-  };
-
-  const updatePoolLogic = (
-    poolDelIndex: number,
-    poolInsIndex: number,
-    teamIndex: number,
-    pools: FakeEntriesTeamArr[]
-  ) => {
-    const newArr = [...pools];
-    const poolToDelFrom = newArr[poolDelIndex];
-    const temp = poolToDelFrom.splice(teamIndex, 1)[0];
-    newArr[poolInsIndex].push(temp);
-    newArr[poolInsIndex].sort(function (a, b) {
-      return b.teamRating - a.teamRating;
-    });
-    setPools(newArr);
-  };
-
-  return (
-    <>
-      <table className="border-seperate border-none">
-        <thead
-          className={`justify-center ${
-            isMyPool ? "bg-green-500" : "bg-[#575757]"
-          } py-2 text-2xl font-bold text-white`}
-        >
-          <tr>
-            <th colSpan={4} className="rounded-t-lg">
-              Pool {poolNumber}
-            </th>
-          </tr>
-        </thead>
-        <tr>
-          <td colSpan={1} className="p-1 text-center font-semibold">
-            Place
-          </td>
-          <td colSpan={3} className="p-1 text-center font-semibold">
-            Team
-          </td>
-        </tr>
-        {pool?.map((team, i) => {
-          return (
-            <tr key={i}>
-              <td colSpan={1} className="border-r-2 p-1">
-                {i + 1}
-              </td>
-              <td colSpan={2} className="px-4">
-                {team.players.map((player, j, arr) => {
-                  return (
-                    <>
-                      {j == arr.length - 1 ? (
-                        <span key={player.userId}>{player.user.fullName}</span>
-                      ) : (
-                        <span key={player.userId}>
-                          {player.user.fullName} {" - "}
-                        </span>
-                      )}
-                    </>
-                  );
-                })}
-              </td>
-              <td colSpan={1} className="border-l-2 p-1">
-                <p>{}</p>
-              </td>
-            </tr>
-          );
-        })}
-      </table>
-    </>
-  );
-};
-
-type GameSchedule = {
-  poolId: string;
-};
-
-type PoolScheduleProps = {
-  schedule: [];
-};
-export const PoolSchedule = ({ schedule }: PoolScheduleProps) => {
-  console.log(schedule);
-  return (
-    <div>
-      <h1>Pool Schedule</h1>
-      <div>
-        {/* {schedule.map((game, i) => {
-          return (
-            <div key={ i }>
-              <p>{game.poolId}</p>
-            </div>
-          )
-        })} */}
-      </div>
-    </div>
-  );
 };
