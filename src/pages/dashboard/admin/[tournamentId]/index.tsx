@@ -2,7 +2,7 @@ import Sidebar from "../../../../components/Sidebar";
 import TopBar from "../../../../components/TopBar";
 import { trpc } from "../../../../utils/trpc";
 import { useRouter } from "next/router";
-import { Division, Team } from "@prisma/client";
+import { Division, Team, User, UsersInTeam } from "@prisma/client";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Link from "next/link";
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
@@ -13,6 +13,7 @@ import {
   FakeEntriesTeamArr,
   PoolTable,
 } from "./[divisionId]";
+import { useAuth } from "@clerk/nextjs";
 
 export async function getServerSideProps(context: any) {
   const { userId } = getAuth(context.req);
@@ -28,10 +29,35 @@ export async function getServerSideProps(context: any) {
   return { props: { ...buildClerkProps(context.req) } };
 }
 
+type myFakeTeam = Team & {
+  players: (UsersInTeam & {
+    user: User;
+  })[];
+  poolWins: number;
+  poolLosses: number;
+};
+
+function amIInThePool(element: FakeEntriesTeamArr, currentUserName: string) {
+  for (let i = 0; i < element.length; i++) {
+    for (const player of element[i].players) {
+      if (currentUserName === player.user.fullName) {
+        console.log(currentUserName, player.user.fullName);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 export default function AdminTournamentView() {
   const router = useRouter();
   const { tournamentId } = router.query;
   const tId: number = parseInt(tournamentId as string);
+  const { isSignedIn, userId } = useAuth();
+  const currentUserName = trpc.user.findUsername.useQuery({
+    id: userId as string,
+  }).data;
+
   const tournamentData = trpc.tournament.getTournament.useQuery({
     id: tId,
   }).data;
@@ -41,13 +67,69 @@ export default function AdminTournamentView() {
     []
   );
   const [pools, setPools] = useState<Array<FakeEntriesTeamArr>>([]);
+  const [myPool, setMyPool] = useState<FakeEntriesTeamArr>([]);
+  const [myEntry, setMyEntry] = useState<myFakeTeam>();
+  const [mySchedule, setMySchedule] = useState<[]>([]);
 
   useEffect(() => {
-    setFakeEntriesToUse(createFakeEntriesAnyTeams(8));
+    setFakeEntriesToUse(createFakeEntriesAnyTeams(11));
   }, []);
   useEffect(() => {
-    setPools(createPoolsFromEntries(fakeEntriesToUse));
-  }, [fakeEntriesToUse]);
+    setMySchedule(createGameSchedule(myPool));
+  }, [myPool]);
+  useEffect(() => {
+    if (currentUserName && userId) {
+      setMyEntry({
+        teamId: 69, //nice
+        divisionId: 1,
+        tournamentId: tId,
+        teamRating: 420,
+        poolId: "1",
+        poolWins: 0,
+        poolLosses: 0,
+        players: [
+          {
+            userId: userId,
+            teamId: 69,
+            user: {
+              id: userId,
+              fullName: currentUserName,
+              isAdmin: true,
+              isTournamentDirector: true,
+              playerRating: 420,
+            },
+          },
+          {
+            userId: "222",
+            teamId: 69,
+            user: {
+              id: "222",
+              fullName: "Joe Mama",
+              isAdmin: false,
+              isTournamentDirector: false,
+              playerRating: 420,
+            },
+          },
+        ],
+      });
+    }
+  }, [currentUserName, userId]);
+  useEffect(() => {
+    if (currentUserName && userId && myEntry) {
+      fakeEntriesToUse.push(myEntry);
+    }
+    const poolsFromEntries = createPoolsFromEntries(fakeEntriesToUse);
+    const poolWithMe = poolsFromEntries.filter(function (element) {
+      return amIInThePool(element, currentUserName as string);
+    });
+    const poolsWithoutMe = poolsFromEntries.filter(function (element) {
+      return !amIInThePool(element, currentUserName as string);
+    });
+    console.log(poolWithMe[0]);
+    setMyPool(poolWithMe[0]);
+    setPools(poolsWithoutMe);
+  }, [fakeEntriesToUse, myEntry]);
+
   return (
     <div className="flex h-screen w-screen">
       <div className="flex h-full w-full flex-row">
@@ -81,27 +163,39 @@ export default function AdminTournamentView() {
                 </button>
                 {tournamentData?.tournament.dayOneStarted ? (
                   <div className="flex w-full flex-col">
-                    <div className="flex w-full flex-row space-x-4 py-4">
+                    <div className="flex w-full flex-row space-x-4 pb-8 pt-4">
                       <div className="flex w-1/2 flex-col">
                         <p className="text-3xl">Pool:</p>
-                        {/* <PoolTable /> */}
+                        <div className="flex justify-center py-2">
+                          <OtherPoolTable
+                            pool={myPool}
+                            poolNumber={1}
+                            pools={pools}
+                            setPools={setPools}
+                            isMyPool={true}
+                          />
+                        </div>
                       </div>
                       <div className="flex w-1/2 flex-col">
                         <p className="text-3xl">Pool Schedule:</p>
+                        <div>
+                          <PoolSchedule schedule={mySchedule} />
+                        </div>
                       </div>
                     </div>
                     <div>
-                      <p className="text-3xl pb-4">Other Pools:</p>
+                      <p className="pb-4 text-3xl">Other Pools:</p>
                       <div className="flex flex-row space-x-6">
                         {pools.map((pool, index, arr) => {
                           return (
                             <div className="flex w-80 flex-col" key={index}>
-                              <p className="text-xl pb-2">Pool {index + 1}</p>
+                              <p className="pb-2 text-xl">Pool {index + 1}</p>
                               <OtherPoolTable
                                 pool={pool}
                                 poolNumber={index + 1}
                                 pools={arr}
                                 setPools={setPools}
+                                isMyPool={false}
                               />
                             </div>
                           );
@@ -140,6 +234,9 @@ export default function AdminTournamentView() {
                         </div>
                         <div className="flex flex-col">
                           <p>Pool Schedule</p>
+                          <div>
+                            <PoolSchedule schedule={mySchedule} />
+                          </div>
                         </div>
                       </div>
                       <div>
@@ -334,9 +431,10 @@ type gameScheduleOptions = {
   numNets: number;
 };
 
-function createGameSchedule(pool: FakeEntriesTeamArr, {}: gameScheduleOptions) {
+function createGameSchedule(pool: FakeEntriesTeamArr) {
   let gamesToInsert: gameCreationProps[] = [];
-  switch (pool.length) {
+  let gamesToReturn = [];
+  switch (pool?.length) {
     case 3: {
       const [firstTeam, secondTeam, thirdTeam] = [pool[0], pool[1], pool[2]];
       gamesToInsert = [
@@ -591,9 +689,11 @@ function createGameSchedule(pool: FakeEntriesTeamArr, {}: gameScheduleOptions) {
       ];
       console.log(
         gamesToInsert.map((game) => {
-          return createGame(game);
+          return gamesToReturn.push(createGame(game));
         })
       );
+      console.log("Games Returned", gamesToReturn);
+      return gamesToReturn;
     }
     case 6: {
     }
@@ -692,19 +792,33 @@ type OtherPoolTableProps = {
   poolNumber: number;
   pools: FakeEntriesTeamArr[];
   setPools: Dispatch<SetStateAction<FakeEntriesTeamArr[]>>;
+  isMyPool: boolean;
 };
 
-export const OtherPoolTable = ({ pool, poolNumber, pools, setPools }: OtherPoolTableProps) => {
-  const swapArray = pools.map((pool) => { return false });
+export const OtherPoolTable = ({
+  pool,
+  poolNumber,
+  pools,
+  setPools,
+  isMyPool,
+}: OtherPoolTableProps) => {
+  const swapArray = pools.map((pool) => {
+    return false;
+  });
   const [isSwapping, setIsSwapping] = useState(swapArray);
 
   const updateSwap = (index: number) => {
     const newArr = [...isSwapping];
     newArr[index] = !newArr[index];
     setIsSwapping(newArr);
-  }
+  };
 
-  const updatePoolLogic = (poolDelIndex: number, poolInsIndex: number ,teamIndex: number, pools:FakeEntriesTeamArr[]) => {
+  const updatePoolLogic = (
+    poolDelIndex: number,
+    poolInsIndex: number,
+    teamIndex: number,
+    pools: FakeEntriesTeamArr[]
+  ) => {
     const newArr = [...pools];
     const poolToDelFrom = newArr[poolDelIndex];
     const temp = poolToDelFrom.splice(teamIndex, 1)[0];
@@ -713,12 +827,16 @@ export const OtherPoolTable = ({ pool, poolNumber, pools, setPools }: OtherPoolT
       return b.teamRating - a.teamRating;
     });
     setPools(newArr);
-  }
+  };
 
   return (
     <>
       <table className="border-seperate border-none">
-        <thead className="justify-center bg-[#575757] py-2 text-2xl font-bold text-white">
+        <thead
+          className={`justify-center ${
+            isMyPool ? "bg-green-500" : "bg-[#575757]"
+          } py-2 text-2xl font-bold text-white`}
+        >
           <tr>
             <th colSpan={4} className="rounded-t-lg">
               Pool {poolNumber}
@@ -733,11 +851,13 @@ export const OtherPoolTable = ({ pool, poolNumber, pools, setPools }: OtherPoolT
             Team
           </td>
         </tr>
-        {pool.map((team, i) => {
+        {pool?.map((team, i) => {
           return (
             <tr key={i}>
-              <td colSpan={1} className="border-r-2 p-1">{i + 1}</td>
-              <td colSpan={2} className='px-4'>
+              <td colSpan={1} className="border-r-2 p-1">
+                {i + 1}
+              </td>
+              <td colSpan={2} className="px-4">
                 {team.players.map((player, j, arr) => {
                   return (
                     <>
@@ -754,11 +874,36 @@ export const OtherPoolTable = ({ pool, poolNumber, pools, setPools }: OtherPoolT
               </td>
               <td colSpan={1} className="border-l-2 p-1">
                 <p>{}</p>
-                </td>
+              </td>
             </tr>
           );
         })}
       </table>
     </>
+  );
+};
+
+type GameSchedule = {
+  poolId: string;
+};
+
+type PoolScheduleProps = {
+  schedule: [];
+};
+export const PoolSchedule = ({ schedule }: PoolScheduleProps) => {
+  console.log(schedule);
+  return (
+    <div>
+      <h1>Pool Schedule</h1>
+      <div>
+        {/* {schedule.map((game, i) => {
+          return (
+            <div key={ i }>
+              <p>{game.poolId}</p>
+            </div>
+          )
+        })} */}
+      </div>
+    </div>
   );
 };
