@@ -2,6 +2,9 @@ import { Division, Team, User, UsersInTeam } from "@prisma/client";
 import { trpc } from "utils/trpc";
 import { NewDivisionForm } from "./DivisionForm";
 import { DivisionAccordian } from "./Admin/DivisionAccordian";
+import { FakeEntriesTeamArr } from "../utils/types/team";
+import { useState, useEffect } from "react";
+import { createFakeEntriesAnyTeams, createPoolsFromEntries } from "utils/lib/team-utils";
 
 export type DivisionPannelProps = {
     format: string;
@@ -16,8 +19,9 @@ export type DivisionPannelProps = {
     })[]
 }
   
-  export function DivisionPannel(props: DivisionPannelProps) {
-    const divisions: DPannelArr[] = [];
+export function DivisionPannel(props: DivisionPannelProps) {
+  const divisions: DPannelArr[] = [];
+  
     if (props.format.includes("SAME_SEX")) {
       const divMen = trpc.tournament.getDivisionsByType.useQuery({
         tournamentId: props.id,
@@ -58,7 +62,7 @@ export type DivisionPannelProps = {
               <div className="flex flex-col space-y-4">
                 <div className="flex flex-col">
                   <p className="pb-2 text-lg">Mens</p>
-                  <div className="flex flex-row space-x-4">
+                  <div className="flex flex-col">
                     {divisions.filter(isCorrectDivision("MENS")).map((div) => (
                         <DivisionAccordian division={div} key={div.name} />
                     ))}
@@ -67,7 +71,7 @@ export type DivisionPannelProps = {
                 </div>
                 <div>
                   <p className="pb-2 text-lg">Womens</p>
-                  <div className="flex flex-row space-x-4">
+                  <div className="flex flex-col">
                     {divisions.filter(isCorrectDivision("WOMENS")).map((div) => (
                     <DivisionAccordian division={div} key={div.name} />
                     ))}
@@ -78,7 +82,7 @@ export type DivisionPannelProps = {
             ) : (
               <div>
                 <p className="pb-2 text-lg">Not Same Sex</p>
-                <div className="flex flex-row space-x-4">
+                <div className="flex flex-col">
                   {divisions.filter(isCorrectDivision("COED")).map((div) => (
                     <DivisionAccordian division={div} key={div.name} />
                   ))}
