@@ -171,6 +171,17 @@ export const tournamentRouter = router({
           tournamentId: input.tournamentId,
           type: input.type,
         },
+        include: {
+          entries: {
+            include: {
+              players: {
+                include: {
+                  user: true,
+                },
+              },
+            },
+          },
+        },
       });
       return divisions;
     }),
