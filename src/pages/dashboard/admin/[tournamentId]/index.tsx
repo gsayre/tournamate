@@ -109,7 +109,7 @@ export default function AdminTournamentView() {
         <Sidebar />
         <div className="flex h-full w-full flex-col ">
           <TopBar />
-          <div className=" h-full w-full  p-4">
+          <div className=" h-full w-full p-4 overflow-auto">
             <p className="text-2xl text-gray-500">
               {tournamentData?.tournament.name}
             </p>
@@ -138,7 +138,7 @@ export default function AdminTournamentView() {
                   <div className="flex w-full flex-col">
                     <div className="flex w-full flex-row space-x-4 pb-8 pt-4">
                       <div className="flex w-1/2 flex-col">
-                        <p className="text-3xl">Pool:</p>
+                        <p className="text-3xl">My Pool:</p>
                         <div className="flex justify-center py-2">
                           <MyPoolTable
                             pool={myPool}
@@ -157,6 +157,7 @@ export default function AdminTournamentView() {
                             pool={myPool}
                             currentUserName={currentUserName as string}
                             setMyPool={setMyPool}
+                            tournamentId={tId}
                           />
                         </div>
                       </div>

@@ -1,5 +1,5 @@
 import { PoolTable } from "@components/PoolTable";
-import { Division, Team, UsersInTeam, User } from "@prisma/client";
+import { Division, Team, UsersInTeam, User } from "@prisma/client"; 
 import { FakeEntriesTeamArr } from "../../utils/types/team";
 import { useEffect, useState } from "react";
 import { createFakeEntriesAnyTeams, createPoolsFromEntries } from "utils/lib/team-utils";

@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
-import type { NextPage } from "next";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@clerk/nextjs";
+import type { NextPage } from "next";;
 import Sidebar from "../../components/Sidebar";
 import TopBar from "../../components/TopBar";
 
@@ -56,7 +56,7 @@ const Profile: NextPage = () => {
 };
 
 function ProfileBanner() {
-  const { data: session } = useSession();
+  const { userId,  } = useAuth();
   return (
     <div className="mb-4 flex flex-col px-4">
       <div className="h-44 w-full rounded-xl bg-[url('/images/nature.webp')] bg-cover bg-center bg-origin-border" />
@@ -64,7 +64,7 @@ function ProfileBanner() {
         <div className="flex">
           <div className="-mt-24 h-48 w-48 rounded-full bg-black bg-[url('/images/person1.avif')] bg-cover bg-center" />
           <div className="pl-6">
-            <p className="text-3xl font-bold">{session?.user?.name}</p>
+            <p className="text-3xl font-bold">{userId}</p>
             <p className="text-xl">Player Location</p>
           </div>
         </div>
@@ -108,7 +108,6 @@ const dummyPlacementData = [
 ];
 
 function TournamentPlacement() {
-  const { data: session } = useSession();
 
   return (
     <div className="flex h-64 w-full flex-col rounded-xl bg-white p-4 drop-shadow-lg">

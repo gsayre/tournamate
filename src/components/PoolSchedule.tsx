@@ -9,6 +9,7 @@ import {
 } from "utils/lib/schedule-utils";
 import { amIInTeam, amIReffing } from "utils/lib/am-i-in-utils";
 import { FakeGame } from "../utils/types/game";
+import Link from "next/link";
 
 type GameSchedule = {
   poolId: string;
@@ -18,12 +19,14 @@ type PoolScheduleProps = {
   pool: FakeEntriesTeamArr;
   currentUserName: string;
   setMyPool: React.Dispatch<React.SetStateAction<FakeEntriesTeamArr>>;
+  tournamentId: number;
 };
 
 export const PoolSchedule = ({
   pool,
   currentUserName,
   setMyPool,
+  tournamentId,
 }: PoolScheduleProps) => {
   const [mySchedule, setMySchedule] = useState<FakeGame[]>();
   const [currentGameIndex, setCurrentGameIndex] = useState<number>();
@@ -101,9 +104,9 @@ export const PoolSchedule = ({
                 </div>
                 {amIReffing(game, currentUserName) && currentGameIndex == i ? (
                   <div className="flex">
-                    <button className="rounded-xl bg-green-500 p-2">
+                    <Link className="rounded-xl bg-green-500 p-2" href={`./${tournamentId}/${i}`}>
                       Ref Game
-                    </button>
+                    </Link>
                   </div>
                 ) : currentGameIndex == i ? (
                   <div className="flex">

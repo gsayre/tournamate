@@ -62,9 +62,10 @@ const AdminPannel = () => {
 
   return (
     <div className="flex h-full w-full flex-col rounded-md bg-white p-4">
-      <h1 className="text-3xl font-bold">Admin Portal</h1>
-      <div className="flex pt-4">
-        {tdRequests.data?.map((request) => (
+      <h1 className="text-3xl font-bold pb-4">Admin Portal</h1>
+      <div className="flex flex-col pt-4">
+        <p className="text-xl pb-2 font-semibold">Tournament Director Requests</p>
+        {tdRequests.data && tdRequests.data?.length > 0 ? (tdRequests.data?.map((request) => (
           <div
             key={request.tdRequestId}
             className="flex w-full flex-col  space-x-4 rounded-md bg-white p-4 drop-shadow-lg"
@@ -98,7 +99,7 @@ const AdminPannel = () => {
               </div>
             </div>
           </div>
-        ))}
+        ))) : (<p className="indent-4 font-normal">No requests...</p>)}
       </div>
     </div>
   );

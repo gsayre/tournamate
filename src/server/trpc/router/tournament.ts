@@ -239,15 +239,11 @@ export const tournamentRouter = router({
     });
     return teamInvitations;
   }),
-  acceptTeamInvitation: protectedProcedure
-    .input(
-      z.object({
+  acceptTeamInvitation: protectedProcedure.input(z.object({
         teamInvitationId: z.number(),
         inviterId: z.string(),
         tournamentId: z.coerce.number(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
+      })).mutation(async ({ ctx, input }) => {
       const teamInvitation = await ctx.prisma.teamInvitation.delete({
         where: {
           inviteId: input.teamInvitationId,
@@ -313,7 +309,7 @@ export const tournamentRouter = router({
         },
       });
       return divUpdated;
-    }),
+}),
   declineTeamInvitation: protectedProcedure
     .input(z.object({ teamInvitationId: z.number() }))
     .mutation(async ({ ctx, input }) => {
@@ -363,5 +359,10 @@ export const tournamentRouter = router({
         });
       }
       return tournament;
+    }),
+    enterTournament: protectedProcedure.input(z.object({})).mutation(async ({ ctx }) => {
+    }),
+    mockTournamentEntries: protectedProcedure.input(z.object({})).mutation(async ({ ctx }) => {
+      
     }),
 });
