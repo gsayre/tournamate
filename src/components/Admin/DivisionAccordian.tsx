@@ -21,6 +21,7 @@ export type divAccordianProps = {
        useState<FakeEntriesTeamArr>([]);
 
      const [pools, setPools] = useState<Array<FakeEntriesTeamArr>>([]);
+     
 
      useEffect(() => {
        setFakeEntriesToUse(createFakeEntriesAnyTeams(8));
@@ -62,6 +63,9 @@ export type divAccordianProps = {
             }}
           >
             Toggle Day Of
+          </button>
+          <button className="rounded-lg bg-white p-2 font-semibold text-black">
+            Add Entry
           </button>
         </div>
 

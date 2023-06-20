@@ -90,6 +90,16 @@ type FakeTeamCriteria = {
   userTwoName: string;
 };
 
+type FakeEntriesTeamArr = FakeEntriesTeam[];
+
+export type FakeEntriesTeam = Team & {
+  players: (UsersInTeam & {
+    user: User;
+  })[];
+  poolWins: number;
+  poolLosses: number;
+};
+
 export function createFakeTeam({
   teamId,
   teamRating,
@@ -100,7 +110,7 @@ export function createFakeTeam({
   userTwoId,
   userOneName,
   userTwoName,
-}: FakeTeamCriteria): FakeEntriesTeam {
+}: FakeTeamCriteria): Team {
   const fakeTeam = {
     teamId,
     divisionId,
@@ -136,5 +146,7 @@ export function createFakeTeam({
   };
   return fakeTeam;
 }
+
+
   
   
