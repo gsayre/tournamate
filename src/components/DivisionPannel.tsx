@@ -1,4 +1,4 @@
-import { Division, Team, User, UsersInTeam } from "@prisma/client";
+import { Division, Format, Team, User, UsersInTeam } from "@prisma/client";
 import { trpc } from "utils/trpc";
 import { NewDivisionForm } from "./DivisionForm";
 import { DivisionAccordian } from "./Admin/DivisionAccordian";
@@ -64,7 +64,13 @@ export function DivisionPannel(props: DivisionPannelProps) {
                   <p className="pb-2 text-lg">Mens</p>
                   <div className="flex flex-col">
                     {divisions.filter(isCorrectDivision("MENS")).map((div) => (
-                        <DivisionAccordian division={div} key={div.name} />
+                      <DivisionAccordian
+                        division={div}
+                        tournamentId={props.id}
+                        divisionType={props.format as Format}
+                        divisionSex={"MENS"}
+                        key={div.name}
+                      />
                     ))}
                     <NewDivisionForm type={props.format} sex={"MENS"} />
                   </div>
@@ -72,9 +78,17 @@ export function DivisionPannel(props: DivisionPannelProps) {
                 <div>
                   <p className="pb-2 text-lg">Womens</p>
                   <div className="flex flex-col">
-                    {divisions.filter(isCorrectDivision("WOMENS")).map((div) => (
-                    <DivisionAccordian division={div} key={div.name} />
-                    ))}
+                    {divisions
+                      .filter(isCorrectDivision("WOMENS"))
+                      .map((div) => (
+                        <DivisionAccordian
+                          division={div}
+                          tournamentId={props.id}
+                          divisionType={props.format as Format}
+                          divisionSex={"WOMENS"}
+                          key={div.name}
+                        />
+                      ))}
                     <NewDivisionForm type={props.format} sex={"WOMENS"} />
                   </div>
                 </div>
@@ -84,7 +98,12 @@ export function DivisionPannel(props: DivisionPannelProps) {
                 <p className="pb-2 text-lg">Not Same Sex</p>
                 <div className="flex flex-col">
                   {divisions.filter(isCorrectDivision("COED")).map((div) => (
-                    <DivisionAccordian division={div} key={div.name} />
+                    <DivisionAccordian
+                      division={div}
+                      tournamentId={props.id}
+                      divisionType={props.format as Format}
+                      key={div.name}
+                    />
                   ))}
                   <NewDivisionForm type={props.format} sex={"COED"} />
                 </div>
