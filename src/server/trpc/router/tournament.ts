@@ -478,7 +478,7 @@ export const tournamentRouter = router({
           }
         }
       })
-      
+
     }),
 });
 
@@ -550,3 +550,61 @@ export function createFakeTeam({
   };
   return fakeTeam;
 }
+
+export const createPoolsFromEntries = (
+  teams: FakeEntriesTeamArr
+): Array<FakeEntriesTeamArr> => {
+  const returnArr: Array<FakeEntriesTeamArr> = [];
+  let zigzag = 0;
+  let zig = false;
+  let zag = false;
+  let pausezigzag = false;
+  teams.sort(function (a, b) {
+    return b.teamRating - a.teamRating;
+  });
+  if (teams.length > 5) {
+    const numPools = Math.ceil(teams.length / 4);
+    for (let i = 0; i < numPools; i++) {
+      returnArr.push([]);
+    }
+    for (const team of teams) {
+      if (zigzag == 0 && zag == false && zig == false) {
+        zig = true;
+        zag = false;
+        returnArr[zigzag].push(team);
+        zigzag++;
+      } else if (zigzag == 0) {
+        zig = true;
+        zag = false;
+        returnArr[zigzag].push(team);
+        if (pausezigzag) {
+          pausezigzag = false;
+          zigzag++;
+        } else {
+          pausezigzag = true;
+        }
+      } else if (zigzag == numPools - 1) {
+        zig = false;
+        zag = true;
+        returnArr[zigzag].push(team);
+        if (pausezigzag) {
+          pausezigzag = false;
+          zigzag--;
+        } else {
+          pausezigzag = true;
+        }
+      } else if (zig) {
+        returnArr[zigzag].push(team);
+        zigzag++;
+      } else if (zag) {
+        returnArr[zigzag].push(team);
+        zigzag--;
+      }
+    }
+    return returnArr;
+  } else {
+    returnArr.push(teams);
+    return returnArr;
+  }
+  return returnArr;
+};
