@@ -16,16 +16,20 @@ export type divAccordianProps = {
         user: User;
       })[];
     })[];
-  },
-  tournamentId: number,
-  divisionType: Format,
-  divisionSex?: Gender, //yes please
+  };
+  tournamentId: number;
+  divisionType: Format;
+  divisionSex?: Gender; //yes please
 };
 
-type Gender = "MENS" | "WOMENS"| undefined
+type Gender = "MENS" | "WOMENS" | undefined;
 
-
-export const DivisionAccordian = ({ division, tournamentId, divisionType, divisionSex }: divAccordianProps) => {
+export const DivisionAccordian = ({
+  division,
+  tournamentId,
+  divisionType,
+  divisionSex,
+}: divAccordianProps) => {
   const addUserToDivision = trpc.tournament.mockTournamentEntries.useMutation();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -85,7 +89,7 @@ export const DivisionAccordian = ({ division, tournamentId, divisionType, divisi
                 tournamentId: 1,
                 divisionId: division.divisionId,
                 typeOfEntry: divisionType,
-                sexOfEntry: divisionSex
+                sexOfEntry: divisionSex,
               });
             }}
           >
@@ -127,41 +131,28 @@ export const DivisionAccordian = ({ division, tournamentId, divisionType, divisi
                 <p className="pb-2 text-2xl">Entries</p>
                 <div className="flex flex-col">
                   {division.entries &&
-                      division.entries.map((entry) => {
-                        return (
-                          <div key={entry.teamId}>
-                            {entry.players.map((player) => {
-                              return (
-                                <div key={player.userId}>
-                                  {player.user.fullName}{" "}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        );
-                      })}
-                  {/* {fakeEntriesToUse.map((entry) => {
-                    return (
-                      <li key={entry.teamId}>
-                        {entry.players.map((player, i, arr) => {
-                          return (
-                            <>
-                              {i == arr.length - 1 ? (
-                                <span key={player.userId}>
-                                  {player.user.fullName}
-                                </span>
-                              ) : (
-                                <span key={player.userId}>
-                                  {player.user.fullName} {" - "}
-                                </span>
-                              )}
-                            </>
-                          );
-                        })}
-                        <span>{" " + entry.teamRating}</span>
-                      </li>
-                    );
-                  })} */}
+                    division.entries.map((entry, i) => {
+                      return (
+                        <div key={entry.teamId}>
+                          <span className="pr-2">{i+1}</span>
+                          {entry.players.map((player, i, arr) => {
+                            return (
+                              <>
+                                {i == arr.length - 1 ? (
+                                  <span key={player.userId}>
+                                    {player.user.fullName}
+                                  </span>
+                                ) : (
+                                  <span key={player.userId}>
+                                    {player.user.fullName} {" - "}
+                                  </span>
+                                )}
+                              </>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
                   <ol className="list-inside list-decimal text-lg"></ol>
                 </div>
                 <div className="flex flex-col pt-2">
