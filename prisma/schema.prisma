@@ -41,6 +41,8 @@ model TeamInvitation {
   tournament Tournament @relation(fields: [tournamentId], references: [tournamentId])
   divisionId Int
   @@unique([inviteId, inviterId])
+  @@index([inviterId])
+  @@index([tournamentId])
 }
 
 model UserInInvitation {

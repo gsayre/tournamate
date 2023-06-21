@@ -9,6 +9,7 @@ import {
   Tournament,
   TeamInvitation,
   Team,
+  UsersInTeam,
 } from "@prisma/client";
 
 export const tournamentRouter = router({
@@ -239,11 +240,15 @@ export const tournamentRouter = router({
     });
     return teamInvitations;
   }),
-  acceptTeamInvitation: protectedProcedure.input(z.object({
+  acceptTeamInvitation: protectedProcedure
+    .input(
+      z.object({
         teamInvitationId: z.number(),
         inviterId: z.string(),
         tournamentId: z.coerce.number(),
-      })).mutation(async ({ ctx, input }) => {
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
       const teamInvitation = await ctx.prisma.teamInvitation.delete({
         where: {
           inviteId: input.teamInvitationId,
@@ -309,7 +314,7 @@ export const tournamentRouter = router({
         },
       });
       return divUpdated;
-}),
+    }),
   declineTeamInvitation: protectedProcedure
     .input(z.object({ teamInvitationId: z.number() }))
     .mutation(async ({ ctx, input }) => {
@@ -360,9 +365,188 @@ export const tournamentRouter = router({
       }
       return tournament;
     }),
-    enterTournament: protectedProcedure.input(z.object({})).mutation(async ({ ctx }) => {
-    }),
-    mockTournamentEntries: protectedProcedure.input(z.object({})).mutation(async ({ ctx }) => {
+  enterTournament: protectedProcedure
+    .input(z.object({}))
+    .mutation(async ({ ctx }) => {}),
+  mockTournamentEntries: protectedProcedure
+    .input(
+      z.object({
+        divisionId: z.number(),
+        tournamentId: z.number(),
+        typeOfEntry: z.nativeEnum(Format),
+        sexOfEntry: z.enum(["MENS", "WOMENS"]).optional()
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      let tournamentEntries;
+      let fullName: string, idSegment:string, playerRating, userId;
+      let entryOneBoy, entryTwoBoy, entryOneGirl, entryTwoGirl, entryTeam
+      // create two users
+      if (input.typeOfEntry === "SAME_SEX_DOUBLES") {
+        if (input.sexOfEntry === "MENS") {
+          idSegment = Math.ceil(Math.random() * 1000000000).toString()
+          fullName = `Boy ${idSegment}`
+          entryOneBoy = await ctx.prisma.user.create({
+            data: {
+              id: idSegment,
+              fullName: fullName,
+            },
+          });
+          idSegment = Math.ceil(Math.random() * 1000000000).toString()
+          fullName = `Boy ${idSegment}`
+          entryTwoBoy = await ctx.prisma.user.create({
+            data: {
+              id: idSegment,
+              fullName: fullName,
+            },
+          });
+        } else if (input.sexOfEntry === "WOMENS") {
+          idSegment = Math.ceil(Math.random() * 1000000000).toString()
+          fullName = `Girl ${idSegment}`
+          entryOneGirl = await ctx.prisma.user.create({
+            data: {
+              id: idSegment,
+              fullName: fullName,
+            },
+          });
+          idSegment = Math.ceil(Math.random() * 1000000000).toString()
+          fullName = `Girl ${idSegment}`
+          entryTwoGirl = await ctx.prisma.user.create({
+            data: {
+              id: idSegment,
+              fullName: fullName,
+            },
+          });
+        }
+      } else if (
+        input.typeOfEntry === "COED_DOUBLES" ||
+        input.typeOfEntry === "REVERSE_COED_DOUBLES"
+      ) {
+        idSegment = Math.ceil(Math.random() * 1000000000).toString()
+        fullName = `Boy ${idSegment}`
+        entryOneBoy = await ctx.prisma.user.create({
+          data: {
+            id: idSegment,
+            fullName: fullName,
+          },
+        });
+        idSegment = Math.ceil(Math.random() * 1000000000).toString()
+        fullName = `Girl ${idSegment}`
+        entryOneGirl = await ctx.prisma.user.create({
+          data: {
+            id: idSegment,
+            fullName: fullName,
+          },
+        });
+      }
+
+      let teammateOneId, teammateTwoId
+      // create a team and add the users to the team and to the division
+      if (input.typeOfEntry === "SAME_SEX_DOUBLES") {
+        if (input.sexOfEntry === "MENS") {
+         teammateOneId = entryOneBoy?.id
+         teammateTwoId = entryTwoBoy?.id
+        } else if (input.sexOfEntry === "WOMENS") {
+          teammateOneId = entryOneGirl?.id
+          teammateTwoId = entryTwoGirl?.id
+        }
+      } else if (
+        input.typeOfEntry === "COED_DOUBLES" ||
+        input.typeOfEntry === "REVERSE_COED_DOUBLES"
+      ) {
+        teammateOneId = entryOneBoy?.id
+        teammateTwoId = entryOneGirl?.id
+      }
+      entryTeam = await ctx.prisma.team.create({
+        data: {
+          divisionId: input.divisionId,
+          tournamentId: input.tournamentId,
+          players: {
+            create:
+            [
+              {user: {
+                connect : {
+                  id: teammateOneId
+                }
+              }},
+              {user: {
+                connect: {
+                  id: teammateTwoId
+                }
+              }}
+            ]
+          }
+        }
+      })
       
     }),
 });
+
+type FakeTeamCriteria = {
+  teamId: number;
+  divisionId: number;
+  teamRating: number;
+  tournamentId: number;
+  poolId: string;
+  userOneId: string;
+  userTwoId: string;
+  userOneName: string;
+  userTwoName: string;
+};
+
+type FakeEntriesTeamArr = FakeEntriesTeam[];
+
+export type FakeEntriesTeam = Team & {
+  players: (UsersInTeam & {
+    user: User;
+  })[];
+  poolWins: number;
+  poolLosses: number;
+};
+
+export function createFakeTeam({
+  teamId,
+  teamRating,
+  divisionId,
+  tournamentId,
+  poolId,
+  userOneId,
+  userTwoId,
+  userOneName,
+  userTwoName,
+}: FakeTeamCriteria): Team {
+  const fakeTeam = {
+    teamId,
+    divisionId,
+    tournamentId,
+    teamRating,
+    poolId,
+    poolWins: 0,
+    poolLosses: 0,
+    players: [
+      {
+        userId: userOneId,
+        teamId,
+        user: {
+          id: userOneId,
+          fullName: userOneName,
+          isAdmin: false,
+          isTournamentDirector: false,
+          playerRating: Math.floor(Math.random() * 1500),
+        },
+      },
+      {
+        userId: userTwoId,
+        teamId,
+        user: {
+          id: userTwoId,
+          fullName: userTwoName,
+          isAdmin: false,
+          isTournamentDirector: false,
+          playerRating: Math.floor(Math.random() * 1500),
+        },
+      },
+    ],
+  };
+  return fakeTeam;
+}
