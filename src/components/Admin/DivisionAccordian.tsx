@@ -31,6 +31,9 @@ export const DivisionAccordian = ({
   divisionSex,
 }: divAccordianProps) => {
   const addUserToDivision = trpc.tournament.mockTournamentEntries.useMutation();
+  const updatePools = trpc.tournament.updatePool.useMutation()
+  const toggleDayOf = trpc.tournament.toggleDayOfDivision.useMutation();
+  const poolsForDivision = trpc.tournament.getPoolsByDivision.useQuery({divisionId: division.divisionId}).data
 
   const [isOpen, setIsOpen] = useState(false);
   const [isDayOf, setIsDayOf] = useState(true);
@@ -76,7 +79,7 @@ export const DivisionAccordian = ({
         <button
           className="rounded-lg bg-white p-2 font-semibold text-black"
           onClick={() => {
-            setIsDayOf(!isDayOf);
+            toggleDayOf.mutate({divisionId: division.divisionId})
           }}
         >
           Toggle Day Of
@@ -104,6 +107,12 @@ export const DivisionAccordian = ({
                 divisionId: division.divisionId,
                 typeOfEntry: divisionType,
               });
+              updatePools.mutate({
+                divisionId: division.divisionId,
+                poolId: null,
+                isDayOf: null,
+                division: division
+              })
             }}
           >
             Add Coed Entry
@@ -113,7 +122,7 @@ export const DivisionAccordian = ({
 
       {isOpen && (
         <>
-          {isDayOf ? (
+          {division.isDayOf ? (
             <div className="flex w-full flex-col bg-white p-4 text-black">
               <div className="flex flex-col">
                 <p className="pb-2 text-2xl">Pools</p>
@@ -160,7 +169,7 @@ export const DivisionAccordian = ({
                   <div className="flex flex-row space-x-4">
                     <div className="flex-rows flex space-x-4">
                       <div className="flex flex-row space-x-4">
-                        {pools.map((pool, i, arr) => {
+                        {poolsForDivision && poolsForDivision.map((pool, i, arr) => {
                           return (
                             <div key={i}>
                               <PoolTable

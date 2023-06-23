@@ -1,12 +1,16 @@
+import { Game, Pool, Team } from "@prisma/client";
 import { FakeEntriesTeamArr } from "../utils/types/team";
 import { Dispatch, SetStateAction, useState } from "react";
 
 type PoolTableProps = {
-    pool: FakeEntriesTeamArr;
-    poolNumber: number;
-    pools: FakeEntriesTeamArr[];
-    setPools: Dispatch<SetStateAction<FakeEntriesTeamArr[]>>;
+  pool: Pool & {
+    games: Game[];
+    teams: Team[];
   };
+  poolNumber: number;
+  pools: FakeEntriesTeamArr[];
+  setPools: Dispatch<SetStateAction<FakeEntriesTeamArr[]>>;
+};
   
   export const PoolTable = ({ pool, poolNumber, pools, setPools }: PoolTableProps) => {
     const swapArray = pools.map((pool) => { return false });
@@ -47,7 +51,7 @@ type PoolTableProps = {
               Team
             </td>
           </tr>
-          {pool.map((team, i) => {
+          {pool.teams.map((team, i) => {
             return (
               <tr key={i}>
                 <td colSpan={1} className="border-r-2 p-1">{i + 1}</td>

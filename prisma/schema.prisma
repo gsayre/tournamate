@@ -126,6 +126,7 @@ model Division {
   divisionId Int @id @default(autoincrement())
   name String
   type String
+  isDayOf Boolean @default(false)
   pools Pool[]
   entries Team[]
   tournament Tournament @relation(fields: [tournamentId], references: [tournamentId])
