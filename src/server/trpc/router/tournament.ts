@@ -365,56 +365,56 @@ export const tournamentRouter = router({
       }
       return tournament;
     }),
-  enterTournament: protectedProcedure
-    .input(z.object({}))
-    .mutation(async ({ ctx }) => {}),
   mockTournamentEntries: protectedProcedure
     .input(
       z.object({
         divisionId: z.number(),
         tournamentId: z.number(),
         typeOfEntry: z.nativeEnum(Format),
-        sexOfEntry: z.enum(["MENS", "WOMENS"]).optional()
+        sexOfEntry: z.enum(["MENS", "WOMENS"]).optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      let tournamentEntries;
-      let fullName: string, idSegment:string, playerRating, userId;
-      let entryOneBoy, entryTwoBoy, entryOneGirl, entryTwoGirl, entryTeam
+      let fullName: string, idSegment: string;
+      let entryOneBoy, entryTwoBoy, entryOneGirl, entryTwoGirl;
       // create two users
       if (input.typeOfEntry === "SAME_SEX_DOUBLES") {
         if (input.sexOfEntry === "MENS") {
-          idSegment = Math.ceil(Math.random() * 1000000000).toString()
-          fullName = `Boy ${idSegment}`
+          idSegment = Math.ceil(Math.random() * 1000000000).toString();
+          fullName = `Boy ${idSegment}`;
           entryOneBoy = await ctx.prisma.user.create({
             data: {
               id: idSegment,
               fullName: fullName,
+              playerRating: Math.floor(Math.random() * (1500 - 500) + 500)
             },
           });
-          idSegment = Math.ceil(Math.random() * 1000000000).toString()
-          fullName = `Boy ${idSegment}`
+          idSegment = Math.ceil(Math.random() * 1000000000).toString();
+          fullName = `Boy ${idSegment}`;
           entryTwoBoy = await ctx.prisma.user.create({
             data: {
               id: idSegment,
               fullName: fullName,
+              playerRating: Math.floor(Math.random() * (1500 - 500) + 500)
             },
           });
         } else if (input.sexOfEntry === "WOMENS") {
-          idSegment = Math.ceil(Math.random() * 1000000000).toString()
-          fullName = `Girl ${idSegment}`
+          idSegment = Math.ceil(Math.random() * 1000000000).toString();
+          fullName = `Girl ${idSegment}`;
           entryOneGirl = await ctx.prisma.user.create({
             data: {
               id: idSegment,
               fullName: fullName,
+              playerRating: Math.floor(Math.random() * (1500 - 500) + 500)
             },
           });
-          idSegment = Math.ceil(Math.random() * 1000000000).toString()
-          fullName = `Girl ${idSegment}`
+          idSegment = Math.ceil(Math.random() * 1000000000).toString();
+          fullName = `Girl ${idSegment}`;
           entryTwoGirl = await ctx.prisma.user.create({
             data: {
               id: idSegment,
               fullName: fullName,
+              playerRating: Math.floor(Math.random() * (1500 - 500) + 500)
             },
           });
         }
@@ -422,63 +422,213 @@ export const tournamentRouter = router({
         input.typeOfEntry === "COED_DOUBLES" ||
         input.typeOfEntry === "REVERSE_COED_DOUBLES"
       ) {
-        idSegment = Math.ceil(Math.random() * 1000000000).toString()
-        fullName = `Boy ${idSegment}`
+        idSegment = Math.ceil(Math.random() * 1000000000).toString();
+        fullName = `Boy ${idSegment}`;
         entryOneBoy = await ctx.prisma.user.create({
           data: {
             id: idSegment,
             fullName: fullName,
+            playerRating: Math.floor(Math.random() * (1500 - 500) + 500)
           },
         });
-        idSegment = Math.ceil(Math.random() * 1000000000).toString()
-        fullName = `Girl ${idSegment}`
+        idSegment = Math.ceil(Math.random() * 1000000000).toString();
+        fullName = `Girl ${idSegment}`;
         entryOneGirl = await ctx.prisma.user.create({
           data: {
             id: idSegment,
             fullName: fullName,
+            playerRating: Math.floor(Math.random() * (1500 - 500) + 500)
           },
         });
       }
 
-      let teammateOneId, teammateTwoId
+      let teammateOneId, teammateTwoId;
+      let teammateOne, teammateTwo;
       // create a team and add the users to the team and to the division
       if (input.typeOfEntry === "SAME_SEX_DOUBLES") {
         if (input.sexOfEntry === "MENS") {
-         teammateOneId = entryOneBoy?.id
-         teammateTwoId = entryTwoBoy?.id
+          teammateOne = entryOneBoy
+          teammateTwo = entryTwoBoy
+          teammateOneId = entryOneBoy?.id;
+          teammateTwoId = entryTwoBoy?.id;
         } else if (input.sexOfEntry === "WOMENS") {
-          teammateOneId = entryOneGirl?.id
-          teammateTwoId = entryTwoGirl?.id
+          teammateOne = entryOneGirl
+          teammateTwo = entryTwoBoy
+          teammateOneId = entryOneGirl?.id;
+          teammateTwoId = entryTwoGirl?.id;
         }
       } else if (
         input.typeOfEntry === "COED_DOUBLES" ||
         input.typeOfEntry === "REVERSE_COED_DOUBLES"
       ) {
-        teammateOneId = entryOneBoy?.id
-        teammateTwoId = entryOneGirl?.id
+        teammateOne = entryOneBoy
+        teammateTwo = entryOneGirl
+        teammateOneId = entryOneBoy?.id;
+        teammateTwoId = entryOneGirl?.id;
       }
-      entryTeam = await ctx.prisma.team.create({
+      const entryTeam = await ctx.prisma.team.create({
         data: {
           divisionId: input.divisionId,
           tournamentId: input.tournamentId,
+          teamRating: (teammateOne && teammateTwo ? ((teammateOne?.playerRating + teammateTwo?.playerRating)/2) : (1000)),
           players: {
-            create:
-            [
-              {user: {
-                connect : {
-                  id: teammateOneId
-                }
-              }},
-              {user: {
-                connect: {
-                  id: teammateTwoId
-                }
-              }}
-            ]
-          }
-        }
+            create: [
+              {
+                user: {
+                  connect: {
+                    id: teammateOneId,
+                  },
+                },
+              },
+              {
+                user: {
+                  connect: {
+                    id: teammateTwoId,
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+      return entryTeam;
+    }),
+  updatePool: protectedProcedure
+    .input(
+      z.object({
+        poolId: z.string().nullable(),
+        divisionId: z.number(),
+        isDayOf: z.boolean().nullable(),
+        division: z.object({
+          divisionId: z.number(),
+          name: z.string(),
+          type: z.string(),
+          isDayOf: z.boolean(),
+          tournamentId: z.number(),
+          entries: z.array(
+            z.object({
+              teamId: z.number(),
+              teamRating: z.number(),
+              divisionId: z.number(),
+              tournamentId: z.number(),
+              poolId: z.string().nullable(),
+              players: z.array(
+                z.object({
+                  userId: z.string(),
+                  teamId: z.number(),
+                  user: z.object({
+                    id: z.string(),
+                    fullName: z.string(),
+                    isAdmin: z.boolean(),
+                    isTournamentDirector: z.boolean(),
+                    playerRating: z.number(),
+                  }),
+                })
+              ),
+            })
+          ),
+        }),
       })
-      
+    )
+    .mutation(async ({ input, ctx }) => {
+      const newPools = createPoolsFromEntries(input.division);
+      const newPoolsWithoutEntries = newPools.map((pool, i) => {
+        return {
+          divisionId: input.divisionId,
+          poolId: "Division " + input.divisionId + " Pool " + i,
+        };
+      });
+      const newPoolsWithEntries = newPools.map((pool, i) => {
+        return {
+          poolId: "Division " + input.divisionId + " Pool " + i,
+          teams: pool.map((team) => {
+            return { teamId: team.teamId };
+          }),
+        };
+      });
+
+      const deletedPools = await ctx.prisma.pool.deleteMany({
+        where: {
+          divisionId: input.divisionId,
+        },
+      });
+
+      for (let i =0; i < newPoolsWithoutEntries.length; i++) {
+        const newPool = await ctx.prisma.pool.create({
+          data: {
+            poolId: newPoolsWithoutEntries[i].poolId,
+            divisionId: newPoolsWithoutEntries[i].divisionId
+          }
+        })
+      }
+
+      for (let i = 0; i < newPoolsWithEntries.length; i++) {
+        const poolsWithTeams = await ctx.prisma.pool.update({
+          where: {
+            poolId: newPoolsWithEntries[i].poolId
+          },
+          data: {
+            teams: {
+              connect : newPoolsWithEntries[i].teams
+            }
+          },
+        });
+      }
+
+      return null;
+    }),
+  toggleDayOfDivision: protectedProcedure
+    .input(z.object({ divisionId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      ctx.prisma.division.update({
+        where: {
+          divisionId: input.divisionId,
+        },
+        data: {
+          isDayOf: true,
+        },
+      });
+    }),
+  getPoolsByDivision: protectedProcedure
+    .input(z.object({ divisionId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const poolsForDivision = await ctx.prisma.pool.findMany({
+        where: {
+          divisionId: input.divisionId,
+        },
+        include: {
+          teams: {
+            include: {
+              players: {
+                include:
+                {
+                  user: true
+                }
+              }
+            },
+          },
+          games: {
+            include: {
+              teams: {
+                include: {
+                  Team: {
+                    include: {
+                      players: {
+                        include:
+                        {
+                          user: true
+                        }
+                      },
+                    },
+                  },
+                },
+              },
+              referees: true,
+            },
+          },
+        },
+      });
+      return poolsForDivision
     }),
 });
 
@@ -487,7 +637,7 @@ type FakeTeamCriteria = {
   divisionId: number;
   teamRating: number;
   tournamentId: number;
-  poolId: string;
+  poolId: number;
   userOneId: string;
   userTwoId: string;
   userOneName: string;
@@ -550,3 +700,74 @@ export function createFakeTeam({
   };
   return fakeTeam;
 }
+
+export type DivisionEntriesForPool = Division & {
+  entries: (Team & {
+    players: (UsersInTeam & {
+      user: User;
+    })[];
+  })[];
+};
+
+export type TeamWithPlayerData = (Team & {
+  players: (UsersInTeam & {
+    user: User;
+  })[];
+})[];
+
+export const createPoolsFromEntries = (
+  division: DivisionEntriesForPool
+): Array<TeamWithPlayerData> => {
+  const returnArr: Array<TeamWithPlayerData> = [];
+  let zigzag = 0;
+  let zig = false;
+  let zag = false;
+  let pausezigzag = false;
+  division.entries.sort(function (a, b) {
+    return b.teamRating - a.teamRating;
+  });
+  if (division.entries.length > 5) {
+    const numPools = Math.ceil(division.entries.length / 4);
+    for (let i = 0; i < numPools; i++) {
+      returnArr.push([]);
+    }
+    for (const team of division.entries) {
+      if (zigzag == 0 && zag == false && zig == false) {
+        zig = true;
+        zag = false;
+        returnArr[zigzag].push(team);
+        zigzag++;
+      } else if (zigzag == 0) {
+        zig = true;
+        zag = false;
+        returnArr[zigzag].push(team);
+        if (pausezigzag) {
+          pausezigzag = false;
+          zigzag++;
+        } else {
+          pausezigzag = true;
+        }
+      } else if (zigzag == numPools - 1) {
+        zig = false;
+        zag = true;
+        returnArr[zigzag].push(team);
+        if (pausezigzag) {
+          pausezigzag = false;
+          zigzag--;
+        } else {
+          pausezigzag = true;
+        }
+      } else if (zig) {
+        returnArr[zigzag].push(team);
+        zigzag++;
+      } else if (zag) {
+        returnArr[zigzag].push(team);
+        zigzag--;
+      }
+    }
+    return returnArr;
+  } else {
+    returnArr.push(division.entries);
+    return returnArr;
+  }
+};

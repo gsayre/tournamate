@@ -1,25 +1,25 @@
 generator client {
-  provider = "prisma-client-js"
-  previewFeatures = ["fullTextIndex", "fullTextSearch"]
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
 model User {
-  id            String    @id
-  fullName         String
-  isAdmin       Boolean   @default(false)
-  isTournamentDirector Boolean @default(false)
-  playerRating  Int       @default(1000)
-  tdRequest TournamentDirectorRequest?
-  teamsParticipation UsersInTeam[]
-  tournamentDirected Tournament[] 
-  invitationsSent TeamInvitation[] @relation("inviter")
-  teamInvitations UserInInvitation[]
+  id                   String                     @id
+  fullName             String
+  isAdmin              Boolean                    @default(false)
+  isTournamentDirector Boolean                    @default(false)
+  playerRating         Float                        @default(1000)
+  tdRequest            TournamentDirectorRequest?
+  teamsParticipation   UsersInTeam[]
+  tournamentDirected   Tournament[]
+  invitationsSent      TeamInvitation[]           @relation("inviter")
+  teamInvitations      UserInInvitation[]
 
   @@fulltext([fullName])
 }
@@ -33,54 +33,133 @@ model VerificationToken {
 }
 
 model TeamInvitation {
-  inviteId Int @id @default(autoincrement())
-  inviter User @relation(fields: [inviterId], references: [id], name: "inviter")
-  inviterId String
-  invitees UserInInvitation[] 
+  inviteId     Int                @id @default(autoincrement())
+  inviterId    String
   tournamentId Int
-  tournament Tournament @relation(fields: [tournamentId], references: [tournamentId])
-  divisionId Int
+  divisionId   Int
+  inviter      User               @relation("inviter", fields: [inviterId], references: [id])
+  invitees     UserInInvitation[]
+  tournament   Tournament         @relation(fields: [tournamentId], references: [tournamentId])
+
   @@unique([inviteId, inviterId])
   @@index([inviterId])
   @@index([tournamentId])
 }
 
 model UserInInvitation {
-  invitationId Int
-  inviteeId String
+  invitationId   Int
+  inviteeId      String
   TeamInvitation TeamInvitation @relation(fields: [invitationId], references: [inviteId], onDelete: Cascade)
-  Invitee User @relation(fields: [inviteeId], references: [id])
+  Invitee        User           @relation(fields: [inviteeId], references: [id])
+
   @@id([inviteeId, invitationId])
 }
 
 model TournamentDirectorRequest {
-  tdRequestId Int @id @default(autoincrement())
-  content String
-  user User @relation(fields: [profileId], references: [id])
-  profileId String @unique
+  tdRequestId Int    @id @default(autoincrement())
+  content     String
+  profileId   String @unique
+  user        User   @relation(fields: [profileId], references: [id])
 }
 
 model Team {
-  teamId Int @id @default(autoincrement())
-  teamRating Int @default(1000)
-  division Division @relation(fields: [divisionId], references: [divisionId])
-  divisionId Int
-  tournament Tournament @relation(fields: [tournamentId], references: [tournamentId])
+  teamId       Int           @id @default(autoincrement())
+  divisionId   Int
   tournamentId Int
-  players UsersInTeam[]
-  games TeamInGame[]
-  gamesReffed Game[]
-  pool Pool? @relation(fields: [poolId], references: [poolId])
-  poolId String?
+  poolId       String?
+  teamRating   Int           @default(1000)
+  division     Division      @relation(fields: [divisionId], references: [divisionId])
+  tournament   Tournament    @relation(fields: [tournamentId], references: [tournamentId])
+  players      UsersInTeam[]
+  games        TeamInGame[]
+  gamesReffed  Game[]
+  pool         Pool?         @relation(fields: [poolId], references: [poolId])
+
   @@unique([teamId, tournamentId])
 }
 
 model UsersInTeam {
-  user User @relation(fields: [userId], references: [id])
   userId String
-  Team Team @relation(fields: [teamId], references: [teamId], onDelete: Cascade)
   teamId Int
+  user   User   @relation(fields: [userId], references: [id])
+  Team   Team   @relation(fields: [teamId], references: [teamId], onDelete: Cascade)
+
   @@id([userId, teamId])
+}
+
+model Tournament {
+  tournamentId         Int              @id @default(autoincrement())
+  name                 String
+  type                 Type
+  dayOne               Boolean          @default(true)
+  dayTwo               Boolean          @default(false)
+  dayOneFormat         Format
+  dayTwoFormat         Format?
+  dayOneDate           DateTime
+  dayTwoDate           DateTime?
+  location             String
+  tournamentDirectorId String
+  dayOneStarted        Boolean          @default(false)
+  dayTwoStarted        Boolean?         @default(false)
+  participants         Team[]
+  tournamentDirector   User             @relation(fields: [tournamentDirectorId], references: [id])
+  divisions            Division[]
+  teamInvitations      TeamInvitation[]
+
+  @@unique([tournamentDirectorId, tournamentId])
+}
+
+model Division {
+  divisionId   Int        @id @default(autoincrement())
+  name         String
+  type         String
+  tournamentId Int
+  isDayOf      Boolean    @default(false)
+  pools        Pool[]
+  entries      Team[]
+  tournament   Tournament @relation(fields: [tournamentId], references: [tournamentId])
+  bracket      Bracket?
+
+  @@unique([tournamentId, type, name])
+}
+
+model Pool {
+  poolId     String   @id
+  divisionId Int
+  division   Division @relation(fields: [divisionId], references: [divisionId])
+  games      Game[]
+  teams      Team[]
+
+  @@unique([poolId, divisionId])
+}
+
+model Bracket {
+  bracketId  Int      @id @default(autoincrement())
+  divisionId Int      @unique
+  division   Division @relation(fields: [divisionId], references: [divisionId])
+  games      Game[]
+
+  @@unique([bracketId, divisionId])
+}
+
+model Game {
+  gameId    Int          @id @default(autoincrement())
+  refereeId Int
+  poolId    String?
+  bracketId Int?
+  teams     TeamInGame[]
+  referees  Team         @relation(fields: [refereeId], references: [teamId])
+  pool      Pool?        @relation(fields: [poolId], references: [poolId])
+  bracket   Bracket?     @relation(fields: [bracketId], references: [bracketId])
+}
+
+model TeamInGame {
+  gameId Int
+  teamId Int
+  game   Game @relation(fields: [gameId], references: [gameId])
+  Team   Team @relation(fields: [teamId], references: [teamId])
+
+  @@id([gameId, teamId])
 }
 
 enum Format {
@@ -99,76 +178,4 @@ enum Type {
   GRASS
   SAND
   INDOOR
-}
-
-model Tournament {
-  tournamentId Int @id @default(autoincrement())
-  name String
-  type Type
-  dayOne               Boolean     @default(true)
-  dayTwo               Boolean     @default(false)
-  dayOneFormat         Format     
-  dayTwoFormat         Format?
-  dayOneDate           DateTime
-  dayTwoDate           DateTime?
-  dayOneStarted        Boolean     @default(false)
-  dayTwoStarted        Boolean?     @default(false)
-  location String      
-  participants Team[] 
-  tournamentDirector User @relation(fields: [tournamentDirectorId], references: [id])
-  tournamentDirectorId String 
-  divisions Division[]
-  teamInvitations TeamInvitation[]
-  @@unique([tournamentDirectorId, tournamentId])
-}
-
-model Division {
-  divisionId Int @id @default(autoincrement())
-  name String
-  type String
-  pools Pool[]
-  entries Team[]
-  tournament Tournament @relation(fields: [tournamentId], references: [tournamentId])
-  tournamentId Int
-  bracket Bracket?
-  @@unique([tournamentId, type, name])
-}
-
-model Pool {
-  poolId String @id 
-  division Division @relation(fields: [divisionId], references: [divisionId])
-  divisionId Int
-  games Game[]
-  teams Team[]
-
-  @@unique([poolId, divisionId])
-}
-
-model Bracket {
-  bracketId Int @id @default(autoincrement())
-  division Division @relation(fields: [divisionId], references: [divisionId])
-  divisionId Int @unique
-  games Game[]
-
-  @@unique([bracketId, divisionId])
-}
-
-model Game {
-  gameId Int @id @default(autoincrement())
-  teams TeamInGame[] 
-  referees Team @relation( fields: [refereeId], references: [teamId])
-  refereeId Int 
-  pool Pool? @relation(fields: [poolId], references: [poolId])
-  poolId String?
-  bracket Bracket? @relation(fields: [bracketId], references: [bracketId])
-  bracketId Int?
-
-}
-
-model TeamInGame {
-  gameId Int
-  teamId Int
-  game Game @relation(fields: [gameId], references: [gameId])
-  Team Team @relation(fields: [teamId], references: [teamId])
-  @@id([gameId,teamId])
 }

@@ -39,7 +39,6 @@ export function DivisionPannel(props: DivisionPannelProps) {
           divisions.push(divWom.data[i]);
         }
       }
-      console.log(divisions)
     } else {
       const divCoed = trpc.tournament.getDivisionsByType.useQuery({
         tournamentId: props.id,
@@ -50,7 +49,6 @@ export function DivisionPannel(props: DivisionPannelProps) {
           divisions.push(divCoed.data[i]);
         }
       }
-      console.log(divisions)
     }
   
     return (

@@ -31,43 +31,43 @@ export const DivisionAccordian = ({
   divisionSex,
 }: divAccordianProps) => {
   const addUserToDivision = trpc.tournament.mockTournamentEntries.useMutation();
+  const updatePools = trpc.tournament.updatePool.useMutation();
+  const toggleDayOf = trpc.tournament.toggleDayOfDivision.useMutation();
+  const poolsForDivision = trpc.tournament.getPoolsByDivision.useQuery({
+    divisionId: division.divisionId,
+  }).data;
 
   const [isOpen, setIsOpen] = useState(false);
-  const [isDayOf, setIsDayOf] = useState(true);
-  const [fakeEntriesToUse, setFakeEntriesToUse] = useState<FakeEntriesTeamArr>(
-    []
-  );
-
-  const [pools, setPools] = useState<Array<FakeEntriesTeamArr>>([]);
 
   useEffect(() => {
-    setFakeEntriesToUse(createFakeEntriesAnyTeams(8));
-  }, []);
-
-  useEffect(() => {
-    setPools(createPoolsFromEntries(fakeEntriesToUse));
-  }, [fakeEntriesToUse]);
-  console.log(division);
+    updatePools.mutate({
+      divisionId: division.divisionId,
+      poolId: null,
+      isDayOf: null,
+      division: division,
+    });
+  }, [division]);
 
   return (
-    <div
-      className="flex h-fit w-5/6 flex-col text-white odd:bg-[#5BA6A1] even:bg-[#374C64]"
-      onClick={() => {
-        setIsOpen(!isOpen);
-      }}
-    >
+    <div className="flex h-fit w-5/6 flex-col text-white odd:bg-[#5BA6A1] even:bg-[#374C64]">
       <div className="flex h-fit flex-row items-center space-x-4 p-2">
         {isOpen ? (
           <img
             src="/icons/icons8-triangle-arrow-24.png"
             alt="arrow"
             className="h-4 w-4 fill-white"
+            onClick={() => {
+              setIsOpen(!isOpen);
+            }}
           />
         ) : (
           <img
             src="/icons/icons8-triangle-arrow-24.png"
             alt="arrow"
             className="h-4 w-4 -rotate-90"
+            onClick={() => {
+              setIsOpen(!isOpen);
+            }}
           />
         )}
         <p className="text-2xl font-semibold">
@@ -76,7 +76,7 @@ export const DivisionAccordian = ({
         <button
           className="rounded-lg bg-white p-2 font-semibold text-black"
           onClick={() => {
-            setIsDayOf(!isDayOf);
+            toggleDayOf.mutate({ divisionId: division.divisionId });
           }}
         >
           Toggle Day Of
@@ -113,7 +113,7 @@ export const DivisionAccordian = ({
 
       {isOpen && (
         <>
-          {isDayOf ? (
+          {division.isDayOf ? (
             <div className="flex w-full flex-col bg-white p-4 text-black">
               <div className="flex flex-col">
                 <p className="pb-2 text-2xl">Pools</p>
@@ -134,7 +134,7 @@ export const DivisionAccordian = ({
                     division.entries.map((entry, i) => {
                       return (
                         <div key={entry.teamId}>
-                          <span className="pr-2">{i+1}</span>
+                          <span className="pr-2">{i + 1}</span>
                           {entry.players.map((player, i, arr) => {
                             return (
                               <>
@@ -157,23 +157,19 @@ export const DivisionAccordian = ({
                 </div>
                 <div className="flex flex-col pt-2">
                   <p className="pb-2 text-2xl">Pools</p>
-                  <div className="flex flex-row space-x-4">
-                    <div className="flex-rows flex space-x-4">
-                      <div className="flex flex-row space-x-4">
-                        {pools.map((pool, i, arr) => {
-                          return (
-                            <div key={i}>
-                              <PoolTable
-                                pool={pool}
-                                poolNumber={i + 1}
-                                pools={arr}
-                                setPools={setPools}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+                  <div className="flex grow flex-row flex-wrap gap-4">
+                    {poolsForDivision &&
+                      poolsForDivision.map((pool, i, arr) => {
+                        return (
+                          <div key={i}>
+                            <PoolTable
+                              pool={pool}
+                              poolNumber={i + 1}
+                              pools={arr}
+                            />
+                          </div>
+                        );
+                      })}
                   </div>
                 </div>
               </div>
