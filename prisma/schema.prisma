@@ -67,7 +67,7 @@ model Team {
   divisionId   Int
   tournamentId Int
   poolId       String?
-  teamRating   Int           @default(1000)
+  teamRating   Float           @default(1000)
   division     Division      @relation(fields: [divisionId], references: [divisionId])
   tournament   Tournament    @relation(fields: [tournamentId], references: [tournamentId])
   players      UsersInTeam[]
