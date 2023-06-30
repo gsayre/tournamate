@@ -386,6 +386,7 @@ export const tournamentRouter = router({
             data: {
               id: idSegment,
               fullName: fullName,
+              playerRating: Math.floor(Math.random() * (1500 - 500) + 500)
             },
           });
           idSegment = Math.ceil(Math.random() * 1000000000).toString();
@@ -394,6 +395,7 @@ export const tournamentRouter = router({
             data: {
               id: idSegment,
               fullName: fullName,
+              playerRating: Math.floor(Math.random() * (1500 - 500) + 500)
             },
           });
         } else if (input.sexOfEntry === "WOMENS") {
@@ -403,6 +405,7 @@ export const tournamentRouter = router({
             data: {
               id: idSegment,
               fullName: fullName,
+              playerRating: Math.floor(Math.random() * (1500 - 500) + 500)
             },
           });
           idSegment = Math.ceil(Math.random() * 1000000000).toString();
@@ -411,6 +414,7 @@ export const tournamentRouter = router({
             data: {
               id: idSegment,
               fullName: fullName,
+              playerRating: Math.floor(Math.random() * (1500 - 500) + 500)
             },
           });
         }
@@ -424,6 +428,7 @@ export const tournamentRouter = router({
           data: {
             id: idSegment,
             fullName: fullName,
+            playerRating: Math.floor(Math.random() * (1500 - 500) + 500)
           },
         });
         idSegment = Math.ceil(Math.random() * 1000000000).toString();
@@ -432,17 +437,23 @@ export const tournamentRouter = router({
           data: {
             id: idSegment,
             fullName: fullName,
+            playerRating: Math.floor(Math.random() * (1500 - 500) + 500)
           },
         });
       }
 
       let teammateOneId, teammateTwoId;
+      let teammateOne, teammateTwo;
       // create a team and add the users to the team and to the division
       if (input.typeOfEntry === "SAME_SEX_DOUBLES") {
         if (input.sexOfEntry === "MENS") {
+          teammateOne = entryOneBoy
+          teammateTwo = entryTwoBoy
           teammateOneId = entryOneBoy?.id;
           teammateTwoId = entryTwoBoy?.id;
         } else if (input.sexOfEntry === "WOMENS") {
+          teammateOne = entryOneGirl
+          teammateTwo = entryTwoBoy
           teammateOneId = entryOneGirl?.id;
           teammateTwoId = entryTwoGirl?.id;
         }
@@ -450,6 +461,8 @@ export const tournamentRouter = router({
         input.typeOfEntry === "COED_DOUBLES" ||
         input.typeOfEntry === "REVERSE_COED_DOUBLES"
       ) {
+        teammateOne = entryOneBoy
+        teammateTwo = entryOneGirl
         teammateOneId = entryOneBoy?.id;
         teammateTwoId = entryOneGirl?.id;
       }
@@ -457,6 +470,7 @@ export const tournamentRouter = router({
         data: {
           divisionId: input.divisionId,
           tournamentId: input.tournamentId,
+          teamRating: (teammateOne && teammateTwo ? ((teammateOne?.playerRating + teammateTwo?.playerRating)/2) : (1000)),
           players: {
             create: [
               {
@@ -518,28 +532,50 @@ export const tournamentRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const newPools = createPoolsFromEntries(input.division);
-      ctx.prisma.pool.deleteMany({
+      const newPoolsWithoutEntries = newPools.map((pool, i) => {
+        return {
+          divisionId: input.divisionId,
+          poolId: "Division " + input.divisionId + " Pool " + i,
+        };
+      });
+      const newPoolsWithEntries = newPools.map((pool, i) => {
+        return {
+          poolId: "Division " + input.divisionId + " Pool " + i,
+          teams: pool.map((team) => {
+            return { teamId: team.teamId };
+          }),
+        };
+      });
+
+      const deletedPools = await ctx.prisma.pool.deleteMany({
         where: {
           divisionId: input.divisionId,
         },
       });
-      const updatedPools = ctx.prisma.pool.createMany({
-        data: newPools.map((pool, i) => {
-          return {
-            divisionId: input.divisionId,
-            poolId: "Division " + input.divisionId + " Pool " + i,
-            entries: {
-              connect: pool.map((team) => {
-                return {
-                  teamId: team.teamId,
-                };
-              }),
-            },
-          };
-        }
-        ),
-      });
-      return updatedPools;
+
+      for (let i =0; i < newPoolsWithoutEntries.length; i++) {
+        const newPool = await ctx.prisma.pool.create({
+          data: {
+            poolId: newPoolsWithoutEntries[i].poolId,
+            divisionId: newPoolsWithoutEntries[i].divisionId
+          }
+        })
+      }
+
+      for (let i = 0; i < newPoolsWithEntries.length; i++) {
+        const poolsWithTeams = await ctx.prisma.pool.update({
+          where: {
+            poolId: newPoolsWithEntries[i].poolId
+          },
+          data: {
+            teams: {
+              connect : newPoolsWithEntries[i].teams
+            }
+          },
+        });
+      }
+
+      return null;
     }),
   toggleDayOfDivision: protectedProcedure
     .input(z.object({ divisionId: z.number() }))
@@ -553,23 +589,47 @@ export const tournamentRouter = router({
         },
       });
     }),
-  getPoolsByDivision: protectedProcedure.input(z.object({ divisionId: z.number() })).query(
-    async ({ctx, input}) => {
-      return ctx.prisma.pool.findMany({
+  getPoolsByDivision: protectedProcedure
+    .input(z.object({ divisionId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const poolsForDivision = await ctx.prisma.pool.findMany({
         where: {
-          divisionId: input.divisionId
+          divisionId: input.divisionId,
         },
         include: {
           teams: {
-            select: {
-              
-            }
+            include: {
+              players: {
+                include:
+                {
+                  user: true
+                }
+              }
+            },
           },
-          games:true
-        }
-      })
-    }
-  )
+          games: {
+            include: {
+              teams: {
+                include: {
+                  Team: {
+                    include: {
+                      players: {
+                        include:
+                        {
+                          user: true
+                        }
+                      },
+                    },
+                  },
+                },
+              },
+              referees: true,
+            },
+          },
+        },
+      });
+      return poolsForDivision
+    }),
 });
 
 type FakeTeamCriteria = {
