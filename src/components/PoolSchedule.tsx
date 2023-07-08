@@ -18,14 +18,13 @@ type GameSchedule = {
 type PoolScheduleProps = {
   pool: FakeEntriesTeamArr;
   currentUserName: string;
-  setMyPool: React.Dispatch<React.SetStateAction<FakeEntriesTeamArr>>;
+  // setMyPool: React.Dispatch<React.SetStateAction<FakeEntriesTeamArr>>;
   tournamentId: number;
 };
 
 export const PoolSchedule = ({
   pool,
   currentUserName,
-  setMyPool,
   tournamentId,
 }: PoolScheduleProps) => {
   const [mySchedule, setMySchedule] = useState<FakeGame[]>();

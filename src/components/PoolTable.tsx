@@ -9,7 +9,6 @@ type PoolTableProps = {
   pools: any;
 };
 
-
 export const PoolTable = ({ pool, poolNumber, pools }: PoolTableProps) => {
   // const updateSwap = (index: number) => {
   //   const newArr = [...isSwapping];
@@ -26,11 +25,21 @@ export const PoolTable = ({ pool, poolNumber, pools }: PoolTableProps) => {
   //     return b.teamRating - a.teamRating;
   //   });
   // }
-  let sortedPools
-  
-  useEffect(()=>{
-    sortedPools = pool.teams.sort((a,b) => a.teamRating > b.teamRating ? -1 : a.teamRating > b.teamRating ? 1 : 0 )
-  },[])
+  const compareFunction = (a: any, b: any) => {
+    return b.teamRating - a.teamRating;
+  };
+  const [poolRating, setPoolRating] = useState(0);
+  const [sortedPools, setSortedPools] = useState([]);
+  useEffect(() => {
+    let accumualtedRating = 0;
+    for (let i = 0; i < pool.teams.length; i++) {
+      accumualtedRating += pool.teams[i].teamRating;
+    }
+    accumualtedRating = accumualtedRating / pool.teams.length;
+    setPoolRating(accumualtedRating);
+    // sortedPools = pool.teams.sort((a,b) => a.teamRating > b.teamRating ? -1 : a.teamRating > b.teamRating ? 1 : 0 )
+    setSortedPools(pool.teams.sort(compareFunction));
+  }, []);
 
   return (
     <>
@@ -38,7 +47,8 @@ export const PoolTable = ({ pool, poolNumber, pools }: PoolTableProps) => {
         <thead className="justify-center bg-[#0ACF83] py-2 text-2xl font-bold text-white">
           <tr>
             <th colSpan={4} className="rounded-t-lg">
-              Pool {poolNumber}
+              Pool {poolNumber} {"   "}
+              {poolRating}
             </th>
           </tr>
         </thead>
@@ -57,19 +67,26 @@ export const PoolTable = ({ pool, poolNumber, pools }: PoolTableProps) => {
                 {i + 1}
               </td>
               <td colSpan={2} className="px-4">
-                {team.players.map((player, j, arr) => {
-                    return (
-                      <>
-                        {j == arr.length - 1 ? (
-                          <span key={player.userId}>{(player.user.fullName).includes("Boy")? ((player.user.fullName).substring(0, 7)) : ((player.user.fullName).substring(0, 8))}</span>
-                        ) : (
-                          <span key={player.userId}>
-                            {(player.user.fullName).includes("Boy")? ((player.user.fullName).substring(0, 7)) : ((player.user.fullName).substring(0, 8))} {" - "}
-                          </span>
-                        )}
-                      </>
-                    );
-                  })}
+                {team?.players.map((player, j, arr) => {
+                  return (
+                    <>
+                      {j == arr.length - 1 ? (
+                        <span key={player.userId}>
+                          {player.user.fullName.includes("Boy")
+                            ? player.user.fullName.substring(0, 7)
+                            : player.user.fullName.substring(0, 8)}
+                        </span>
+                      ) : (
+                        <span key={player.userId}>
+                          {player.user.fullName.includes("Boy")
+                            ? player.user.fullName.substring(0, 7)
+                            : player.user.fullName.substring(0, 8)}{" "}
+                          {" - "}
+                        </span>
+                      )}
+                    </>
+                  );
+                })}
                 <span className="pl-2">{team.teamRating}</span>
               </td>
               <td colSpan={1} className="pl-4 pr-1">

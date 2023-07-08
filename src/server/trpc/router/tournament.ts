@@ -386,7 +386,7 @@ export const tournamentRouter = router({
             data: {
               id: idSegment,
               fullName: fullName,
-              playerRating: Math.floor(Math.random() * (1500 - 500) + 500)
+              playerRating: Math.floor(Math.random() * (1500 - 500) + 500),
             },
           });
           idSegment = Math.ceil(Math.random() * 1000000000).toString();
@@ -395,7 +395,7 @@ export const tournamentRouter = router({
             data: {
               id: idSegment,
               fullName: fullName,
-              playerRating: Math.floor(Math.random() * (1500 - 500) + 500)
+              playerRating: Math.floor(Math.random() * (1500 - 500) + 500),
             },
           });
         } else if (input.sexOfEntry === "WOMENS") {
@@ -405,7 +405,7 @@ export const tournamentRouter = router({
             data: {
               id: idSegment,
               fullName: fullName,
-              playerRating: Math.floor(Math.random() * (1500 - 500) + 500)
+              playerRating: Math.floor(Math.random() * (1500 - 500) + 500),
             },
           });
           idSegment = Math.ceil(Math.random() * 1000000000).toString();
@@ -414,7 +414,7 @@ export const tournamentRouter = router({
             data: {
               id: idSegment,
               fullName: fullName,
-              playerRating: Math.floor(Math.random() * (1500 - 500) + 500)
+              playerRating: Math.floor(Math.random() * (1500 - 500) + 500),
             },
           });
         }
@@ -428,7 +428,7 @@ export const tournamentRouter = router({
           data: {
             id: idSegment,
             fullName: fullName,
-            playerRating: Math.floor(Math.random() * (1500 - 500) + 500)
+            playerRating: Math.floor(Math.random() * (1500 - 500) + 500),
           },
         });
         idSegment = Math.ceil(Math.random() * 1000000000).toString();
@@ -437,7 +437,7 @@ export const tournamentRouter = router({
           data: {
             id: idSegment,
             fullName: fullName,
-            playerRating: Math.floor(Math.random() * (1500 - 500) + 500)
+            playerRating: Math.floor(Math.random() * (1500 - 500) + 500),
           },
         });
       }
@@ -447,13 +447,13 @@ export const tournamentRouter = router({
       // create a team and add the users to the team and to the division
       if (input.typeOfEntry === "SAME_SEX_DOUBLES") {
         if (input.sexOfEntry === "MENS") {
-          teammateOne = entryOneBoy
-          teammateTwo = entryTwoBoy
+          teammateOne = entryOneBoy;
+          teammateTwo = entryTwoBoy;
           teammateOneId = entryOneBoy?.id;
           teammateTwoId = entryTwoBoy?.id;
         } else if (input.sexOfEntry === "WOMENS") {
-          teammateOne = entryOneGirl
-          teammateTwo = entryTwoBoy
+          teammateOne = entryOneGirl;
+          teammateTwo = entryTwoBoy;
           teammateOneId = entryOneGirl?.id;
           teammateTwoId = entryTwoGirl?.id;
         }
@@ -461,8 +461,8 @@ export const tournamentRouter = router({
         input.typeOfEntry === "COED_DOUBLES" ||
         input.typeOfEntry === "REVERSE_COED_DOUBLES"
       ) {
-        teammateOne = entryOneBoy
-        teammateTwo = entryOneGirl
+        teammateOne = entryOneBoy;
+        teammateTwo = entryOneGirl;
         teammateOneId = entryOneBoy?.id;
         teammateTwoId = entryOneGirl?.id;
       }
@@ -470,7 +470,10 @@ export const tournamentRouter = router({
         data: {
           divisionId: input.divisionId,
           tournamentId: input.tournamentId,
-          teamRating: (teammateOne && teammateTwo ? ((teammateOne?.playerRating + teammateTwo?.playerRating)/2) : (1000)),
+          teamRating:
+            teammateOne && teammateTwo
+              ? (teammateOne?.playerRating + teammateTwo?.playerRating) / 2
+              : 1000,
           players: {
             create: [
               {
@@ -553,24 +556,24 @@ export const tournamentRouter = router({
         },
       });
 
-      for (let i =0; i < newPoolsWithoutEntries.length; i++) {
+      for (let i = 0; i < newPoolsWithoutEntries.length; i++) {
         const newPool = await ctx.prisma.pool.create({
           data: {
             poolId: newPoolsWithoutEntries[i].poolId,
-            divisionId: newPoolsWithoutEntries[i].divisionId
-          }
-        })
+            divisionId: newPoolsWithoutEntries[i].divisionId,
+          },
+        });
       }
 
       for (let i = 0; i < newPoolsWithEntries.length; i++) {
         const poolsWithTeams = await ctx.prisma.pool.update({
           where: {
-            poolId: newPoolsWithEntries[i].poolId
+            poolId: newPoolsWithEntries[i].poolId,
           },
           data: {
             teams: {
-              connect : newPoolsWithEntries[i].teams
-            }
+              connect: newPoolsWithEntries[i].teams,
+            },
           },
         });
       }
@@ -580,7 +583,7 @@ export const tournamentRouter = router({
   toggleDayOfDivision: protectedProcedure
     .input(z.object({ divisionId: z.number() }))
     .mutation(async ({ input, ctx }) => {
-      ctx.prisma.division.update({
+      const updatedDivision = await ctx.prisma.division.update({
         where: {
           divisionId: input.divisionId,
         },
@@ -588,6 +591,8 @@ export const tournamentRouter = router({
           isDayOf: true,
         },
       });
+
+      return { updatedDivision };
     }),
   getPoolsByDivision: protectedProcedure
     .input(z.object({ divisionId: z.number() }))
@@ -600,12 +605,14 @@ export const tournamentRouter = router({
           teams: {
             include: {
               players: {
-                include:
-                {
-                  user: true
-                }
-              }
+                include: {
+                  user: true,
+                },
+              },
             },
+            orderBy: {
+              teamRating: "desc"
+            }
           },
           games: {
             include: {
@@ -614,10 +621,9 @@ export const tournamentRouter = router({
                   Team: {
                     include: {
                       players: {
-                        include:
-                        {
-                          user: true
-                        }
+                        include: {
+                          user: true,
+                        },
                       },
                     },
                   },
@@ -628,7 +634,7 @@ export const tournamentRouter = router({
           },
         },
       });
-      return poolsForDivision
+      return poolsForDivision;
     }),
 });
 

@@ -39,15 +39,6 @@ export const DivisionAccordian = ({
 
   const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    updatePools.mutate({
-      divisionId: division.divisionId,
-      poolId: null,
-      isDayOf: null,
-      division: division,
-    });
-  }, [division]);
-
   return (
     <div className="flex h-fit w-5/6 flex-col text-white odd:bg-[#5BA6A1] even:bg-[#374C64]">
       <div className="flex h-fit flex-row items-center space-x-4 p-2">
@@ -75,39 +66,73 @@ export const DivisionAccordian = ({
         </p>
         <button
           className="rounded-lg bg-white p-2 font-semibold text-black"
-          onClick={() => {
+          onClick={() =>
+          {
+            console.log(division.divisionId)
             toggleDayOf.mutate({ divisionId: division.divisionId });
-          }}
+            }
+            
+          }
         >
           Toggle Day Of
         </button>
         {divisionSex ? (
-          <button
-            className="rounded-lg bg-white p-2 font-semibold text-black"
-            onClick={() => {
-              addUserToDivision.mutate({
-                tournamentId: 1,
-                divisionId: division.divisionId,
-                typeOfEntry: divisionType,
-                sexOfEntry: divisionSex,
-              });
-            }}
-          >
-            Add Same Sex Entry
-          </button>
+          <>
+            <button
+              className="rounded-lg bg-white p-2 font-semibold text-black"
+              onClick={() => {
+                addUserToDivision.mutate({
+                  tournamentId: 1,
+                  divisionId: division.divisionId,
+                  typeOfEntry: divisionType,
+                  sexOfEntry: divisionSex,
+                });
+              }}
+            >
+              Add Same Sex Entry
+            </button>
+            <button
+              className="rounded-lg bg-white p-2 font-semibold text-black"
+              onClick={() => {
+                updatePools.mutate({
+                  divisionId: division.divisionId,
+                  poolId: null,
+                  isDayOf: null,
+                  division: division,
+                });
+              }}
+            >
+              Update Pools
+            </button>
+          </>
         ) : (
-          <button
-            className="rounded-lg bg-white p-2 font-semibold text-black"
-            onClick={() => {
-              addUserToDivision.mutate({
-                tournamentId: 1,
-                divisionId: division.divisionId,
-                typeOfEntry: divisionType,
-              });
-            }}
-          >
-            Add Coed Entry
-          </button>
+          <>
+            <button
+              className="rounded-lg bg-white p-2 font-semibold text-black"
+              onClick={() => {
+                addUserToDivision.mutate({
+                  tournamentId: 1,
+                  divisionId: division.divisionId,
+                  typeOfEntry: divisionType,
+                });
+              }}
+            >
+              Add Coed Entry
+            </button>
+            <button
+              className="rounded-lg bg-white p-2 font-semibold text-black"
+              onClick={() => {
+                updatePools.mutate({
+                  divisionId: division.divisionId,
+                  poolId: null,
+                  isDayOf: null,
+                  division: division,
+                });
+              }}
+            >
+              Update Pools
+            </button>
+          </>
         )}
       </div>
 

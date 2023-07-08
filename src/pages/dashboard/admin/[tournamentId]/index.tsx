@@ -215,7 +215,7 @@ export default function AdminTournamentView() {
                         <div className="flex flex-col">
                           <p>Pool Schedule</p>
                           <div>
-                            {/* <PoolSchedule pool={myPool}  currentUserName={currentUserName as string}/> */}
+                            <PoolSchedule pool={myPool}  currentUserName={currentUserName as string} tournamentId={tId}/>
                           </div>
                         </div>
                       </div>
