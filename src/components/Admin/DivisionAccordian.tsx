@@ -66,13 +66,10 @@ export const DivisionAccordian = ({
         </p>
         <button
           className="rounded-lg bg-white p-2 font-semibold text-black"
-          onClick={() =>
-          {
-            console.log(division.divisionId)
+          onClick={() => {
+            console.log(division.divisionId);
             toggleDayOf.mutate({ divisionId: division.divisionId });
-            }
-            
-          }
+          }}
         >
           Toggle Day Of
         </button>
@@ -152,51 +149,15 @@ export const DivisionAccordian = ({
             </div>
           ) : (
             <div className="flex w-full flex-col bg-white p-4 text-black">
+              <div className="flex flex-row">
               <div className="flex flex-col">
-                <p className="pb-2 text-2xl">Entries</p>
-                <div className="flex flex-col">
-                  {division.entries &&
-                    division.entries.map((entry, i) => {
-                      return (
-                        <div key={entry.teamId}>
-                          <span className="pr-2">{i + 1}</span>
-                          {entry.players.map((player, i, arr) => {
-                            return (
-                              <>
-                                {i == arr.length - 1 ? (
-                                  <span key={player.userId}>
-                                    {player.user.fullName}
-                                  </span>
-                                ) : (
-                                  <span key={player.userId}>
-                                    {player.user.fullName} {" - "}
-                                  </span>
-                                )}
-                              </>
-                            );
-                          })}
-                        </div>
-                      );
-                    })}
-                  <ol className="list-inside list-decimal text-lg"></ol>
-                </div>
-                <div className="flex flex-col pt-2">
-                  <p className="pb-2 text-2xl">Pools</p>
-                  <div className="flex grow flex-row flex-wrap gap-4">
-                    {poolsForDivision &&
-                      poolsForDivision.map((pool, i, arr) => {
-                        return (
-                          <div key={i}>
-                            <PoolTable
-                              pool={pool}
-                              poolNumber={i + 1}
-                              pools={arr}
-                            />
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
+                <EntrySection division={division} />
+                <PoolSection poolsForDivision={poolsForDivision} />
+              </div>
+              <div className="flex flex-col">
+                <MyPoolSection/>
+                <MyScheduleSection/>
+              </div>
               </div>
             </div>
           )}
@@ -205,3 +166,86 @@ export const DivisionAccordian = ({
     </div>
   );
 };
+
+type EntrySectionProps = {
+  division: any;
+};
+
+const EntrySection = ({ division }: EntrySectionProps) => {
+  return (
+    <>
+      <p className="pb-2 text-2xl">Entries</p>
+      <div className="flex flex-col">
+        {division.entries &&
+          division.entries.map((entry, i) => {
+            return (
+              <div key={entry.teamId}>
+                <span className="pr-2">{i + 1}</span>
+                {entry.players.map((player, i, arr) => {
+                  return (
+                    <>
+                      {i == arr.length - 1 ? (
+                        <span key={player.userId}>{player.user.fullName}</span>
+                      ) : (
+                        <span key={player.userId}>
+                          {player.user.fullName} {" - "}
+                        </span>
+                      )}
+                    </>
+                  );
+                })}
+              </div>
+            );
+          })}
+        <ol className="list-inside list-decimal text-lg"></ol>
+      </div>
+    </>
+  );
+};
+
+type PoolSectionProps = {
+  poolsForDivision: any;
+};
+
+const PoolSection = ({ poolsForDivision }: PoolSectionProps) => {
+  return (
+    <div className="flex flex-col pt-2">
+      <p className="pb-2 text-2xl">Pools</p>
+      <div className="flex grow flex-row flex-wrap gap-4">
+        {poolsForDivision &&
+          poolsForDivision.map((pool, i, arr) => {
+            return (
+              <div key={i}>
+                <PoolTable pool={pool} poolNumber={i + 1} pools={arr} />
+              </div>
+            );
+          })}
+      </div>
+    </div>
+  );
+};
+
+
+type MyPoolSectionProps = {
+
+}
+
+const MyPoolSection = ({}: MyPoolSectionProps) => {
+  return (
+    <div>
+    <p>My Pool</p>
+    </div>
+  )
+}
+
+type MyScheduleSectionProps = {
+
+}
+
+const MyScheduleSection = ({}: MyScheduleSectionProps) => {
+  return (
+    <div>
+    <p>My Schedule</p>
+    </div>
+  )
+}

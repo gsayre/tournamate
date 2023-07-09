@@ -415,7 +415,6 @@ export function finishCurrentGame({
   setMySchedule,
   gameIndex,
   pool,
-  setMyPool,
 }: finishCurrentGameArgs): void {
   for (
     mySchedule[gameIndex].currentSet;
@@ -443,7 +442,7 @@ export function finishCurrentGame({
       //   pool[indexOfTeamInPool(pool, mySchedule[gameIndex].teamTwo)].poolWins++;
       // }
     }
-    if (mySchedule[gameIndex].currentSet === 2) {
+    if (mySchedule[gameIndex].currentSet === 2 ) {
       while (
         mySchedule[gameIndex].gameTwoScoreCap >
           mySchedule[gameIndex].gameTwoTeamOneScore &&

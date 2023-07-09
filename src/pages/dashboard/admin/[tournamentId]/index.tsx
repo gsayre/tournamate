@@ -37,6 +37,9 @@ export default function AdminTournamentView() {
   const currentUserName = trpc.user.findUsername.useQuery({
     id: userId as string,
   }).data;
+  // const poolsForDivision = trpc.tournament.getPoolsByDivision.useQuery({
+  //   divisionId: division.divisionId,
+  // }).data;
 
   const tournamentData = trpc.tournament.getTournament.useQuery({
     id: tId,
@@ -89,19 +92,19 @@ export default function AdminTournamentView() {
     }
   }, [currentUserName, userId]);
 
-  useEffect(() => {
-    const poolsFromEntries = createPoolsFromEntries(fakeEntriesToUse);
-    const poolWithMe = poolsFromEntries.filter(function (element) {
-      return amIInThePool(element, currentUserName as string);
-    });
-    const poolsWithoutMe = poolsFromEntries.filter(function (element) {
-      return !amIInThePool(element, currentUserName as string);
-    });
-    console.log("Pool with me", poolWithMe);
-    console.log("Pools without me", poolsWithoutMe);
-    setMyPool(poolWithMe[0]);
-    setPools(poolsWithoutMe);
-  }, [fakeEntriesToUse]);
+  // useEffect(() => {
+  //   const poolsFromEntries = createPoolsFromEntries(fakeEntriesToUse);
+  //   const poolWithMe = poolsFromEntries.filter(function (element) {
+  //     return amIInThePool(element, currentUserName as string);
+  //   });
+  //   const poolsWithoutMe = poolsFromEntries.filter(function (element) {
+  //     return !amIInThePool(element, currentUserName as string);
+  //   });
+  //   console.log("Pool with me", poolWithMe);
+  //   console.log("Pools without me", poolsWithoutMe);
+  //   setMyPool(poolWithMe[0]);
+  //   setPools(poolsWithoutMe);
+  // }, [fakeEntriesToUse]);
 
   return (
     <div className="flex h-screen w-screen">
@@ -156,7 +159,6 @@ export default function AdminTournamentView() {
                           <PoolSchedule
                             pool={myPool}
                             currentUserName={currentUserName as string}
-                            setMyPool={setMyPool}
                             tournamentId={tId}
                           />
                         </div>
@@ -208,9 +210,17 @@ export default function AdminTournamentView() {
                   </button>
                   {tournamentData.tournament.dayTwoStarted ? (
                     <div className="flex flex-col">
-                      <div className="flex flex-row">
+                      <div className="flex flex-row gap-4">
                         <div className="flex flex-col">
-                          <p>Pool</p>
+                          <p>My Pool</p>
+                          <MyPoolTable
+                            pool={myPool}
+                            poolNumber={1}
+                            pools={pools}
+                            setPools={setPools}
+                            isMyPool={true}
+                            currentUserName={currentUserName as string}
+                          />
                         </div>
                         <div className="flex flex-col">
                           <p>Pool Schedule</p>
