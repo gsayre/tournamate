@@ -8,6 +8,7 @@ import {
 } from "utils/lib/team-utils";
 import { trpc } from "utils/trpc";
 import { z } from "zod";
+import { MyPoolTable } from "@components/MyPoolTable";
 
 export type divAccordianProps = {
   division: Division & {
@@ -155,7 +156,7 @@ export const DivisionAccordian = ({
                 <PoolSection poolsForDivision={poolsForDivision} />
               </div>
               <div className="flex flex-col">
-                <MyPoolSection/>
+                    <MyPoolSection divisionId={division.divisionId}/>
                 <MyScheduleSection/>
               </div>
               </div>
@@ -227,13 +228,17 @@ const PoolSection = ({ poolsForDivision }: PoolSectionProps) => {
 
 
 type MyPoolSectionProps = {
-
+  divisionId: number;
 }
 
-const MyPoolSection = ({}: MyPoolSectionProps) => {
+const MyPoolSection = ({ divisionId }: MyPoolSectionProps) => {
+  const myPool = trpc.tournament.getMyPool.useQuery({
+    divisionId
+  }).data;
   return (
     <div>
-    <p>My Pool</p>
+      <p className="text-2xl pb-2">My Pool</p>
+      <MyPoolTable pool={myPool} poolNumber={1} pools={[myPool]} />
     </div>
   )
 }

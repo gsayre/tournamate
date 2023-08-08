@@ -50,61 +50,6 @@ export default function AdminTournamentView() {
     []
   );
   const [pools, setPools] = useState<Array<FakeEntriesTeamArr>>([]);
-  const [myPool, setMyPool] = useState<FakeEntriesTeamArr>([]);
-
-  useEffect(() => {
-    if (currentUserName && userId) {
-      const myEntry = {
-        teamId: 69, //nice
-        divisionId: 1,
-        tournamentId: tId,
-        teamRating: 420,
-        poolId: "1",
-        poolWins: 0,
-        poolLosses: 0,
-        players: [
-          {
-            userId: userId,
-            teamId: 69,
-            user: {
-              id: userId,
-              fullName: currentUserName,
-              isAdmin: true,
-              isTournamentDirector: true,
-              playerRating: 420,
-            },
-          },
-          {
-            userId: "222",
-            teamId: 69,
-            user: {
-              id: "222",
-              fullName: "Joe Mama",
-              isAdmin: false,
-              isTournamentDirector: false,
-              playerRating: 420,
-            },
-          },
-        ],
-      };
-      const fakeEntriesToInsert = [...createFakeEntriesAnyTeams(11), myEntry];
-      setFakeEntriesToUse(fakeEntriesToInsert);
-    }
-  }, [currentUserName, userId]);
-
-  // useEffect(() => {
-  //   const poolsFromEntries = createPoolsFromEntries(fakeEntriesToUse);
-  //   const poolWithMe = poolsFromEntries.filter(function (element) {
-  //     return amIInThePool(element, currentUserName as string);
-  //   });
-  //   const poolsWithoutMe = poolsFromEntries.filter(function (element) {
-  //     return !amIInThePool(element, currentUserName as string);
-  //   });
-  //   console.log("Pool with me", poolWithMe);
-  //   console.log("Pools without me", poolsWithoutMe);
-  //   setMyPool(poolWithMe[0]);
-  //   setPools(poolsWithoutMe);
-  // }, [fakeEntriesToUse]);
 
   return (
     <div className="flex h-screen w-screen">
@@ -144,7 +89,6 @@ export default function AdminTournamentView() {
                         <p className="text-3xl">My Pool:</p>
                         <div className="flex justify-center py-2">
                           <MyPoolTable
-                            pool={myPool}
                             poolNumber={1}
                             pools={pools}
                             setPools={setPools}

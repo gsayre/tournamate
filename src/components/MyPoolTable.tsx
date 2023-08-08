@@ -1,9 +1,10 @@
 import { FakeEntriesTeam, FakeEntriesTeamArr } from "../utils/types/team";
 import { Dispatch, SetStateAction, useState } from "react";
 import { amIInTeam } from "utils/lib/am-i-in-utils";
+import { trpc } from "utils/trpc";
 
 type OtherPoolTableProps = {
-  pool: FakeEntriesTeamArr;
+  pool: any;
   poolNumber: number;
   pools: FakeEntriesTeamArr[];
   setPools: Dispatch<SetStateAction<FakeEntriesTeamArr[]>>;
@@ -71,7 +72,8 @@ export const MyPoolTable = ({
             Record
           </td>
         </tr>
-        {pool?.map((team, i) => {
+        {pool && pool[0]?.teams.map((team, i) => {
+          console.log(team)
           return (
             <tr
               key={i}

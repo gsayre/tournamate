@@ -103,6 +103,35 @@ export const tournamentRouter = router({
       return pools;
     }),
 
+  getMyPool: protectedProcedure.input(z.object({divisionId: z.number()})).query(async ({ctx, input}) => {
+    const myPool = await ctx.prisma.pool.findMany({
+      where: {
+        teams: {
+          some: {
+            players: {
+              some: {
+                userId: ctx.user.id
+              }
+            }
+          }
+        }
+      },
+      include: {
+        teams: {
+          select: {
+            players: {
+              select: {
+                user: true
+              }
+            },
+            poolWins: true,
+            poolLosses: true
+          }
+        }
+      }
+    })
+    return myPool
+  }),
   //Division Queries/Mutations
   createDivision: protectedProcedure
     .input(
