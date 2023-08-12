@@ -6,8 +6,6 @@ import { trpc } from "utils/trpc";
 type OtherPoolTableProps = {
   pool: any;
   poolNumber: number;
-  pools: FakeEntriesTeamArr[];
-  setPools: Dispatch<SetStateAction<FakeEntriesTeamArr[]>>;
   isMyPool: boolean;
   currentUserName: string;
 };
@@ -15,37 +13,9 @@ type OtherPoolTableProps = {
 export const MyPoolTable = ({
   pool,
   poolNumber,
-  pools,
-  setPools,
   isMyPool,
   currentUserName,
 }: OtherPoolTableProps) => {
-  const swapArray = pools.map((pool) => {
-    return false;
-  });
-  const [isSwapping, setIsSwapping] = useState(swapArray);
-
-  const updateSwap = (index: number) => {
-    const newArr = [...isSwapping];
-    newArr[index] = !newArr[index];
-    setIsSwapping(newArr);
-  };
-
-  const updatePoolLogic = (
-    poolDelIndex: number,
-    poolInsIndex: number,
-    teamIndex: number,
-    pools: FakeEntriesTeamArr[]
-  ) => {
-    const newArr = [...pools];
-    const poolToDelFrom = newArr[poolDelIndex];
-    const temp = poolToDelFrom.splice(teamIndex, 1)[0];
-    newArr[poolInsIndex].push(temp);
-    newArr[poolInsIndex].sort(function (a, b) {
-      return b.teamRating - a.teamRating;
-    });
-    setPools(newArr);
-  };
 
   return (
     <>

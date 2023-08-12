@@ -148,7 +148,21 @@ model Game {
   gameId    Int          @id @default(autoincrement())
   refereeId Int
   poolId    String?
-  bracketId Int?
+  bracketId Int?  
+  gameOrder Int
+  gameOneScoreCap Int
+  gameOneTeamOneScore Int @default(0)
+  gameOneTeamTwoScore Int @default(0)
+  gameTwoScoreCap Int?
+  gameTwoTeamOneScore Int? @default(0)
+  gameTwoTeamTwoScore Int? @default(0)
+  gameThreeScoreCap Int?
+  gameThreeTeamOneScore Int? @default(0)
+  gameThreeTeamTwoScore Int? @default(0)
+  isScoreCapped Boolean @default(false)
+  currentSet Int @default(1)
+  gameFinished Boolean @default(false)
+  numSets Int 
   teams     TeamInGame[]
   referees  Team         @relation(fields: [refereeId], references: [teamId])
   pool      Pool?        @relation(fields: [poolId], references: [poolId])

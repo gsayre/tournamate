@@ -9,6 +9,7 @@ import {
 import { trpc } from "utils/trpc";
 import { z } from "zod";
 import { MyPoolTable } from "@components/MyPoolTable";
+import { PoolSchedule } from "@components/PoolSchedule";
 
 export type divAccordianProps = {
   division: Division & {
@@ -80,7 +81,7 @@ export const DivisionAccordian = ({
               className="rounded-lg bg-white p-2 font-semibold text-black"
               onClick={() => {
                 addUserToDivision.mutate({
-                  tournamentId: 1,
+                  tournamentId: tournamentId,
                   divisionId: division.divisionId,
                   typeOfEntry: divisionType,
                   sexOfEntry: divisionSex,
@@ -150,15 +151,15 @@ export const DivisionAccordian = ({
             </div>
           ) : (
             <div className="flex w-full flex-col bg-white p-4 text-black">
-              <div className="flex flex-row">
-              <div className="flex flex-col">
-                <EntrySection division={division} />
-                <PoolSection poolsForDivision={poolsForDivision} />
-              </div>
-              <div className="flex flex-col">
-                    <MyPoolSection divisionId={division.divisionId}/>
-                <MyScheduleSection/>
-              </div>
+              <div className="flex flex-row gap-4">
+                <div className="flex flex-col">
+                  <EntrySection division={division} />
+                  <PoolSection poolsForDivision={poolsForDivision} />
+                </div>
+                <div className="flex flex-col">
+                  <MyPoolSection divisionId={division.divisionId} />
+                  <MyScheduleSection tournamentId={tournamentId}/>
+                </div>
               </div>
             </div>
           )}
@@ -226,31 +227,41 @@ const PoolSection = ({ poolsForDivision }: PoolSectionProps) => {
   );
 };
 
-
 type MyPoolSectionProps = {
   divisionId: number;
-}
+};
 
 const MyPoolSection = ({ divisionId }: MyPoolSectionProps) => {
-  const myPool = trpc.tournament.getMyPool.useQuery({
-    divisionId
-  }).data;
+  const myPool = trpc.tournament.getMyPool.useQuery({}).data;
   return (
     <div>
-      <p className="text-2xl pb-2">My Pool</p>
-      <MyPoolTable pool={myPool} poolNumber={1} pools={[myPool]} />
+      <p className="pb-2 text-2xl">My Pool</p>
+      {myPool && myPool.myPool && myPool.firstName && myPool.lastName ? (
+        <>
+          <MyPoolTable
+            pool={myPool?.myPool}
+            poolNumber={1}
+            isMyPool={true}
+            currentUserName={myPool?.firstName + " " + myPool?.lastName}
+          />
+        </>
+      ) : (
+        <div>Loading</div>
+      )}
     </div>
-  )
-}
+  );
+};
 
 type MyScheduleSectionProps = {
+  tournamentId: number;
+};
 
-}
-
-const MyScheduleSection = ({}: MyScheduleSectionProps) => {
+const MyScheduleSection = ({ tournamentId }: MyScheduleSectionProps) => {
+  const mySchedule = trpc.tournament.getMyScheudule.useQuery({}).data;
   return (
     <div>
-    <p>My Schedule</p>
+      <p className="pb-2 text-2xl">My Schedule</p>
+      <PoolSchedule poolSchedule={mySchedule?.mySchedule} currentUserName={mySchedule?.firstName + " " + mySchedule?.lastName} tournamentId={tournamentId}/>
     </div>
-  )
-}
+  );
+};

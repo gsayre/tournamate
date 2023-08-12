@@ -103,7 +103,7 @@ export const tournamentRouter = router({
       return pools;
     }),
 
-  getMyPool: protectedProcedure.input(z.object({divisionId: z.number()})).query(async ({ctx, input}) => {
+  getMyPool: protectedProcedure.input(z.object({})).query(async ({ctx}) => {
     const myPool = await ctx.prisma.pool.findMany({
       where: {
         teams: {
@@ -130,8 +130,38 @@ export const tournamentRouter = router({
         }
       }
     })
-    return myPool
+    return {myPool, firstName:ctx.user.firstName, lastName: ctx.user.lastName}
   }),
+
+  getMyScheudule: protectedProcedure.input(z.object({})).query(async ({ctx, input}) => {
+    const mySchedule = await ctx.prisma.pool.findMany({
+      where: {
+        teams: {
+          some: {
+            players: {
+              some: {
+                userId: ctx.user.id,
+              },
+            },
+          },
+        },
+      },
+      include: {
+        games: true
+      },
+    });
+    return {
+      mySchedule,
+      firstName: ctx.user.firstName,
+      lastName: ctx.user.lastName,
+    };
+  }),
+
+  createPoolSchedule: protectedProcedure.input(z.object({})).query(async ({ctx, input}) => {
+    const createdSchedule: Array<number> = []
+    return createdSchedule
+  }),
+
   //Division Queries/Mutations
   createDivision: protectedProcedure
     .input(
@@ -806,3 +836,386 @@ export const createPoolsFromEntries = (
     return returnArr;
   }
 };
+
+export type gameCreationProps = {
+  gameOneScoreCap: number;
+  gameTwoScoreCap?: number;
+  gameThreeScoreCap?: number;
+  isScoreCapped: boolean;
+  numSets: number;
+  currentSet: number;
+  teamOne: FakeEntriesTeam;
+  teamTwo: FakeEntriesTeam;
+  refs: FakeEntriesTeam;
+  poolId: string;
+  isBracket?: boolean;
+  bracketId?: boolean;
+  gameFinished: boolean;
+};
+
+export function createGame({
+  numSets,
+  isBracket,
+  gameOneScoreCap,
+  gameTwoScoreCap,
+  gameThreeScoreCap,
+  isScoreCapped,
+  currentSet,
+  teamOne,
+  teamTwo,
+  refs,
+  poolId,
+  gameFinished,
+  bracketId,
+}: gameCreationProps): FakeGame {
+  if (isBracket) {
+  }
+  switch (numSets) {
+    case 1: {
+      return {
+        poolId,
+        gameOneScoreCap,
+        currentSet,
+        numSets,
+        teamOne,
+        teamTwo,
+        refs,
+        gameOneTeamOneScore: 0,
+        gameOneTeamTwoScore: 0,
+        isScoreCapped,
+        gameFinished,
+      };
+    }
+    case 2: {
+      return {
+        poolId,
+        gameOneScoreCap,
+        gameTwoScoreCap,
+        currentSet,
+        numSets,
+        teamOne,
+        teamTwo,
+        refs,
+        gameOneTeamOneScore: 0,
+        gameOneTeamTwoScore: 0,
+        gameTwoTeamOneScore: 0,
+        gameTwoTeamTwoScore: 0,
+        isScoreCapped,
+        gameFinished,
+      };
+    }
+    case 3: {
+      return {
+        poolId,
+        gameOneScoreCap,
+        gameTwoScoreCap,
+        gameThreeScoreCap,
+        currentSet,
+        numSets,
+        teamOne,
+        teamTwo,
+        refs,
+        gameOneTeamOneScore: 0,
+        gameOneTeamTwoScore: 0,
+        gameTwoTeamOneScore: 0,
+        gameTwoTeamTwoScore: 0,
+        gameThreeTeamOneScore: 0,
+        gameThreeTeamTwoScore: 0,
+        isScoreCapped,
+        gameFinished,
+      };
+    }
+  }
+  return {} as FakeGame;
+}
+
+export function createGameSchedule(pool: FakeEntriesTeamArr): FakeGame[] {
+  let gamesToInsert: gameCreationProps[] = [];
+  let gamesToReturn: FakeGame[] = [];
+  console.log(pool?.length);
+  switch (pool?.length) {
+    case 3: {
+      const [firstTeam, secondTeam, thirdTeam] = [pool[0], pool[1], pool[2]];
+      gamesToInsert = [
+        {
+          teamOne: firstTeam,
+          teamTwo: thirdTeam,
+          refs: secondTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+        {
+          teamOne: secondTeam,
+          teamTwo: thirdTeam,
+          refs: firstTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+        {
+          teamOne: firstTeam,
+          teamTwo: secondTeam,
+          refs: thirdTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+        {
+          teamOne: firstTeam,
+          teamTwo: thirdTeam,
+          refs: secondTeam,
+          gameOneScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 1,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+        {
+          teamOne: secondTeam,
+          teamTwo: thirdTeam,
+          refs: firstTeam,
+          gameOneScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 1,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+        {
+          teamOne: firstTeam,
+          teamTwo: secondTeam,
+          refs: thirdTeam,
+          gameOneScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 1,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+      ];
+      for (let i = 0; i < gamesToInsert.length; i++) {
+        gamesToReturn.push(createGame(gamesToInsert[i]));
+      }
+      return gamesToReturn;
+    }
+    case 4: {
+      const [firstTeam, secondTeam, thirdTeam, fourthTeam] = [
+        pool[0],
+        pool[1],
+        pool[2],
+        pool[3],
+      ];
+      gamesToInsert = [
+        {
+          teamOne: firstTeam,
+          teamTwo: fourthTeam,
+          refs: secondTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+        {
+          teamOne: secondTeam,
+          teamTwo: thirdTeam,
+          refs: fourthTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+        {
+          teamOne: secondTeam,
+          teamTwo: fourthTeam,
+          refs: firstTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+        {
+          teamOne: firstTeam,
+          teamTwo: thirdTeam,
+          refs: secondTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+        {
+          teamOne: thirdTeam,
+          teamTwo: fourthTeam,
+          refs: firstTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+        {
+          teamOne: firstTeam,
+          teamTwo: secondTeam,
+          refs: thirdTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+      ];
+      for (let i = 0; i < gamesToInsert.length; i++) {
+        gamesToReturn.push(createGame(gamesToInsert[i]));
+      }
+      return gamesToReturn;
+    }
+    case 5: {
+      const [firstTeam, secondTeam, thirdTeam, fourthTeam, fifthTeam] = [
+        pool[0],
+        pool[1],
+        pool[2],
+        pool[3],
+        pool[4],
+      ];
+      gamesToInsert = [
+        {
+          teamOne: firstTeam,
+          teamTwo: fifthTeam,
+          refs: secondTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+        {
+          teamOne: secondTeam,
+          teamTwo: fourthTeam,
+          refs: fifthTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+        {
+          teamOne: secondTeam,
+          teamTwo: fifthTeam,
+          refs: firstTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+        {
+          teamOne: firstTeam,
+          teamTwo: thirdTeam,
+          refs: secondTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+        {
+          teamOne: thirdTeam,
+          teamTwo: fifthTeam,
+          refs: firstTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+        {
+          teamOne: firstTeam,
+          teamTwo: fourthTeam,
+          refs: thirdTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+        {
+          teamOne: thirdTeam,
+          teamTwo: fourthTeam,
+          refs: firstTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+        {
+          teamOne: firstTeam,
+          teamTwo: secondTeam,
+          refs: fourthTeam,
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          isScoreCapped: false,
+          numSets: 2,
+          currentSet: 1,
+          poolId: "123",
+          gameFinished: false,
+        },
+      ];
+      gamesToInsert.map((game) => {
+        return gamesToReturn.push(createGame(game));
+      });
+      // console.log("Games Returned", gamesToReturn);
+      return gamesToReturn;
+    }
+    case 6: {
+    }
+    case 7: {
+    }
+    case 8: {
+    }
+  }
+  return [];
+}
