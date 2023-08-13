@@ -34,6 +34,7 @@ export const DivisionAccordian = ({
 }: divAccordianProps) => {
   const addUserToDivision = trpc.tournament.mockTournamentEntries.useMutation();
   const updatePools = trpc.tournament.updatePool.useMutation();
+  const createPoolSchedule = trpc.tournament.createPoolSchedule.useMutation();
   const toggleDayOf = trpc.tournament.toggleDayOfDivision.useMutation();
   const poolsForDivision = trpc.tournament.getPoolsByDivision.useQuery({
     divisionId: division.divisionId,
@@ -103,6 +104,16 @@ export const DivisionAccordian = ({
             >
               Update Pools
             </button>
+            <button
+              className="rounded-lg bg-white p-2 font-semibold text-black"
+              onClick={() => {
+                createPoolSchedule.mutate({
+                  divisionId: division.divisionId,
+                });
+              }}
+            >
+              Create Schedule
+            </button>
           </>
         ) : (
           <>
@@ -131,6 +142,16 @@ export const DivisionAccordian = ({
             >
               Update Pools
             </button>
+            <button
+              className="rounded-lg bg-white p-2 font-semibold text-black"
+              onClick={() => {
+                createPoolSchedule.mutate({
+                  divisionId: division.divisionId,
+                });
+              }}
+            >
+              Create Schedule
+            </button>
           </>
         )}
       </div>
@@ -158,7 +179,7 @@ export const DivisionAccordian = ({
                 </div>
                 <div className="flex flex-col">
                   <MyPoolSection divisionId={division.divisionId} />
-                  <MyScheduleSection tournamentId={tournamentId}/>
+                  <MyScheduleSection tournamentId={tournamentId} />
                 </div>
               </div>
             </div>
@@ -231,8 +252,31 @@ type MyPoolSectionProps = {
   divisionId: number;
 };
 
+export type getMyPoolReturnType = {
+    myPool: ({
+        teams: {
+            players: {
+                user: {
+                    id: string;
+                    fullName: string;
+                    isAdmin: boolean;
+                    isTournamentDirector: boolean;
+                    playerRating: number;
+                };
+            }[];
+            poolWins: number;
+            poolLosses: number;
+        }[];
+    } & {
+        poolId: string;
+        divisionId: number;
+    })[];
+    firstName: string | null;
+    lastName: string | null;
+} | undefined
+
 const MyPoolSection = ({ divisionId }: MyPoolSectionProps) => {
-  const myPool = trpc.tournament.getMyPool.useQuery({}).data;
+  const myPool: getMyPoolReturnType = trpc.tournament.getMyPool.useQuery({}).data;
   return (
     <div>
       <p className="pb-2 text-2xl">My Pool</p>

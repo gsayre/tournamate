@@ -1,5 +1,5 @@
 import { router, protectedProcedure } from "../trpc";
-import { z } from "zod";
+import { number, z } from "zod";
 import {
   Type,
   Format,
@@ -103,38 +103,8 @@ export const tournamentRouter = router({
       return pools;
     }),
 
-  getMyPool: protectedProcedure.input(z.object({})).query(async ({ctx}) => {
+  getMyPool: protectedProcedure.input(z.object({})).query(async ({ ctx }) => {
     const myPool = await ctx.prisma.pool.findMany({
-      where: {
-        teams: {
-          some: {
-            players: {
-              some: {
-                userId: ctx.user.id
-              }
-            }
-          }
-        }
-      },
-      include: {
-        teams: {
-          select: {
-            players: {
-              select: {
-                user: true
-              }
-            },
-            poolWins: true,
-            poolLosses: true
-          }
-        }
-      }
-    })
-    return {myPool, firstName:ctx.user.firstName, lastName: ctx.user.lastName}
-  }),
-
-  getMyScheudule: protectedProcedure.input(z.object({})).query(async ({ctx, input}) => {
-    const mySchedule = await ctx.prisma.pool.findMany({
       where: {
         teams: {
           some: {
@@ -147,20 +117,107 @@ export const tournamentRouter = router({
         },
       },
       include: {
-        games: true
+        teams: {
+          select: {
+            players: {
+              select: {
+                user: true,
+              },
+            },
+            poolWins: true,
+            poolLosses: true,
+          },
+        },
       },
     });
     return {
-      mySchedule,
+      myPool,
       firstName: ctx.user.firstName,
       lastName: ctx.user.lastName,
     };
   }),
 
-  createPoolSchedule: protectedProcedure.input(z.object({})).query(async ({ctx, input}) => {
-    const createdSchedule: Array<number> = []
-    return createdSchedule
-  }),
+  getMyScheudule: protectedProcedure
+    .input(z.object({}))
+    .query(async ({ ctx, input }) => {
+      const mySchedule = await ctx.prisma.pool.findMany({
+        where: {
+          teams: {
+            some: {
+              players: {
+                some: {
+                  userId: ctx.user.id,
+                },
+              },
+            },
+          },
+        },
+        include: {
+          games: true,
+        },
+      });
+      return {
+        mySchedule,
+        firstName: ctx.user.firstName,
+        lastName: ctx.user.lastName,
+      };
+    }),
+
+  createPoolSchedule: protectedProcedure
+    .input(z.object({ divisionId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const divisionToAddSchedule = await ctx.prisma.division.findUnique({
+        where: {
+          divisionId: input.divisionId,
+        },
+        include: {
+          pools: {
+            include: {
+              teams: {
+                include: {
+                  players: {
+                    include: {
+                      user: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      if (divisionToAddSchedule && divisionToAddSchedule.pools) {
+        const deletedSchedule = await ctx.prisma.game.deleteMany(
+          {
+            where: {
+              pool: {
+                divisionId: input.divisionId
+              }
+            }
+          }
+        )
+        for (let i = 0; i < divisionToAddSchedule?.pools.length; i++) {
+
+        }
+      }
+      
+      switch (input.divisionId) {
+        case 3:
+          break;
+        case 4:
+          break;
+        case 5:
+          break;
+        case 6:
+          break;
+        case 7:
+          break;
+        case 8:
+          break;
+      }
+      console.log("Mut Res: ", divisionToAddSchedule);
+      return divisionToAddSchedule;
+    }),
 
   //Division Queries/Mutations
   createDivision: protectedProcedure
@@ -670,8 +727,8 @@ export const tournamentRouter = router({
               },
             },
             orderBy: {
-              teamRating: "desc"
-            }
+              teamRating: "desc",
+            },
           },
           games: {
             include: {
