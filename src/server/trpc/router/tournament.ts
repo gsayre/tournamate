@@ -187,34 +187,201 @@ export const tournamentRouter = router({
         },
       });
       if (divisionToAddSchedule && divisionToAddSchedule.pools) {
-        const deletedSchedule = await ctx.prisma.game.deleteMany(
-          {
-            where: {
-              pool: {
-                divisionId: input.divisionId
-              }
-            }
-          }
-        )
+        const deletedSchedule = await ctx.prisma.game.deleteMany({
+          where: {
+            pool: {
+              divisionId: input.divisionId,
+            },
+          },
+        });
         for (let i = 0; i < divisionToAddSchedule?.pools.length; i++) {
-
+          switch (divisionToAddSchedule.pools[i].teams.length) {
+            case 3:
+              const [team1, team2, team3] =
+                divisionToAddSchedule.pools[i].teams;
+              const game1 = await ctx.prisma.game.create({
+                data: {
+                  poolId: divisionToAddSchedule.pools[i].poolId,
+                  gameOneScoreCap: 21,
+                  gameTwoScoreCap: 21,
+                  refereeId: team2.teamId,
+                  gameOrder: 1,
+                  numSets: 2,
+                  teams: {
+                    create: [
+                      {
+                        Team: {
+                          connect: {
+                            teamId: team1.teamId,
+                          },
+                        },
+                      },
+                      {
+                        Team: {
+                          connect: {
+                            teamId: team3.teamId,
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+              });
+              const game2 = await ctx.prisma.game.create({
+                data: {
+                  poolId: divisionToAddSchedule.pools[i].poolId,
+                  gameOneScoreCap: 21,
+                  gameTwoScoreCap: 21,
+                  refereeId: team1.teamId,
+                  gameOrder: 2,
+                  numSets: 2,
+                  teams: {
+                    create: [
+                      {
+                        Team: {
+                          connect: {
+                            teamId: team2.teamId,
+                          },
+                        },
+                      },
+                      {
+                        Team: {
+                          connect: {
+                            teamId: team3.teamId,
+                          },
+                        },
+                      },
+                    ],
+                  },
+                }, 
+              });
+              const game3 = await ctx.prisma.game.create({
+                data: {
+                  poolId: divisionToAddSchedule.pools[i].poolId,
+                  gameOneScoreCap: 21,
+                  gameTwoScoreCap: 21,
+                  refereeId: team3.teamId,
+                  gameOrder: 1,
+                  numSets: 2,
+                  teams: {
+                    create: [
+                      {
+                        Team: {
+                          connect: {
+                            teamId: team1.teamId,
+                          },
+                        },
+                      },
+                      {
+                        Team: {
+                          connect: {
+                            teamId: team2.teamId,
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+              });
+              const game4 = await ctx.prisma.game.create({
+                data: {
+                  poolId: divisionToAddSchedule.pools[i].poolId,
+                  gameOneScoreCap: 21,
+                  gameTwoScoreCap: 21,
+                  refereeId: team1.teamId,
+                  gameOrder: 2,
+                  numSets: 2,
+                  teams: {
+                    create: [
+                      {
+                        Team: {
+                          connect: {
+                            teamId: team2.teamId,
+                          },
+                        },
+                      },
+                      {
+                        Team: {
+                          connect: {
+                            teamId: team3.teamId,
+                          },
+                        },
+                      },
+                    ],
+                  },
+                }, 
+              });
+              const game5 = await ctx.prisma.game.create({
+                data: {
+                  poolId: divisionToAddSchedule.pools[i].poolId,
+                  gameOneScoreCap: 21,
+                  gameTwoScoreCap: 21,
+                  refereeId: team2.teamId,
+                  gameOrder: 1,
+                  numSets: 2,
+                  teams: {
+                    create: [
+                      {
+                        Team: {
+                          connect: {
+                            teamId: team1.teamId,
+                          },
+                        },
+                      },
+                      {
+                        Team: {
+                          connect: {
+                            teamId: team3.teamId,
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+              });
+              const game6 = await ctx.prisma.game.create({
+                data: {
+                  poolId: divisionToAddSchedule.pools[i].poolId,
+                  gameOneScoreCap: 21,
+                  gameTwoScoreCap: 21,
+                  refereeId: team1.teamId,
+                  gameOrder: 2,
+                  numSets: 2,
+                  teams: {
+                    create: [
+                      {
+                        Team: {
+                          connect: {
+                            teamId: team2.teamId,
+                          },
+                        },
+                      },
+                      {
+                        Team: {
+                          connect: {
+                            teamId: team3.teamId,
+                          },
+                        },
+                      },
+                    ],
+                  },
+                }, 
+              });
+              break;
+            case 4:
+              break;
+            case 5:
+              break;
+            case 6:
+              break;
+            case 7:
+              break;
+            case 8:
+              break;
+          }
         }
       }
-      
-      switch (input.divisionId) {
-        case 3:
-          break;
-        case 4:
-          break;
-        case 5:
-          break;
-        case 6:
-          break;
-        case 7:
-          break;
-        case 8:
-          break;
-      }
+
       console.log("Mut Res: ", divisionToAddSchedule);
       return divisionToAddSchedule;
     }),
