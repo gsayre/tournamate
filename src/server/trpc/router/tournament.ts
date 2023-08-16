@@ -153,7 +153,27 @@ export const tournamentRouter = router({
           },
         },
         include: {
-          games: true,
+          games: {
+            orderBy: {
+              gameOrder: "asc",
+            },
+            include: {
+              teams: {
+                include: {
+                  Team: {
+                    include: {
+                      players: {
+                        include: {
+                          user: true,
+                        },
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          
         },
       });
       return {
@@ -199,12 +219,20 @@ export const tournamentRouter = router({
         for (let i = 0; i < divisionToAddSchedule?.pools.length; i++) {
           const gamesCreated = [];
           let team1, team2, team3, team4, team5, team6, team7, team8;
-          let game1, game2, game3, game4, game5, game6, game7, game8, game9, game10;
+          let game1,
+            game2,
+            game3,
+            game4,
+            game5,
+            game6,
+            game7,
+            game8,
+            game9,
+            game10;
           switch (divisionToAddSchedule.pools[i].teams.length) {
             case 3:
-              [team1, team2, team3] =
-                divisionToAddSchedule.pools[i].teams;
-               game1 = await ctx.prisma.game.create({
+              [team1, team2, team3] = divisionToAddSchedule.pools[i].teams;
+              game1 = await ctx.prisma.game.create({
                 data: {
                   poolId: divisionToAddSchedule.pools[i].poolId,
                   gameOneScoreCap: 21,
@@ -232,7 +260,7 @@ export const tournamentRouter = router({
                   },
                 },
               });
-               game2 = await ctx.prisma.game.create({
+              game2 = await ctx.prisma.game.create({
                 data: {
                   poolId: divisionToAddSchedule.pools[i].poolId,
                   gameOneScoreCap: 21,
@@ -258,9 +286,9 @@ export const tournamentRouter = router({
                       },
                     ],
                   },
-                }, 
+                },
               });
-               game3 = await ctx.prisma.game.create({
+              game3 = await ctx.prisma.game.create({
                 data: {
                   poolId: divisionToAddSchedule.pools[i].poolId,
                   gameOneScoreCap: 21,
@@ -288,7 +316,7 @@ export const tournamentRouter = router({
                   },
                 },
               });
-               game4 = await ctx.prisma.game.create({
+              game4 = await ctx.prisma.game.create({
                 data: {
                   poolId: divisionToAddSchedule.pools[i].poolId,
                   gameOneScoreCap: 21,
@@ -313,9 +341,9 @@ export const tournamentRouter = router({
                       },
                     ],
                   },
-                }, 
+                },
               });
-               game5 = await ctx.prisma.game.create({
+              game5 = await ctx.prisma.game.create({
                 data: {
                   poolId: divisionToAddSchedule.pools[i].poolId,
                   gameOneScoreCap: 21,
@@ -342,7 +370,7 @@ export const tournamentRouter = router({
                   },
                 },
               });
-               game6 = await ctx.prisma.game.create({
+              game6 = await ctx.prisma.game.create({
                 data: {
                   poolId: divisionToAddSchedule.pools[i].poolId,
                   gameOneScoreCap: 21,
@@ -367,12 +395,13 @@ export const tournamentRouter = router({
                       },
                     ],
                   },
-                }, 
+                },
               });
-              gamesCreated.push(game1, game2, game3, game4, game5, game6)
+              gamesCreated.push(game1, game2, game3, game4, game5, game6);
               break;
             case 4:
-              [team1, team2, team3, team4] = divisionToAddSchedule.pools[i].teams;
+              [team1, team2, team3, team4] =
+                divisionToAddSchedule.pools[i].teams;
               // add 6 games to the pool with 4 teams
               game1 = await ctx.prisma.game.create({
                 data: {
@@ -401,7 +430,7 @@ export const tournamentRouter = router({
                     ],
                   },
                 },
-              })
+              });
               game2 = await ctx.prisma.game.create({
                 data: {
                   poolId: divisionToAddSchedule.pools[i].poolId,
@@ -542,10 +571,11 @@ export const tournamentRouter = router({
                   },
                 },
               });
-              gamesCreated.push(game1, game2, game3, game4, game5, game6)
+              gamesCreated.push(game1, game2, game3, game4, game5, game6);
               break;
             case 5:
-              [team1, team2, team3, team4, team5] = divisionToAddSchedule.pools[i].teams;
+              [team1, team2, team3, team4, team5] =
+                divisionToAddSchedule.pools[i].teams;
               game1 = await ctx.prisma.game.create({
                 data: {
                   poolId: divisionToAddSchedule.pools[i].poolId,
@@ -661,7 +691,7 @@ export const tournamentRouter = router({
               game5 = await ctx.prisma.game.create({
                 data: {
                   poolId: divisionToAddSchedule.pools[i].poolId,
-                  gameOneScoreCap: 21, 
+                  gameOneScoreCap: 21,
                   gameTwoScoreCap: 21,
                   refereeId: team1.teamId,
                   gameOrder: 5,
@@ -730,7 +760,6 @@ export const tournamentRouter = router({
                             teamId: team1.teamId,
                           },
                         },
-
                       },
                       {
                         Team: {
@@ -799,7 +828,17 @@ export const tournamentRouter = router({
                   },
                 },
               });
-              gamesCreated.push(game1, game2, game3, game4, game5, game6, game7, game8, game9)
+              gamesCreated.push(
+                game1,
+                game2,
+                game3,
+                game4,
+                game5,
+                game6,
+                game7,
+                game8,
+                game9
+              );
               break;
             case 6:
               break;
@@ -811,7 +850,11 @@ export const tournamentRouter = router({
           schedulesCreated.push(gamesCreated);
         }
       }
-      return {divisionForAdding: divisionToAddSchedule, deletedSchedules: deletedSchedule, schedulesCreated: schedulesCreated};
+      return {
+        divisionForAdding: divisionToAddSchedule,
+        deletedSchedules: deletedSchedule,
+        schedulesCreated: schedulesCreated,
+      };
     }),
 
   //Division Queries/Mutations
