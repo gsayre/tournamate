@@ -166,14 +166,22 @@ export const tournamentRouter = router({
                         include: {
                           user: true,
                         },
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                      },
+                    },
+                  },
+                },
+              },
+              referees: {
+                include: {
+                  players: {
+                    include: {
+                      user: true,
+                    },
+                  },
+                },
+              },
+            },
           },
-          
         },
       });
       return {
@@ -857,6 +865,188 @@ export const tournamentRouter = router({
       };
     }),
 
+  addPointToGameMock: protectedProcedure
+    .input(z.object({ gameId: z.number(), gameNumber: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      let pointAdded;
+      switch (input.gameNumber) {
+        case 1: {
+          if (Math.random() < 0.5) {
+            pointAdded = await ctx.prisma.game.update({
+              where: {
+                gameId: input.gameId,
+              },
+              data: {
+                gameOneTeamOneScore: {
+                  increment: 1,
+                },
+              },
+            });
+          } else {
+            pointAdded = await ctx.prisma.game.update({
+              where: {
+                gameId: input.gameId,
+              },
+              data: {
+                gameOneTeamTwoScore: {
+                  increment: 1,
+                },
+              },
+            });
+          }
+          break;
+        }
+
+        case 2: {
+          if (Math.random() < 0.5) {
+            pointAdded = await ctx.prisma.game.update({
+              where: {
+                gameId: input.gameId,
+              },
+              data: {
+                gameTwoTeamOneScore: {
+                  increment: 1,
+                },
+              },
+            });
+          } else {
+            pointAdded = await ctx.prisma.game.update({
+              where: {
+                gameId: input.gameId,
+              },
+              data: {
+                gameTwoTeamTwoScore: {
+                  increment: 1,
+                },
+              },
+            });
+          }
+          break;
+        }
+
+        case 3: {
+          if (Math.random() < 0.5) {
+            pointAdded = ctx.prisma.game.update({
+              where: {
+                gameId: input.gameId,
+              },
+              data: {
+                gameThreeTeamOneScore: {
+                  increment: 1,
+                },
+              },
+            });
+          } else {
+            pointAdded = ctx.prisma.game.update({
+              where: {
+                gameId: input.gameId,
+              },
+              data: {
+                gameThreeTeamTwoScore: {
+                  increment: 1,
+                },
+              },
+            });
+          }
+          break;
+        }
+      }
+      let finishSet;
+      if (pointAdded) {
+        if (
+          (pointAdded.gameOneTeamOneScore === pointAdded.gameOneScoreCap ||
+            pointAdded.gameOneTeamTwoScore === pointAdded.gameOneScoreCap) &&
+          input.gameNumber === 1
+        ) {
+          finishSet = await ctx.prisma.game.update({
+            where: {
+              gameId: input.gameId,
+            },
+            data: {
+              currentSet: { increment: 1 },
+            },
+          });
+        } else if (
+          (pointAdded.gameTwoTeamOneScore === pointAdded.gameTwoScoreCap ||
+            pointAdded.gameTwoTeamTwoScore === pointAdded.gameTwoScoreCap) &&
+          input.gameNumber === 2
+        ) {
+          finishSet = await ctx.prisma.game.update({
+            where: {
+              gameId: input.gameId,
+            },
+            data: {
+              currentSet: { increment: 1 },
+            },
+          });
+        } else if (
+          (pointAdded.gameThreeTeamOneScore === pointAdded.gameThreeScoreCap ||
+            pointAdded.gameThreeTeamTwoScore ===
+              pointAdded.gameThreeScoreCap) &&
+          input.gameNumber === 3
+        ) {
+          finishSet = await ctx.prisma.game.update({
+            where: {
+              gameId: input.gameId,
+            },
+            data: {
+              currentSet: { increment: 1 },
+            },
+          });
+        }
+      }
+      let finishGame;
+      if (finishSet) {
+        if (finishSet.currentSet === finishSet.numSets) {
+          finishGame = await ctx.prisma.game.update({
+            where: {
+              gameId: input.gameId,
+            },
+            data: {
+              gameFinished: true,
+            },
+          });
+        }
+      }
+      return pointAdded;
+    }),
+  finishGameMock: protectedProcedure
+    .input(
+      z.object({
+        gameId: z.number(),
+        gameNumber: z.number(),
+        gameOneTeamOneScore: z.number(),
+        gameOneTeamTwoScore: z.number(),
+        scoreCapGame1: z.number(),
+        gameTwoTeamOneScore: z.number(),
+        gameTwoTeamTwoScore: z.number(),
+        scoreCapGame2: z.number(),
+        gameThreeTeamOneScore: z.number(),
+        gameThreeTeamTwoScore: z.number(),
+        scoreCapGame3: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      let i,
+        teamOneScore: number,
+        teamTwoScore: number;
+      switch (input.gameNumber) {
+        
+      }
+      while (
+        teamOneScore !== input.scoreCapGame1 ||
+        teamTwoScore !== input.scoreCapGame1
+      ) {
+        if (Math.random() < 0.5) {
+          teamOneScore++;
+        } else {
+          teamTwoScore++;
+        }
+      }
+    }),
+  addPointToGame: protectedProcedure
+    .input(z.object({ gameId: z.number(), teamId: z.number() }))
+    .mutation(async ({ ctx, input }) => {}),
   //Division Queries/Mutations
   createDivision: protectedProcedure
     .input(
@@ -1914,3 +2104,73 @@ export function createGameSchedule(pool: FakeEntriesTeamArr): FakeGame[] {
   }
   return [];
 }
+
+// type finishCurrentGameArgs = {
+//   mySchedule: FakeGame[];
+//   setMySchedule: Dispatch<SetStateAction<FakeGame[] | undefined>>;
+//   currentGame: FakeGame;
+//   gameIndex: number;
+//   pool: FakeEntriesTeamArr;
+//   setMyPool: Dispatch<SetStateAction<FakeEntriesTeamArr>>;
+// };
+
+// export function finishCurrentGame({
+//   mySchedule,
+//   setMySchedule,
+//   gameIndex,
+//   pool,
+// }: finishCurrentGameArgs): void {
+//   for (
+//     mySchedule[gameIndex].currentSet;
+//     mySchedule[gameIndex].currentSet < mySchedule[gameIndex].numSets + 1;
+//     mySchedule[gameIndex].currentSet++
+//   ) {
+//     if (mySchedule[gameIndex].currentSet === 1) {
+//       while (
+//         mySchedule[gameIndex].gameOneScoreCap >
+//           mySchedule[gameIndex].gameOneTeamOneScore &&
+//         mySchedule[gameIndex].gameOneScoreCap >
+//           mySchedule[gameIndex].gameOneTeamTwoScore
+//       ) {
+//         if (Math.random() > 0.5) {
+//           mySchedule[gameIndex].gameOneTeamOneScore++;
+//         } else {
+//           mySchedule[gameIndex].gameOneTeamTwoScore++;
+//         }
+//       }
+//       // if (mySchedule[gameIndex].gameOneTeamOneScore > mySchedule[gameIndex].gameOneTeamTwoScore) {
+//       //   pool[indexOfTeamInPool(pool, mySchedule[gameIndex].teamOne)].poolWins++;
+//       //   pool[indexOfTeamInPool(pool, mySchedule[gameIndex].teamTwo)].poolLosses++;
+//       // } else {
+//       //   pool[indexOfTeamInPool(pool, mySchedule[gameIndex].teamOne)].poolLosses++;
+//       //   pool[indexOfTeamInPool(pool, mySchedule[gameIndex].teamTwo)].poolWins++;
+//       // }
+//     }
+//     if (mySchedule[gameIndex].currentSet === 2) {
+//       while (
+//         mySchedule[gameIndex].gameTwoScoreCap >
+//           mySchedule[gameIndex].gameTwoTeamOneScore &&
+//         mySchedule[gameIndex].gameTwoScoreCap >
+//           mySchedule[gameIndex].gameTwoTeamTwoScore
+//       ) {
+//         if (Math.random() > 0.5) {
+//           mySchedule[gameIndex].gameTwoTeamOneScore++;
+//         } else {
+//           mySchedule[gameIndex].gameTwoTeamTwoScore++;
+//         }
+//       }
+//       // if (mySchedule[gameIndex].gameTwoTeamOneScore > mySchedule[gameIndex].gameTwoTeamTwoScore) {
+//       //   pool[indexOfTeamInPool(pool, mySchedule[gameIndex].teamOne)].poolWins++;
+//       //   pool[indexOfTeamInPool(pool, mySchedule[gameIndex].teamTwo)].poolLosses++;
+//       // }else {
+//       //   pool[indexOfTeamInPool(pool, mySchedule[gameIndex].teamOne)].poolLosses++;
+//       //   pool[indexOfTeamInPool(pool, mySchedule[gameIndex].teamTwo)].poolWins++;
+//       // }
+//     }
+//     if (mySchedule[gameIndex].currentSet === 3) {
+//     }
+//   }
+//   mySchedule[gameIndex].gameFinished = true;
+//   // setMyPool([...pool])
+//   setMySchedule([...mySchedule]);
+// }

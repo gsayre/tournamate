@@ -172,14 +172,14 @@ export const DivisionAccordian = ({
             </div>
           ) : (
             <div className="flex w-full flex-col bg-white p-4 text-black">
-              <div className="flex flex-row gap-4">
-                <div className="flex flex-col">
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-row space-x-12">
                   <EntrySection division={division} />
-                  <PoolSection poolsForDivision={poolsForDivision} />
-                </div>
-                <div className="flex flex-col">
                   <MyPoolSection divisionId={division.divisionId} />
                   <MyScheduleSection tournamentId={tournamentId} />
+                </div>
+                <div className="flex flex-row">
+                  <PoolSection poolsForDivision={poolsForDivision} />
                 </div>
               </div>
             </div>
@@ -197,30 +197,34 @@ type EntrySectionProps = {
 const EntrySection = ({ division }: EntrySectionProps) => {
   return (
     <>
-      <p className="pb-2 text-2xl">Entries</p>
       <div className="flex flex-col">
-        {division.entries &&
-          division.entries.map((entry, i) => {
-            return (
-              <div key={entry.teamId}>
-                <span className="pr-2">{i + 1}</span>
-                {entry.players.map((player, i, arr) => {
-                  return (
-                    <>
-                      {i == arr.length - 1 ? (
-                        <span key={player.userId}>{player.user.fullName}</span>
-                      ) : (
-                        <span key={player.userId}>
-                          {player.user.fullName} {" - "}
-                        </span>
-                      )}
-                    </>
-                  );
-                })}
-              </div>
-            );
-          })}
-        <ol className="list-inside list-decimal text-lg"></ol>
+        <p className="pb-2 text-2xl">Entries</p>
+        <div className="flex flex-col">
+          {division.entries &&
+            division.entries.map((entry, i) => {
+              return (
+                <div key={entry.teamId}>
+                  <span className="pr-2">{i + 1}</span>
+                  {entry.players.map((player, i, arr) => {
+                    return (
+                      <>
+                        {i == arr.length - 1 ? (
+                          <span key={player.userId}>
+                            {player.user.fullName}
+                          </span>
+                        ) : (
+                          <span key={player.userId}>
+                            {player.user.fullName} {" - "}
+                          </span>
+                        )}
+                      </>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          <ol className="list-inside list-decimal text-lg"></ol>
+        </div>
       </div>
     </>
   );
@@ -252,31 +256,35 @@ type MyPoolSectionProps = {
   divisionId: number;
 };
 
-export type getMyPoolReturnType = {
-    myPool: ({
+export type getMyPoolReturnType =
+  | {
+      myPool: ({
         teams: {
-            players: {
-                user: {
-                    id: string;
-                    fullName: string;
-                    isAdmin: boolean;
-                    isTournamentDirector: boolean;
-                    playerRating: number;
-                };
-            }[];
-            poolWins: number;
-            poolLosses: number;
+          players: {
+            user: {
+              id: string;
+              fullName: string;
+              isAdmin: boolean;
+              isTournamentDirector: boolean;
+              playerRating: number;
+            };
+          }[];
+          poolWins: number;
+          poolLosses: number;
         }[];
-    } & {
+      } & {
         poolId: string;
         divisionId: number;
-    })[];
-    firstName: string | null;
-    lastName: string | null;
-} | undefined
+      })[];
+      firstName: string | null;
+      lastName: string | null;
+    }
+  | undefined;
 
 const MyPoolSection = ({ divisionId }: MyPoolSectionProps) => {
-  const myPool: getMyPoolReturnType = trpc.tournament.getMyPool.useQuery({}).data;
+  const myPool: getMyPoolReturnType = trpc.tournament.getMyPool.useQuery(
+    {}
+  ).data;
   return (
     <div>
       <p className="pb-2 text-2xl">My Pool</p>
@@ -305,7 +313,11 @@ const MyScheduleSection = ({ tournamentId }: MyScheduleSectionProps) => {
   return (
     <div>
       <p className="pb-2 text-2xl">My Schedule</p>
-      <PoolSchedule poolSchedule={mySchedule?.mySchedule} currentUserName={mySchedule?.firstName + " " + mySchedule?.lastName} tournamentId={tournamentId}/>
+      <PoolSchedule
+        poolSchedule={mySchedule?.mySchedule}
+        currentUserName={mySchedule?.firstName + " " + mySchedule?.lastName}
+        tournamentId={tournamentId}
+      />
     </div>
   );
 };
