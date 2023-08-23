@@ -25,7 +25,7 @@ export const PoolSchedule = ({
 }: PoolScheduleProps) => {
   const { user } = useUser();
 
-  const utils = trpc.useContext()
+  const utils = trpc.useContext();
   const addPointMock = trpc.tournament.addPointToGameMock.useMutation();
   const finishGameMock = trpc.tournament.finishGameMock.useMutation();
   const addPoint = trpc.tournament.addPointToGame.useMutation();
@@ -121,27 +121,56 @@ export const PoolSchedule = ({
                     <div className="flex">
                       <Link
                         className="flex items-center rounded-xl bg-green-500 p-2 text-lg"
-                        href={`./${tournamentId}/${i}`}
+                        href={`./${tournamentId}/${game.gameId}`}
                       >
                         Ref Game
                       </Link>
                     </div>
                   ) : isCurrentGame(arr) === i ? (
                     <div className="flex flex-row gap-4">
-                        <button className="flex items-center rounded-xl p-2 text-lg bg-teal-500"
-                          onClick={() => {
-                            addPointMock.mutate({
+                      <button
+                        className="flex items-center rounded-xl bg-teal-500 p-2 text-lg"
+                        onClick={() => {
+                          addPointMock.mutate(
+                            {
                               gameId: game.gameId,
-                              gameNumber: game.currentSet,   
-                            }, {
+                              gameNumber: game.currentSet,
+                            },
+                            {
                               onSuccess: () => {
-                                utils.tournament.getMyScheudule.invalidate()
-                        }})}}>
+                                utils.tournament.getMyScheudule.invalidate();
+                              },
+                            }
+                          );
+                        }}
+                      >
                         Add Point
                       </button>
                       <button
                         className="flex items-center rounded-xl bg-orange-500 p-2 text-lg"
-                        onClick={() => {}}
+                        onClick={() => {
+                          finishGameMock.mutate(
+                            {
+                              gameId: game.gameId,
+                              numSets: game.numSets,
+                              gameOneTeamOneScore: game.gameOneTeamOneScore,
+                              gameOneTeamTwoScore: game.gameOneTeamTwoScore,
+                              scoreCapGame1: game.gameOneScoreCap,
+                              gameTwoTeamOneScore: game.gameTwoTeamOneScore,
+                              gameTwoTeamTwoScore: game.gameTwoTeamTwoScore,
+                              scoreCapGame2: game.gameTwoScoreCap,
+                              gameThreeTeamOneScore: game.gameThreeTeamOneScore,
+                              gameThreeTeamTwoScore: game.gameThreeTeamTwoScore,
+                              scoreCapGame3: game.gameThreeScoreCap,
+                            },
+                            {
+                              onSuccess: () => {
+                                console.log(finishGameMock.data);
+                                utils.tournament.getMyScheudule.invalidate();
+                              },
+                            }
+                          );
+                        }}
                       >
                         Finish Game
                       </button>
