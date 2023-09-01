@@ -1168,32 +1168,90 @@ export const tournamentRouter = router({
       };
     }),
   addPointToGame: protectedProcedure
-    .input(z.object({ gameId: z.number(), teamNum: z.number() }))
+    .input(z.object({ gameId: z.number(), teamNum: z.number(), currentSet: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      if (input.teamNum === 1) {
-              const pointAdded = await ctx.prisma.game.update({
-                where: {
-                  gameId: input.gameId,
-                },
-                data: {
-                  gameOneTeamOneScore: {
-                    increment: 1
-                  }
-                },
-              });
-      } else if (input.teamNum === 2) {
-              const pointAdded = await ctx.prisma.game.update({
-                where: {
-                  gameId: input.gameId,
-                },
-                data: {
-                  gameOneTeamTwoScore: {
-                    increment: 1
-                  }
-                },
-              });
+      let pointAdded
+      switch (input.currentSet) {
+        case 1: {
+          if (input.teamNum === 1) {
+            pointAdded = await ctx.prisma.game.update({
+              where: {
+                gameId: input.gameId,
+              },
+              data: {
+                gameOneTeamOneScore: {
+                  increment: 1
+                }
+              },
+            });
+          } else if (input.teamNum === 2) {
+            pointAdded = await ctx.prisma.game.update({
+              where: {
+                gameId: input.gameId,
+              },
+              data: {
+                gameOneTeamTwoScore: {
+                  increment: 1
+                }
+              },
+            });
+          }
+          break
+        }
+        case 2: {
+          if (input.teamNum === 1) {
+            pointAdded = await ctx.prisma.game.update({
+              where: {
+                gameId: input.gameId,
+              },
+              data: {
+                gameTwoTeamOneScore: {
+                  increment: 1
+                }
+              },
+            });
+          } else if (input.teamNum === 2) {
+            pointAdded = await ctx.prisma.game.update({
+              where: {
+                gameId: input.gameId,
+              },
+              data: {
+                gameTwoTeamTwoScore: {
+                  increment: 1
+                }
+              },
+            });
+          }
+          break
+        }
+        case 3: {
+          if (input.teamNum === 1) {
+            pointAdded = await ctx.prisma.game.update({
+              where: {
+                gameId: input.gameId,
+              },
+              data: {
+                gameThreeTeamOneScore: {
+                  increment: 1
+                }
+              },
+            });
+          } else if (input.teamNum === 2) {
+            pointAdded = await ctx.prisma.game.update({
+              where: {
+                gameId: input.gameId,
+              },
+              data: {
+                gameThreeTeamTwoScore: {
+                  increment: 1
+                }
+              },
+            });
+          }
+          break
+        }
       }
-
+      return {pointAdded}
      }),
   
   getGameAndScore: protectedProcedure.input(z.object({gameId: z.number()})).query(async ({ ctx, input }) => { 
