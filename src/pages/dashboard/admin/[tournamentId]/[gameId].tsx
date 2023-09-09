@@ -44,15 +44,27 @@ export default function RefView() {
   const teamOnePlayerOne = gameAndScore?.teams[0].Team.players[0].user.fullName
     ? gameAndScore?.teams[0].Team.players[0].user.fullName
     : "PLAYER ABSENT";
+  const teamOnePlayerOneId = gameAndScore?.teams[0].Team.players[0].user.id
+    ? gameAndScore?.teams[0].Team.players[0].user.id
+    : "NO ID";
   const teamOnePlayerTwo = gameAndScore?.teams[0].Team.players[1].user.fullName
     ? gameAndScore?.teams[0].Team.players[1].user.fullName
     : "PLAYER ABSENT";
+  const teamOnePlayerTwoId = gameAndScore?.teams[0].Team.players[1].user.id
+    ? gameAndScore?.teams[0].Team.players[1].user.id
+    : "NO ID";
   const teamTwoPlayerOne = gameAndScore?.teams[1].Team.players[0].user.fullName
     ? gameAndScore?.teams[1].Team.players[0].user.fullName
     : "PLAYER ABSENT";
+  const teamTwoPlayerOneId = gameAndScore?.teams[1].Team.players[0].user.id
+    ? gameAndScore?.teams[1].Team.players[0].user.id
+    : "NO ID";
   const teamTwoPlayerTwo = gameAndScore?.teams[1].Team.players[1].user.fullName
     ? gameAndScore?.teams[1].Team.players[1].user.fullName
     : "PLAYER ABSENT";
+  const teamTwoPlayerTwoId = gameAndScore?.teams[1].Team.players[1].user.id
+    ? gameAndScore?.teams[1].Team.players[1].user.id
+    : "NO ID";
 
   const [explanationStep, setExplanationStep] = useState(1);
   const [pointData, setPointData] = useState<PointData>({
@@ -131,9 +143,15 @@ export default function RefView() {
             pointData={pointData}
             setPointData={setPointData}
             teamOneId={gameAndScore.teams[0].teamId}
-            teamOne={[teamOnePlayerOne, teamOnePlayerTwo]}
+            teamOne={[
+              { name: teamOnePlayerOne, id: teamOnePlayerOneId },
+              { name: teamOnePlayerTwo, id: teamOnePlayerTwoId },
+            ]}
             teamTwoId={gameAndScore.teams[1].teamId}
-            teamTwo={[teamTwoPlayerOne, teamTwoPlayerTwo]}
+            teamTwo={[
+              { name: teamTwoPlayerOne, id: teamTwoPlayerOneId },
+              { name: teamTwoPlayerTwo, id: teamTwoPlayerTwoId },
+            ]}
           />
         ) : null}
       </div>
@@ -209,7 +227,7 @@ function PointExplanationOne({
   return (
     <div className="flex flex-col justify-center space-y-16 text-center">
       <p className="text-9xl font-bold">Point Nature</p>
-      <div className="flex flex-row space-x-4 justify-center">
+      <div className="flex flex-row justify-center space-x-4">
         <button
           onClick={() => {
             setPointData({ ...pointData, pointNature: "Positive" });
@@ -335,9 +353,9 @@ function PointExplanationTwo({
 
 type PointExplanationThreeProps = {
   teamOneId: number;
-  teamOne: string[];
+  teamOne: Array<{ name: string; id: string }>;
   teamTwoId: number;
-  teamTwo: string[];
+  teamTwo: Array<{ name: string; id: string }>;
   setExplanationStep: React.Dispatch<React.SetStateAction<number>>;
   pointData: PointData;
   setPointData: React.Dispatch<React.SetStateAction<PointData>>;
@@ -368,43 +386,70 @@ function PointExplanationThree({
       : pointData.teamNum === 2 && pointData.pointNature === "Positive"
       ? teamTwo[1]
       : teamOne[1];
+  const addPointToGame = trpc.tournament.addPointToGame.useMutation();
   return (
     <div className="flex flex-col justify-center space-y-16 text-center">
       <p className="text-9xl font-bold">Player</p>
       <div className="flex flex-row space-x-4">
         <button
           onClick={() => {
-            setPointData({ ...pointData, player: playerOne });
-            setExplanationStep(1);
-            setPointData({
-              teamNum: 0,
-              pointNature: "",
-              reason: "",
-              player: "",
-            });
+            addPointToGame.mutate(
+              {
+                gameId: 1,
+                teamNum: pointData.teamNum,
+                currentSet: 1,
+                pointNature: pointData.pointNature,
+                reason: pointData.reason,
+                playerId: playerOne.id,
+              },
+              {
+                onSuccess: () => {
+                  setExplanationStep(1);
+                  setPointData({
+                    teamNum: 0,
+                    pointNature: "",
+                    reason: "",
+                    player: "",
+                  });
+                },
+              }
+            );
           }}
           className={`w-56 rounded-full ${
             pointData.pointNature === "Positive" ? "bg-green-500" : "bg-red-500"
           } p-4 text-3xl font-semibold text-white`}
         >
-          {playerOne}
+          {playerOne.name}
         </button>
         <button
           className={`w-56 rounded-full ${
             pointData.pointNature === "Positive" ? "bg-green-500" : "bg-red-500"
           } p-4 text-3xl font-semibold text-white`}
           onClick={() => {
-            setPointData({ ...pointData, player: playerTwo });
-            setExplanationStep(1);
-            setPointData({
-              teamNum: 0,
-              pointNature: "",
-              reason: "",
-              player: "",
-            });
+            addPointToGame.mutate(
+              {
+                gameId: 1,
+                teamNum: pointData.teamNum,
+                currentSet: 1,
+                pointNature: pointData.pointNature,
+                reason: pointData.reason,
+                playerId: playerTwo.id,
+              },
+              {
+                onSuccess: () => {
+                  setExplanationStep(1);
+                  setPointData({
+                    teamNum: 0,
+                    pointNature: "",
+                    reason: "",
+                    player: "",
+                  });
+                },
+              }
+            );
           }}
         >
-          {playerTwo}
+          {playerTwo.name}
         </button>
       </div>
     </div>

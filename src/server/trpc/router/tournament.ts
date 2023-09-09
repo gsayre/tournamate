@@ -1168,7 +1168,7 @@ export const tournamentRouter = router({
       };
     }),
   addPointToGame: protectedProcedure
-    .input(z.object({ gameId: z.number(), teamNum: z.number(), currentSet: z.number() }))
+    .input(z.object({ gameId: z.number(), teamNum: z.number(), currentSet: z.number(), pointNature: z.string(), reason: z.string(), playerId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       let pointAdded
       switch (input.currentSet) {
