@@ -20,6 +20,7 @@ model User {
   tournamentDirected   Tournament[]
   invitationsSent      TeamInvitation[]           @relation("inviter")
   teamInvitations      UserInInvitation[]
+  gameStatistics       GameStatistics[]
 
   @@fulltext([fullName])
 }
@@ -164,9 +165,35 @@ model Game {
   isScoreCapped         Boolean      @default(false)
   numSets               Int
   teams                 TeamInGame[]
+  gameStatistics        GameStatistics[]
   referees              Team         @relation(fields: [refereeId], references: [teamId])
   pool                  Pool?        @relation(fields: [poolId], references: [poolId])
   bracket               Bracket?     @relation(fields: [bracketId], references: [bracketId])
+}
+
+model GameStatistics {
+  id        Int     @id @default(autoincrement())
+  isPool    Boolean @default(false)
+  isBracket Boolean @default(false)
+
+  wins      Int     @default(0)
+  losses    Int     @default(0)
+  totalGames Int    @default(0)
+  aces     Int     @default(0)
+  kills    Int     @default(0)
+  blocks   Int     @default(0)
+  hittingErrors Int @default(0)
+  serviceErrors Int @default(0)
+  netViolations Int @default(0)
+  doubleContacts Int @default(0)
+  assists Int @default(0)
+  liftOrCarries Int @default(0)
+
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  gameId    Int
+  game      Game    @relation(fields: [gameId], references: [gameId])
+  @@unique([userId, gameId])
 }
 
 model TeamInGame {

@@ -5,9 +5,21 @@ import { trpc } from "utils/trpc";
 type PointData = {
   teamNum: number;
   pointNature: string;
-  reason: string;
+  reason: PointReason;
   player: string;
 };
+
+export enum PointReason {
+  EMPTY = "",
+SERVICEACE = "Service Ace",
+ BLOCK = "Block",
+KILL = "Kill",
+HITTINGERROR = "Hitting Error",
+SERVICEERROR = "Service Error",
+NETVIOLATION = "Net Violation",
+DOUBLECONTACT = "Double Contact",
+LIFTCARRY = "Lift/Carry"
+}
 
 export default function RefView() {
   const router = useRouter();
@@ -69,8 +81,8 @@ export default function RefView() {
   const [explanationStep, setExplanationStep] = useState(1);
   const [pointData, setPointData] = useState<PointData>({
     teamNum: 0,
-    pointNature: "",
-    reason: "",
+    pointNature: '',
+    reason: PointReason.EMPTY,
     player: "",
   });
 
@@ -137,9 +149,14 @@ export default function RefView() {
           />
         ) : gameAndScore?.teams[0].Team.players &&
           gameAndScore?.teams[1].Team.players &&
-          explanationStep === 4 ? (
+          explanationStep === 4 && teamOneScore && teamTwoScore && scoreCap ? (
           <PointExplanationThree
-            setExplanationStep={setExplanationStep}
+            gameId={gameAndScore.gameId}
+            currentSet={gameAndScore.currentSet}
+                    setExplanationStep={setExplanationStep}
+                    teamOneScore={teamOneScore}
+                    teamTwoScore={teamTwoScore}
+                    scoreCap={scoreCap}
             pointData={pointData}
             setPointData={setPointData}
             teamOneId={gameAndScore.teams[0].teamId}
@@ -271,7 +288,7 @@ function PointExplanationTwo({
         <div className="flex flex-row space-x-4">
           <button
             onClick={() => {
-              setPointData({ ...pointData, reason: "Service Ace" });
+              setPointData({ ...pointData, reason: PointReason.SERVICEACE });
               setExplanationStep(explanationStep + 1);
             }}
             className="w-56 rounded-full bg-green-500 p-4 text-3xl font-semibold text-white"
@@ -280,7 +297,7 @@ function PointExplanationTwo({
           </button>
           <button
             onClick={() => {
-              setPointData({ ...pointData, reason: "Block" });
+              setPointData({ ...pointData, reason: PointReason.BLOCK });
               setExplanationStep(explanationStep + 1);
             }}
             className="w-56 rounded-full bg-green-500 p-4 text-3xl font-semibold text-white"
@@ -289,7 +306,7 @@ function PointExplanationTwo({
           </button>
           <button
             onClick={() => {
-              setPointData({ ...pointData, reason: "Kill" });
+              setPointData({ ...pointData, reason: PointReason.KILL });
               setExplanationStep(explanationStep + 1);
             }}
             className="w-56 rounded-full bg-green-500 p-4 text-3xl font-semibold text-white"
@@ -301,7 +318,7 @@ function PointExplanationTwo({
         <div className="flex flex-row space-x-4">
           <button
             onClick={() => {
-              setPointData({ ...pointData, reason: "Hitting Error" });
+              setPointData({ ...pointData, reason: PointReason.HITTINGERROR });
               setExplanationStep(explanationStep + 1);
             }}
             className="w-56 rounded-full bg-red-500 p-4 text-3xl font-semibold text-white"
@@ -311,7 +328,7 @@ function PointExplanationTwo({
           <button
             className="w-56 rounded-full bg-red-500 p-4 text-3xl font-semibold text-white"
             onClick={() => {
-              setPointData({ ...pointData, reason: "Service Error" });
+              setPointData({ ...pointData, reason: PointReason.SERVICEERROR });
               setExplanationStep(explanationStep + 1);
             }}
           >
@@ -320,7 +337,7 @@ function PointExplanationTwo({
           <button></button>
           <button
             onClick={() => {
-              setPointData({ ...pointData, reason: "Net Violation" });
+              setPointData({ ...pointData, reason: PointReason.NETVIOLATION});
               setExplanationStep(explanationStep + 1);
             }}
             className="w-56 rounded-full bg-red-500 p-4 text-3xl font-semibold text-white"
@@ -329,7 +346,7 @@ function PointExplanationTwo({
           </button>
           <button
             onClick={() => {
-              setPointData({ ...pointData, reason: "Double Contact" });
+              setPointData({ ...pointData, reason: PointReason.DOUBLECONTACT });
               setExplanationStep(explanationStep + 1);
             }}
             className="w-56 rounded-full bg-red-500 p-4 text-3xl font-semibold text-white"
@@ -338,7 +355,7 @@ function PointExplanationTwo({
           </button>
           <button
             onClick={() => {
-              setPointData({ ...pointData, reason: "Lift/Carry" });
+              setPointData({ ...pointData, reason: PointReason.LIFTCARRY });
               setExplanationStep(explanationStep + 1);
             }}
             className="w-56 rounded-full bg-red-500 p-4 text-3xl font-semibold text-white"
@@ -352,6 +369,11 @@ function PointExplanationTwo({
 }
 
 type PointExplanationThreeProps = {
+  gameId: number;
+  teamOneScore: number;
+  teamTwoScore: number
+  scoreCap: number
+  currentSet: number;
   teamOneId: number;
   teamOne: Array<{ name: string; id: string }>;
   teamTwoId: number;
@@ -362,6 +384,11 @@ type PointExplanationThreeProps = {
 };
 
 function PointExplanationThree({
+  gameId,
+  teamOneScore,
+  teamTwoScore,
+  scoreCap,
+  currentSet,
   teamOneId,
   teamOne,
   teamTwoId,
@@ -370,6 +397,11 @@ function PointExplanationThree({
   pointData,
   setPointData,
 }: PointExplanationThreeProps) {
+  const isGameAboutToFinish = (pointData.teamNum === 1 && pointData.pointNature === "Positive" && teamOneScore === scoreCap - 1)
+    || (pointData.teamNum === 1 && pointData.pointNature === "Negative" && teamTwoScore === scoreCap - 1)
+    || (pointData.teamNum === 2 && pointData.pointNature === "Positive" && teamTwoScore === scoreCap - 1)
+    || (pointData.teamNum === 2 && pointData.pointNature === "Negative" && teamOneScore === scoreCap - 1)
+  
   const playerOne =
     pointData.teamNum === 1 && pointData.pointNature === "Positive"
       ? teamOne[0]
@@ -377,7 +409,8 @@ function PointExplanationThree({
       ? teamTwo[0]
       : pointData.teamNum === 2 && pointData.pointNature === "Positive"
       ? teamTwo[0]
-      : teamOne[0];
+          : teamOne[0];
+  
   const playerTwo =
     pointData.teamNum === 1 && pointData.pointNature === "Positive"
       ? teamOne[1]
@@ -387,6 +420,7 @@ function PointExplanationThree({
       ? teamTwo[1]
       : teamOne[1];
   const addPointToGame = trpc.tournament.addPointToGame.useMutation();
+  const utils = trpc.useContext();
   return (
     <div className="flex flex-col justify-center space-y-16 text-center">
       <p className="text-9xl font-bold">Player</p>
@@ -395,12 +429,13 @@ function PointExplanationThree({
           onClick={() => {
             addPointToGame.mutate(
               {
-                gameId: 1,
+                gameId: gameId,
                 teamNum: pointData.teamNum,
-                currentSet: 1,
+                currentSet: currentSet,
                 pointNature: pointData.pointNature,
                 reason: pointData.reason,
                 playerId: playerOne.id,
+                isGameAboutToFinish: isGameAboutToFinish
               },
               {
                 onSuccess: () => {
@@ -408,9 +443,10 @@ function PointExplanationThree({
                   setPointData({
                     teamNum: 0,
                     pointNature: "",
-                    reason: "",
+                    reason: PointReason.EMPTY,
                     player: "",
                   });
+                  utils.tournament.getGameAndScore.invalidate();
                 },
               }
             );
@@ -428,12 +464,13 @@ function PointExplanationThree({
           onClick={() => {
             addPointToGame.mutate(
               {
-                gameId: 1,
+                gameId: gameId,
                 teamNum: pointData.teamNum,
-                currentSet: 1,
+                currentSet: currentSet,
                 pointNature: pointData.pointNature,
                 reason: pointData.reason,
                 playerId: playerTwo.id,
+                isGameAboutToFinish: isGameAboutToFinish
               },
               {
                 onSuccess: () => {
@@ -441,9 +478,10 @@ function PointExplanationThree({
                   setPointData({
                     teamNum: 0,
                     pointNature: "",
-                    reason: "",
+                    reason: PointReason.EMPTY,
                     player: "",
                   });
+                  utils.tournament.getGameAndScore.invalidate();
                 },
               }
             );

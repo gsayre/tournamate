@@ -1,5 +1,5 @@
 import { router, protectedProcedure } from "../trpc";
-import { number, z } from "zod";
+import { boolean, number, z } from "zod";
 import {
   Type,
   Format,
@@ -10,7 +10,9 @@ import {
   TeamInvitation,
   Team,
   UsersInTeam,
+  TeamInGame,
 } from "@prisma/client";
+import { PointReason } from "pages/dashboard/admin/[tournamentId]/[gameId]";
 
 export const tournamentRouter = router({
   //Tournament Queries/Mutations
@@ -215,6 +217,7 @@ export const tournamentRouter = router({
         },
       });
       let deletedSchedule;
+
       let schedulesCreated = [];
       if (divisionToAddSchedule && divisionToAddSchedule.pools) {
         deletedSchedule = await ctx.prisma.game.deleteMany({
@@ -267,6 +270,21 @@ export const tournamentRouter = router({
                     ],
                   },
                 },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               });
               game2 = await ctx.prisma.game.create({
                 data: {
@@ -293,6 +311,21 @@ export const tournamentRouter = router({
                         },
                       },
                     ],
+                  },
+                },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
                   },
                 },
               });
@@ -323,6 +356,21 @@ export const tournamentRouter = router({
                     ],
                   },
                 },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               });
               game4 = await ctx.prisma.game.create({
                 data: {
@@ -348,6 +396,21 @@ export const tournamentRouter = router({
                         },
                       },
                     ],
+                  },
+                },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
                   },
                 },
               });
@@ -377,6 +440,21 @@ export const tournamentRouter = router({
                     ],
                   },
                 },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               });
               game6 = await ctx.prisma.game.create({
                 data: {
@@ -404,8 +482,47 @@ export const tournamentRouter = router({
                     ],
                   },
                 },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               });
               gamesCreated.push(game1, game2, game3, game4, game5, game6);
+              for (let i = 0; i < gamesCreated.length; i++) {
+                for (let j = 0; j < gamesCreated[i].teams.length; j++) {
+                  for (
+                    let k = 0;
+                    k < gamesCreated[i].teams[j].Team.players.length;
+                    k++
+                  ) {
+                    const gameStats = await prisma?.gameStatistics.upsert({
+                      where: {
+                        userId_gameId: {
+                          gameId: gamesCreated[i].gameId,
+                          userId:
+                            gamesCreated[i].teams[j].Team.players[k].userId,
+                        },
+                      },
+                      create: {
+                        gameId: gamesCreated[i].gameId,
+                        userId: gamesCreated[i].teams[j].Team.players[k].userId,
+                      },
+                      update: {},
+                    });
+                  }
+                }
+              }
               break;
             case 4:
               [team1, team2, team3, team4] =
@@ -438,6 +555,21 @@ export const tournamentRouter = router({
                     ],
                   },
                 },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               });
               game2 = await ctx.prisma.game.create({
                 data: {
@@ -464,6 +596,21 @@ export const tournamentRouter = router({
                         },
                       },
                     ],
+                  },
+                },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
                   },
                 },
               });
@@ -494,6 +641,21 @@ export const tournamentRouter = router({
                     ],
                   },
                 },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               });
               game4 = await ctx.prisma.game.create({
                 data: {
@@ -520,6 +682,21 @@ export const tournamentRouter = router({
                         },
                       },
                     ],
+                  },
+                },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
                   },
                 },
               });
@@ -550,6 +727,21 @@ export const tournamentRouter = router({
                     ],
                   },
                 },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               });
               game6 = await ctx.prisma.game.create({
                 data: {
@@ -578,8 +770,47 @@ export const tournamentRouter = router({
                     ],
                   },
                 },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               });
               gamesCreated.push(game1, game2, game3, game4, game5, game6);
+              for (let i = 0; i < gamesCreated.length; i++) {
+                for (let j = 0; j < gamesCreated[i].teams.length; j++) {
+                  for (
+                    let k = 0;
+                    k < gamesCreated[i].teams[j].Team.players.length;
+                    k++
+                  ) {
+                    const gameStats = await prisma?.gameStatistics.upsert({
+                      where: {
+                        userId_gameId: {
+                          gameId: gamesCreated[i].gameId,
+                          userId:
+                            gamesCreated[i].teams[j].Team.players[k].userId,
+                        },
+                      },
+                      create: {
+                        gameId: gamesCreated[i].gameId,
+                        userId: gamesCreated[i].teams[j].Team.players[k].userId,
+                      },
+                      update: {},
+                    });
+                  }
+                }
+              }
               break;
             case 5:
               [team1, team2, team3, team4, team5] =
@@ -611,6 +842,21 @@ export const tournamentRouter = router({
                     ],
                   },
                 },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               });
               game2 = await ctx.prisma.game.create({
                 data: {
@@ -637,6 +883,21 @@ export const tournamentRouter = router({
                         },
                       },
                     ],
+                  },
+                },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
                   },
                 },
               });
@@ -667,6 +928,21 @@ export const tournamentRouter = router({
                     ],
                   },
                 },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               });
               game4 = await ctx.prisma.game.create({
                 data: {
@@ -693,6 +969,21 @@ export const tournamentRouter = router({
                         },
                       },
                     ],
+                  },
+                },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
                   },
                 },
               });
@@ -723,6 +1014,21 @@ export const tournamentRouter = router({
                     ],
                   },
                 },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               });
               game6 = await ctx.prisma.game.create({
                 data: {
@@ -749,6 +1055,21 @@ export const tournamentRouter = router({
                         },
                       },
                     ],
+                  },
+                },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
                   },
                 },
               });
@@ -779,6 +1100,21 @@ export const tournamentRouter = router({
                     ],
                   },
                 },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               });
               game8 = await ctx.prisma.game.create({
                 data: {
@@ -805,6 +1141,21 @@ export const tournamentRouter = router({
                         },
                       },
                     ],
+                  },
+                },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
                   },
                 },
               });
@@ -835,6 +1186,21 @@ export const tournamentRouter = router({
                     ],
                   },
                 },
+                include: {
+                  teams: {
+                    include: {
+                      Team: {
+                        include: {
+                          players: {
+                            include: {
+                              user: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               });
               gamesCreated.push(
                 game1,
@@ -847,6 +1213,30 @@ export const tournamentRouter = router({
                 game8,
                 game9
               );
+              for (let i = 0; i < gamesCreated.length; i++) {
+                for (let j = 0; j < gamesCreated[i].teams.length; j++) {
+                  for (
+                    let k = 0;
+                    k < gamesCreated[i].teams[j].Team.players.length;
+                    k++
+                  ) {
+                    const gameStats = await prisma?.gameStatistics.upsert({
+                      where: {
+                        userId_gameId: {
+                          gameId: gamesCreated[i].gameId,
+                          userId:
+                            gamesCreated[i].teams[j].Team.players[k].userId,
+                        },
+                      },
+                      create: {
+                        gameId: gamesCreated[i].gameId,
+                        userId: gamesCreated[i].teams[j].Team.players[k].userId,
+                      },
+                      update: {},
+                    });
+                  }
+                }
+              }
               break;
             case 6:
               break;
@@ -1031,13 +1421,10 @@ export const tournamentRouter = router({
       let gameOneteamOneScore: number = input.gameOneTeamOneScore;
       let gameOneteamTwoScore: number = input.gameOneTeamTwoScore;
       let gameTwoteamOneScore: number | null = input.gameTwoTeamOneScore;
-      let gameTwoteamTwoScore: number | null =
-        input.gameTwoTeamTwoScore;
-      let gameThreeteamOneScore: number | null =
-        input.gameThreeTeamOneScore;
-      let gameThreeteamTwoScore: number | null =
-        input.gameThreeTeamTwoScore;
-      let updatedGame
+      let gameTwoteamTwoScore: number | null = input.gameTwoTeamTwoScore;
+      let gameThreeteamOneScore: number | null = input.gameThreeTeamOneScore;
+      let gameThreeteamTwoScore: number | null = input.gameThreeTeamTwoScore;
+      let updatedGame;
       switch (input.numSets) {
         case 1: {
           while (
@@ -1052,14 +1439,14 @@ export const tournamentRouter = router({
           }
           updatedGame = await ctx.prisma.game.update({
             where: {
-              gameId: input.gameId
+              gameId: input.gameId,
             },
             data: {
               gameOneTeamOneScore: gameOneteamOneScore,
               gameOneTeamTwoScore: gameOneteamTwoScore,
-              gameFinished: true
-            }
-          })
+              gameFinished: true,
+            },
+          });
           break;
         }
         case 2: {
@@ -1077,7 +1464,7 @@ export const tournamentRouter = router({
             gameTwoteamOneScore !== null &&
             gameTwoteamTwoScore !== null &&
             input.scoreCapGame2 !== null
-           ) {
+          ) {
             while (
               gameTwoteamOneScore < input.scoreCapGame2 &&
               gameTwoteamTwoScore < input.scoreCapGame2
@@ -1098,7 +1485,7 @@ export const tournamentRouter = router({
               gameOneTeamTwoScore: gameOneteamTwoScore,
               gameTwoTeamOneScore: gameTwoteamOneScore,
               gameTwoTeamTwoScore: gameTwoteamTwoScore,
-              gameFinished:true
+              gameFinished: true,
             },
           });
           break;
@@ -1157,33 +1544,207 @@ export const tournamentRouter = router({
               gameTwoTeamTwoScore: gameTwoteamTwoScore,
               gameThreeTeamOneScore: gameThreeteamOneScore,
               gameThreeTeamTwoScore: gameThreeteamTwoScore,
-              gameFinished: true
+              gameFinished: true,
             },
           });
           break;
         }
       }
       return {
-        updatedGame
+        updatedGame,
       };
     }),
   addPointToGame: protectedProcedure
-    .input(z.object({ gameId: z.number(), teamNum: z.number(), currentSet: z.number(), pointNature: z.string(), reason: z.string(), playerId: z.string() }))
+    .input(
+      z.object({
+        gameId: z.number(),
+        teamNum: z.number(),
+        currentSet: z.number(),
+        pointNature: z.string(),
+        reason: z.nativeEnum(PointReason),
+        playerId: z.string(),
+        isGameAboutToFinish: z.boolean(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
-      let pointAdded
+      let pointAdded;
       switch (input.currentSet) {
         case 1: {
+          // Update the score based off of which team got the point
           if (input.teamNum === 1) {
-            pointAdded = await ctx.prisma.game.update({
-              where: {
-                gameId: input.gameId,
-              },
-              data: {
-                gameOneTeamOneScore: {
-                  increment: 1
-                }
-              },
-            });
+            if (input.isGameAboutToFinish) {
+              pointAdded = await ctx.prisma.game.update({
+                where: {
+                  gameId: input.gameId,
+                },
+                data: {
+                  gameOneTeamOneScore: {
+                    increment: 1,
+                  },
+                  currentSet: {
+                    increment: 1,
+                  },
+                },
+              });
+            } else {
+              if (input.isGameAboutToFinish) {
+                pointAdded = await ctx.prisma.game.update({
+                  where: {
+                    gameId: input.gameId,
+                  },
+                  data: {
+                    gameOneTeamOneScore: {
+                      increment: 1,
+                    },
+                    currentSet: {
+                      increment: 1,
+                    },
+                  },
+                });
+              } else {
+                pointAdded = await ctx.prisma.game.update({
+                  where: {
+                    gameId: input.gameId,
+                  },
+                  data: {
+                    gameOneTeamOneScore: {
+                      increment: 1,
+                    },
+                  },
+                });
+              }
+            }
+            // Update the game statistics for the player who caused the point
+            switch (input.reason) {
+              case PointReason.SERVICEACE: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    aces: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.BLOCK: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    blocks: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.KILL: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    kills: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.HITTINGERROR: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    hittingErrors: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.SERVICEERROR: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    serviceErrors: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.NETVIOLATION: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    netViolations: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.DOUBLECONTACT: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    doubleContacts: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.LIFTCARRY: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    liftOrCarries: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+            }
           } else if (input.teamNum === 2) {
             pointAdded = await ctx.prisma.game.update({
               where: {
@@ -1191,12 +1752,143 @@ export const tournamentRouter = router({
               },
               data: {
                 gameOneTeamTwoScore: {
-                  increment: 1
-                }
+                  increment: 1,
+                },
               },
             });
+            // Update the game statistics for the player who caused the point
+            switch (input.reason) {
+              case PointReason.SERVICEACE: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    aces: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.BLOCK: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    blocks: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.KILL: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    kills: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.HITTINGERROR: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    hittingErrors: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.SERVICEERROR: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    serviceErrors: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.NETVIOLATION: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    netViolations: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.DOUBLECONTACT: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    doubleContacts: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.LIFTCARRY: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    liftOrCarries: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+            }
           }
-          break
+          break;
         }
         case 2: {
           if (input.teamNum === 1) {
@@ -1206,10 +1898,141 @@ export const tournamentRouter = router({
               },
               data: {
                 gameTwoTeamOneScore: {
-                  increment: 1
-                }
+                  increment: 1,
+                },
               },
             });
+            // Update the game statistics for the player who caused the point
+            switch (input.reason) {
+              case PointReason.SERVICEACE: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    aces: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.BLOCK: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    blocks: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.KILL: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    kills: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.HITTINGERROR: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    hittingErrors: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.SERVICEERROR: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    serviceErrors: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.NETVIOLATION: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    netViolations: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.DOUBLECONTACT: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    doubleContacts: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.LIFTCARRY: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    liftOrCarries: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+            }
           } else if (input.teamNum === 2) {
             pointAdded = await ctx.prisma.game.update({
               where: {
@@ -1217,12 +2040,143 @@ export const tournamentRouter = router({
               },
               data: {
                 gameTwoTeamTwoScore: {
-                  increment: 1
-                }
+                  increment: 1,
+                },
               },
             });
+            // Update the game statistics for the player who caused the point
+            switch (input.reason) {
+              case PointReason.SERVICEACE: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    aces: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.BLOCK: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    blocks: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.KILL: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    kills: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.HITTINGERROR: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    hittingErrors: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.SERVICEERROR: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    serviceErrors: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.NETVIOLATION: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    netViolations: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.DOUBLECONTACT: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    doubleContacts: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.LIFTCARRY: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    liftOrCarries: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+            }
           }
-          break
+          break;
         }
         case 3: {
           if (input.teamNum === 1) {
@@ -1232,10 +2186,141 @@ export const tournamentRouter = router({
               },
               data: {
                 gameThreeTeamOneScore: {
-                  increment: 1
-                }
+                  increment: 1,
+                },
               },
             });
+            // Update the game statistics for the player who caused the point
+            switch (input.reason) {
+              case PointReason.SERVICEACE: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    aces: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.BLOCK: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    blocks: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.KILL: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    kills: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.HITTINGERROR: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    hittingErrors: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.SERVICEERROR: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    serviceErrors: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.NETVIOLATION: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    netViolations: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.DOUBLECONTACT: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    doubleContacts: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.LIFTCARRY: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    liftOrCarries: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+            }
           } else if (input.teamNum === 2) {
             pointAdded = await ctx.prisma.game.update({
               where: {
@@ -1243,40 +2328,173 @@ export const tournamentRouter = router({
               },
               data: {
                 gameThreeTeamTwoScore: {
-                  increment: 1
-                }
+                  increment: 1,
+                },
               },
             });
-          }
-          break
-        }
-      }
-      return {pointAdded}
-     }),
-  
-  getGameAndScore: protectedProcedure.input(z.object({gameId: z.number()})).query(async ({ ctx, input }) => { 
-    const gameAndScore = await ctx.prisma.game.findUnique({
-      where: {
-        gameId: input.gameId
-      },
-      include: {
-        teams: {
-          include: {
-            Team: {
-              include: {
-                players: {
-                  include: {
-                    user: true
-                  }
-                }
+            // Update the game statistics for the player who caused the point
+            switch (input.reason) {
+              case PointReason.SERVICEACE: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    aces: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.BLOCK: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    blocks: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.KILL: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    kills: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.HITTINGERROR: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    hittingErrors: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.SERVICEERROR: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    serviceErrors: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.NETVIOLATION: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    netViolations: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.DOUBLECONTACT: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    doubleContacts: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
+              }
+              case PointReason.LIFTCARRY: {
+                const gameStats = await ctx.prisma.gameStatistics.update({
+                  where: {
+                    userId_gameId: {
+                      gameId: input.gameId,
+                      userId: input.playerId,
+                    },
+                  },
+                  data: {
+                    liftOrCarries: {
+                      increment: 1,
+                    },
+                  },
+                });
+                break;
               }
             }
           }
+          break;
         }
       }
-    })
-    return {gameAndScore}
-  }),
+      return { pointAdded };
+    }),
+
+  getGameAndScore: protectedProcedure
+    .input(z.object({ gameId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const gameAndScore = await ctx.prisma.game.findUnique({
+        where: {
+          gameId: input.gameId,
+        },
+        include: {
+          teams: {
+            include: {
+              Team: {
+                include: {
+                  players: {
+                    include: {
+                      user: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      return { gameAndScore };
+    }),
   //Division Queries/Mutations
   createDivision: protectedProcedure
     .input(
@@ -1812,75 +3030,6 @@ export const tournamentRouter = router({
     }),
 });
 
-type FakeTeamCriteria = {
-  teamId: number;
-  divisionId: number;
-  teamRating: number;
-  tournamentId: number;
-  poolId: number;
-  userOneId: string;
-  userTwoId: string;
-  userOneName: string;
-  userTwoName: string;
-};
-
-type FakeEntriesTeamArr = FakeEntriesTeam[];
-
-export type FakeEntriesTeam = Team & {
-  players: (UsersInTeam & {
-    user: User;
-  })[];
-  poolWins: number;
-  poolLosses: number;
-};
-
-export function createFakeTeam({
-  teamId,
-  teamRating,
-  divisionId,
-  tournamentId,
-  poolId,
-  userOneId,
-  userTwoId,
-  userOneName,
-  userTwoName,
-}: FakeTeamCriteria): Team {
-  const fakeTeam = {
-    teamId,
-    divisionId,
-    tournamentId,
-    teamRating,
-    poolId,
-    poolWins: 0,
-    poolLosses: 0,
-    players: [
-      {
-        userId: userOneId,
-        teamId,
-        user: {
-          id: userOneId,
-          fullName: userOneName,
-          isAdmin: false,
-          isTournamentDirector: false,
-          playerRating: Math.floor(Math.random() * 1500),
-        },
-      },
-      {
-        userId: userTwoId,
-        teamId,
-        user: {
-          id: userTwoId,
-          fullName: userTwoName,
-          isAdmin: false,
-          isTournamentDirector: false,
-          playerRating: Math.floor(Math.random() * 1500),
-        },
-      },
-    ],
-  };
-  return fakeTeam;
-}
-
 export type DivisionEntriesForPool = Division & {
   entries: (Team & {
     players: (UsersInTeam & {
@@ -1951,456 +3100,3 @@ export const createPoolsFromEntries = (
     return returnArr;
   }
 };
-
-export type gameCreationProps = {
-  gameOneScoreCap: number;
-  gameTwoScoreCap?: number;
-  gameThreeScoreCap?: number;
-  isScoreCapped: boolean;
-  numSets: number;
-  currentSet: number;
-  teamOne: FakeEntriesTeam;
-  teamTwo: FakeEntriesTeam;
-  refs: FakeEntriesTeam;
-  poolId: string;
-  isBracket?: boolean;
-  bracketId?: boolean;
-  gameFinished: boolean;
-};
-
-export function createGame({
-  numSets,
-  isBracket,
-  gameOneScoreCap,
-  gameTwoScoreCap,
-  gameThreeScoreCap,
-  isScoreCapped,
-  currentSet,
-  teamOne,
-  teamTwo,
-  refs,
-  poolId,
-  gameFinished,
-  bracketId,
-}: gameCreationProps): FakeGame {
-  if (isBracket) {
-  }
-  switch (numSets) {
-    case 1: {
-      return {
-        poolId,
-        gameOneScoreCap,
-        currentSet,
-        numSets,
-        teamOne,
-        teamTwo,
-        refs,
-        gameOneTeamOneScore: 0,
-        gameOneTeamTwoScore: 0,
-        isScoreCapped,
-        gameFinished,
-      };
-    }
-    case 2: {
-      return {
-        poolId,
-        gameOneScoreCap,
-        gameTwoScoreCap,
-        currentSet,
-        numSets,
-        teamOne,
-        teamTwo,
-        refs,
-        gameOneTeamOneScore: 0,
-        gameOneTeamTwoScore: 0,
-        gameTwoTeamOneScore: 0,
-        gameTwoTeamTwoScore: 0,
-        isScoreCapped,
-        gameFinished,
-      };
-    }
-    case 3: {
-      return {
-        poolId,
-        gameOneScoreCap,
-        gameTwoScoreCap,
-        gameThreeScoreCap,
-        currentSet,
-        numSets,
-        teamOne,
-        teamTwo,
-        refs,
-        gameOneTeamOneScore: 0,
-        gameOneTeamTwoScore: 0,
-        gameTwoTeamOneScore: 0,
-        gameTwoTeamTwoScore: 0,
-        gameThreeTeamOneScore: 0,
-        gameThreeTeamTwoScore: 0,
-        isScoreCapped,
-        gameFinished,
-      };
-    }
-  }
-  return {} as FakeGame;
-}
-
-export function createGameSchedule(pool: FakeEntriesTeamArr): FakeGame[] {
-  let gamesToInsert: gameCreationProps[] = [];
-  let gamesToReturn: FakeGame[] = [];
-  console.log(pool?.length);
-  switch (pool?.length) {
-    case 3: {
-      const [firstTeam, secondTeam, thirdTeam] = [pool[0], pool[1], pool[2]];
-      gamesToInsert = [
-        {
-          teamOne: firstTeam,
-          teamTwo: thirdTeam,
-          refs: secondTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-        {
-          teamOne: secondTeam,
-          teamTwo: thirdTeam,
-          refs: firstTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-        {
-          teamOne: firstTeam,
-          teamTwo: secondTeam,
-          refs: thirdTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-        {
-          teamOne: firstTeam,
-          teamTwo: thirdTeam,
-          refs: secondTeam,
-          gameOneScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 1,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-        {
-          teamOne: secondTeam,
-          teamTwo: thirdTeam,
-          refs: firstTeam,
-          gameOneScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 1,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-        {
-          teamOne: firstTeam,
-          teamTwo: secondTeam,
-          refs: thirdTeam,
-          gameOneScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 1,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-      ];
-      for (let i = 0; i < gamesToInsert.length; i++) {
-        gamesToReturn.push(createGame(gamesToInsert[i]));
-      }
-      return gamesToReturn;
-    }
-    case 4: {
-      const [firstTeam, secondTeam, thirdTeam, fourthTeam] = [
-        pool[0],
-        pool[1],
-        pool[2],
-        pool[3],
-      ];
-      gamesToInsert = [
-        {
-          teamOne: firstTeam,
-          teamTwo: fourthTeam,
-          refs: secondTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-        {
-          teamOne: secondTeam,
-          teamTwo: thirdTeam,
-          refs: fourthTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-        {
-          teamOne: secondTeam,
-          teamTwo: fourthTeam,
-          refs: firstTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-        {
-          teamOne: firstTeam,
-          teamTwo: thirdTeam,
-          refs: secondTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-        {
-          teamOne: thirdTeam,
-          teamTwo: fourthTeam,
-          refs: firstTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-        {
-          teamOne: firstTeam,
-          teamTwo: secondTeam,
-          refs: thirdTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-      ];
-      for (let i = 0; i < gamesToInsert.length; i++) {
-        gamesToReturn.push(createGame(gamesToInsert[i]));
-      }
-      return gamesToReturn;
-    }
-    case 5: {
-      const [firstTeam, secondTeam, thirdTeam, fourthTeam, fifthTeam] = [
-        pool[0],
-        pool[1],
-        pool[2],
-        pool[3],
-        pool[4],
-      ];
-      gamesToInsert = [
-        {
-          teamOne: firstTeam,
-          teamTwo: fifthTeam,
-          refs: secondTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-        {
-          teamOne: secondTeam,
-          teamTwo: fourthTeam,
-          refs: fifthTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-        {
-          teamOne: secondTeam,
-          teamTwo: fifthTeam,
-          refs: firstTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-        {
-          teamOne: firstTeam,
-          teamTwo: thirdTeam,
-          refs: secondTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-        {
-          teamOne: thirdTeam,
-          teamTwo: fifthTeam,
-          refs: firstTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-        {
-          teamOne: firstTeam,
-          teamTwo: fourthTeam,
-          refs: thirdTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-        {
-          teamOne: thirdTeam,
-          teamTwo: fourthTeam,
-          refs: firstTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-        {
-          teamOne: firstTeam,
-          teamTwo: secondTeam,
-          refs: fourthTeam,
-          gameOneScoreCap: 21,
-          gameTwoScoreCap: 21,
-          isScoreCapped: false,
-          numSets: 2,
-          currentSet: 1,
-          poolId: "123",
-          gameFinished: false,
-        },
-      ];
-      gamesToInsert.map((game) => {
-        return gamesToReturn.push(createGame(game));
-      });
-      // console.log("Games Returned", gamesToReturn);
-      return gamesToReturn;
-    }
-    case 6: {
-    }
-    case 7: {
-    }
-    case 8: {
-    }
-  }
-  return [];
-}
-
-// type finishCurrentGameArgs = {
-//   mySchedule: FakeGame[];
-//   setMySchedule: Dispatch<SetStateAction<FakeGame[] | undefined>>;
-//   currentGame: FakeGame;
-//   gameIndex: number;
-//   pool: FakeEntriesTeamArr;
-//   setMyPool: Dispatch<SetStateAction<FakeEntriesTeamArr>>;
-// };
-
-// export function finishCurrentGame({
-//   mySchedule,
-//   setMySchedule,
-//   gameIndex,
-//   pool,
-// }: finishCurrentGameArgs): void {
-//   for (
-//     mySchedule[gameIndex].currentSet;
-//     mySchedule[gameIndex].currentSet < mySchedule[gameIndex].numSets + 1;
-//     mySchedule[gameIndex].currentSet++
-//   ) {
-//     if (mySchedule[gameIndex].currentSet === 1) {
-//       while (
-//         mySchedule[gameIndex].gameOneScoreCap >
-//           mySchedule[gameIndex].gameOneTeamOneScore &&
-//         mySchedule[gameIndex].gameOneScoreCap >
-//           mySchedule[gameIndex].gameOneTeamTwoScore
-//       ) {
-//         if (Math.random() > 0.5) {
-//           mySchedule[gameIndex].gameOneTeamOneScore++;
-//         } else {
-//           mySchedule[gameIndex].gameOneTeamTwoScore++;
-//         }
-//       }
-//       // if (mySchedule[gameIndex].gameOneTeamOneScore > mySchedule[gameIndex].gameOneTeamTwoScore) {
-//       //   pool[indexOfTeamInPool(pool, mySchedule[gameIndex].teamOne)].poolWins++;
-//       //   pool[indexOfTeamInPool(pool, mySchedule[gameIndex].teamTwo)].poolLosses++;
-//       // } else {
-//       //   pool[indexOfTeamInPool(pool, mySchedule[gameIndex].teamOne)].poolLosses++;
-//       //   pool[indexOfTeamInPool(pool, mySchedule[gameIndex].teamTwo)].poolWins++;
-//       // }
-//     }
-//     if (mySchedule[gameIndex].currentSet === 2) {
-//       while (
-//         mySchedule[gameIndex].gameTwoScoreCap >
-//           mySchedule[gameIndex].gameTwoTeamOneScore &&
-//         mySchedule[gameIndex].gameTwoScoreCap >
-//           mySchedule[gameIndex].gameTwoTeamTwoScore
-//       ) {
-//         if (Math.random() > 0.5) {
-//           mySchedule[gameIndex].gameTwoTeamOneScore++;
-//         } else {
-//           mySchedule[gameIndex].gameTwoTeamTwoScore++;
-//         }
-//       }
-//       // if (mySchedule[gameIndex].gameTwoTeamOneScore > mySchedule[gameIndex].gameTwoTeamTwoScore) {
-//       //   pool[indexOfTeamInPool(pool, mySchedule[gameIndex].teamOne)].poolWins++;
-//       //   pool[indexOfTeamInPool(pool, mySchedule[gameIndex].teamTwo)].poolLosses++;
-//       // }else {
-//       //   pool[indexOfTeamInPool(pool, mySchedule[gameIndex].teamOne)].poolLosses++;
-//       //   pool[indexOfTeamInPool(pool, mySchedule[gameIndex].teamTwo)].poolWins++;
-//       // }
-//     }
-//     if (mySchedule[gameIndex].currentSet === 3) {
-//     }
-//   }
-//   mySchedule[gameIndex].gameFinished = true;
-//   // setMyPool([...pool])
-//   setMySchedule([...mySchedule]);
-// }
