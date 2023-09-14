@@ -28,7 +28,7 @@ export const tournamentRouter = router({
         dayOneDate: z.date(),
         dayTwoDate: z.date().optional().nullable(),
         location: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       if (!input.dayTwo) {
@@ -517,6 +517,7 @@ export const tournamentRouter = router({
                       create: {
                         gameId: gamesCreated[i].gameId,
                         userId: gamesCreated[i].teams[j].Team.players[k].userId,
+                        isPool: true,
                       },
                       update: {},
                     });
@@ -805,6 +806,7 @@ export const tournamentRouter = router({
                       create: {
                         gameId: gamesCreated[i].gameId,
                         userId: gamesCreated[i].teams[j].Team.players[k].userId,
+                        isPool: true,
                       },
                       update: {},
                     });
@@ -1211,7 +1213,7 @@ export const tournamentRouter = router({
                 game6,
                 game7,
                 game8,
-                game9
+                game9,
               );
               for (let i = 0; i < gamesCreated.length; i++) {
                 for (let j = 0; j < gamesCreated[i].teams.length; j++) {
@@ -1231,6 +1233,7 @@ export const tournamentRouter = router({
                       create: {
                         gameId: gamesCreated[i].gameId,
                         userId: gamesCreated[i].teams[j].Team.players[k].userId,
+                        isPool: true,
                       },
                       update: {},
                     });
@@ -1414,7 +1417,9 @@ export const tournamentRouter = router({
         gameThreeTeamOneScore: z.number().nullable(),
         gameThreeTeamTwoScore: z.number().nullable(),
         scoreCapGame3: z.number().nullable(),
-      })
+        teamOneId: z.number(),
+        teamTwoId: z.number(),
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       console.log(input);
@@ -1437,6 +1442,13 @@ export const tournamentRouter = router({
               gameOneteamTwoScore++;
             }
           }
+          let WinningTeam =
+            gameOneteamOneScore > gameOneteamTwoScore
+              ? input.teamOneId
+              : input.teamTwoId;
+          let LosingTeam =
+            WinningTeam === input.teamOneId ? input.teamTwoId : input.teamOneId;
+
           updatedGame = await ctx.prisma.game.update({
             where: {
               gameId: input.gameId,
@@ -1445,6 +1457,26 @@ export const tournamentRouter = router({
               gameOneTeamOneScore: gameOneteamOneScore,
               gameOneTeamTwoScore: gameOneteamTwoScore,
               gameFinished: true,
+            },
+          });
+          const updateWinningTeam = await ctx.prisma.team.update({
+            where: {
+              teamId: WinningTeam,
+            },
+            data: {
+              poolWins: {
+                increment: 1,
+              },
+            },
+          });
+          const updateLosingTeam = await ctx.prisma.team.update({
+            where: {
+              teamId: LosingTeam,
+            },
+            data: {
+              poolLosses: {
+                increment: 1,
+              },
             },
           });
           break;
@@ -1476,6 +1508,34 @@ export const tournamentRouter = router({
               }
             }
           }
+          let teamOneWins = 0,
+            teamOneLosses = 0,
+            teamTwoWins = 0,
+            teamTwoLosses = 0;
+          if (
+            gameOneteamOneScore !== null &&
+            gameOneteamTwoScore !== null &&
+            gameTwoteamOneScore !== null &&
+            gameTwoteamTwoScore !== null
+          ) {
+            const gameOneTeamOneWin = gameOneteamOneScore > gameOneteamTwoScore;
+            if (gameOneTeamOneWin) {
+              teamOneWins++;
+              teamTwoLosses++;
+            } else {
+              teamOneLosses++;
+              teamTwoWins++;
+            }
+            const gameTwoTeamOneWin = gameTwoteamOneScore > gameTwoteamTwoScore;
+            if (gameTwoTeamOneWin) {
+              teamOneWins++;
+              teamTwoLosses++;
+            } else {
+              teamOneLosses++;
+              teamTwoWins++;
+            }
+          }
+
           updatedGame = await ctx.prisma.game.update({
             where: {
               gameId: input.gameId,
@@ -1486,6 +1546,24 @@ export const tournamentRouter = router({
               gameTwoTeamOneScore: gameTwoteamOneScore,
               gameTwoTeamTwoScore: gameTwoteamTwoScore,
               gameFinished: true,
+            },
+          });
+          const updateTeamOne = await ctx.prisma.team.update({
+            where: {
+              teamId: input.teamOneId,
+            },
+            data: {
+              poolWins: teamOneWins,
+              poolLosses: teamOneLosses,
+            },
+          });
+          const updateTeamTwo = await ctx.prisma.team.update({
+            where: {
+              teamId: input.teamTwoId,
+            },
+            data: {
+              poolWins: teamTwoWins,
+              poolLosses: teamTwoLosses,
             },
           });
           break;
@@ -1533,6 +1611,46 @@ export const tournamentRouter = router({
               }
             }
           }
+
+          let teamOneWins = 0,
+            teamOneLosses = 0,
+            teamTwoWins = 0,
+            teamTwoLosses = 0;
+          if (
+            gameOneteamOneScore !== null &&
+            gameOneteamTwoScore !== null &&
+            gameTwoteamOneScore !== null &&
+            gameTwoteamTwoScore !== null &&
+            gameThreeteamOneScore !== null &&
+            gameThreeteamTwoScore !== null
+          ) {
+            const gameOneTeamOneWin = gameOneteamOneScore > gameOneteamTwoScore;
+            if (gameOneTeamOneWin) {
+              teamOneWins++;
+              teamTwoLosses++;
+            } else {
+              teamOneLosses++;
+              teamTwoWins++;
+            }
+            const gameTwoTeamOneWin = gameTwoteamOneScore > gameTwoteamTwoScore;
+            if (gameTwoTeamOneWin) {
+              teamOneWins++;
+              teamTwoLosses++;
+            } else {
+              teamOneLosses++;
+              teamTwoWins++;
+            }
+            const gameThreeTeamOneWin =
+              gameThreeteamOneScore > gameThreeteamTwoScore;
+            if (gameThreeTeamOneWin) {
+              teamOneWins++;
+              teamTwoLosses++;
+            } else {
+              teamOneLosses++;
+              teamTwoWins++;
+            }
+          }
+
           updatedGame = await ctx.prisma.game.update({
             where: {
               gameId: input.gameId,
@@ -1545,6 +1663,24 @@ export const tournamentRouter = router({
               gameThreeTeamOneScore: gameThreeteamOneScore,
               gameThreeTeamTwoScore: gameThreeteamTwoScore,
               gameFinished: true,
+            },
+          });
+          const updateWinningTeam = await ctx.prisma.team.update({
+            where: {
+              teamId: input.teamOneId,
+            },
+            data: {
+              poolWins: teamOneWins,
+              poolLosses: teamOneLosses,
+            },
+          });
+          const updateLosingTeam = await ctx.prisma.team.update({
+            where: {
+              teamId: input.teamTwoId,
+            },
+            data: {
+              poolWins: teamTwoWins,
+              poolLosses: teamTwoLosses,
             },
           });
           break;
@@ -1564,908 +1700,112 @@ export const tournamentRouter = router({
         reason: z.nativeEnum(PointReason),
         playerId: z.string(),
         isGameAboutToFinish: z.boolean(),
-      })
+        partnerId: z.string(),
+        opponentIds: z.array(z.string()),
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       let pointAdded;
-      switch (input.currentSet) {
-        case 1: {
-          // Update the score based off of which team got the point
-          if (input.teamNum === 1) {
-            if (input.isGameAboutToFinish) {
-              pointAdded = await ctx.prisma.game.update({
-                where: {
-                  gameId: input.gameId,
-                },
-                data: {
-                  gameOneTeamOneScore: {
-                    increment: 1,
-                  },
-                  currentSet: {
-                    increment: 1,
-                  },
-                },
-              });
-            } else {
-              if (input.isGameAboutToFinish) {
-                pointAdded = await ctx.prisma.game.update({
-                  where: {
-                    gameId: input.gameId,
-                  },
-                  data: {
-                    gameOneTeamOneScore: {
-                      increment: 1,
-                    },
-                    currentSet: {
-                      increment: 1,
-                    },
-                  },
-                });
-              } else {
-                pointAdded = await ctx.prisma.game.update({
-                  where: {
-                    gameId: input.gameId,
-                  },
-                  data: {
-                    gameOneTeamOneScore: {
-                      increment: 1,
-                    },
-                  },
-                });
-              }
-            }
-            // Update the game statistics for the player who caused the point
-            switch (input.reason) {
-              case PointReason.SERVICEACE: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    aces: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.BLOCK: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    blocks: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.KILL: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    kills: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.HITTINGERROR: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    hittingErrors: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.SERVICEERROR: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    serviceErrors: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.NETVIOLATION: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    netViolations: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.DOUBLECONTACT: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    doubleContacts: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.LIFTCARRY: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    liftOrCarries: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-            }
-          } else if (input.teamNum === 2) {
-            pointAdded = await ctx.prisma.game.update({
-              where: {
+      let setString =
+        input.currentSet === 1
+          ? "One"
+          : input.currentSet === 2
+          ? "Two"
+          : input.currentSet === 3
+          ? "Three"
+          : input.currentSet === 4
+          ? "Four"
+          : "Five";
+      let teamNumString =
+        input.teamNum === 1 ? "One" : input.teamNum === 2 ? "Two" : "";
+      const teamToIncrement = `game${setString}Team${teamNumString}Score`;
+
+      if (input.isGameAboutToFinish) {
+        //Update Game
+        pointAdded = await ctx.prisma.game.update({
+          where: {
+            gameId: input.gameId,
+          },
+          data: {
+            [teamToIncrement]: {
+              increment: 1,
+            },
+            currentSet: {
+              increment: 1,
+            },
+          },
+        });
+        //Update Statistics
+        const playerStats = await ctx.prisma.gameStatistics.update({
+          where: {
+            userId_gameId: {
+              gameId: input.gameId,
+              userId: input.playerId,
+            },
+          },
+          data: {
+            wins: {
+              increment: 1,
+            },
+            [input.reason]: {
+              increment: 1,
+            },
+          },
+        });
+        const partnerStats = await ctx.prisma.gameStatistics.update({
+          where: {
+            userId_gameId: {
+              gameId: input.gameId,
+              userId: input.partnerId,
+            },
+          },
+          data: {
+            wins: {
+              increment: 1,
+            },
+          },
+        });
+        for (let i = 0; i < input.opponentIds.length; i++) {
+          const opponentStats = await ctx.prisma.gameStatistics.update({
+            where: {
+              userId_gameId: {
                 gameId: input.gameId,
+                userId: input.opponentIds[i],
               },
-              data: {
-                gameOneTeamTwoScore: {
-                  increment: 1,
-                },
+            },
+            data: {
+              losses: {
+                increment: 1,
               },
-            });
-            // Update the game statistics for the player who caused the point
-            switch (input.reason) {
-              case PointReason.SERVICEACE: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    aces: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.BLOCK: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    blocks: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.KILL: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    kills: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.HITTINGERROR: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    hittingErrors: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.SERVICEERROR: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    serviceErrors: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.NETVIOLATION: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    netViolations: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.DOUBLECONTACT: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    doubleContacts: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.LIFTCARRY: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    liftOrCarries: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-            }
-          }
-          break;
+            },
+          });
         }
-        case 2: {
-          if (input.teamNum === 1) {
-            pointAdded = await ctx.prisma.game.update({
-              where: {
-                gameId: input.gameId,
-              },
-              data: {
-                gameTwoTeamOneScore: {
-                  increment: 1,
-                },
-              },
-            });
-            // Update the game statistics for the player who caused the point
-            switch (input.reason) {
-              case PointReason.SERVICEACE: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    aces: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.BLOCK: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    blocks: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.KILL: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    kills: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.HITTINGERROR: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    hittingErrors: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.SERVICEERROR: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    serviceErrors: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.NETVIOLATION: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    netViolations: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.DOUBLECONTACT: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    doubleContacts: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.LIFTCARRY: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    liftOrCarries: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-            }
-          } else if (input.teamNum === 2) {
-            pointAdded = await ctx.prisma.game.update({
-              where: {
-                gameId: input.gameId,
-              },
-              data: {
-                gameTwoTeamTwoScore: {
-                  increment: 1,
-                },
-              },
-            });
-            // Update the game statistics for the player who caused the point
-            switch (input.reason) {
-              case PointReason.SERVICEACE: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    aces: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.BLOCK: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    blocks: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.KILL: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    kills: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.HITTINGERROR: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    hittingErrors: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.SERVICEERROR: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    serviceErrors: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.NETVIOLATION: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    netViolations: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.DOUBLECONTACT: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    doubleContacts: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.LIFTCARRY: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    liftOrCarries: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-            }
-          }
-          break;
-        }
-        case 3: {
-          if (input.teamNum === 1) {
-            pointAdded = await ctx.prisma.game.update({
-              where: {
-                gameId: input.gameId,
-              },
-              data: {
-                gameThreeTeamOneScore: {
-                  increment: 1,
-                },
-              },
-            });
-            // Update the game statistics for the player who caused the point
-            switch (input.reason) {
-              case PointReason.SERVICEACE: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    aces: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.BLOCK: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    blocks: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.KILL: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    kills: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.HITTINGERROR: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    hittingErrors: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.SERVICEERROR: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    serviceErrors: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.NETVIOLATION: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    netViolations: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.DOUBLECONTACT: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    doubleContacts: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.LIFTCARRY: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    liftOrCarries: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-            }
-          } else if (input.teamNum === 2) {
-            pointAdded = await ctx.prisma.game.update({
-              where: {
-                gameId: input.gameId,
-              },
-              data: {
-                gameThreeTeamTwoScore: {
-                  increment: 1,
-                },
-              },
-            });
-            // Update the game statistics for the player who caused the point
-            switch (input.reason) {
-              case PointReason.SERVICEACE: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    aces: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.BLOCK: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    blocks: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.KILL: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    kills: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.HITTINGERROR: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    hittingErrors: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.SERVICEERROR: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    serviceErrors: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.NETVIOLATION: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    netViolations: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.DOUBLECONTACT: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    doubleContacts: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-              case PointReason.LIFTCARRY: {
-                const gameStats = await ctx.prisma.gameStatistics.update({
-                  where: {
-                    userId_gameId: {
-                      gameId: input.gameId,
-                      userId: input.playerId,
-                    },
-                  },
-                  data: {
-                    liftOrCarries: {
-                      increment: 1,
-                    },
-                  },
-                });
-                break;
-              }
-            }
-          }
-          break;
-        }
+      } else {
+        //Update Game
+        pointAdded = await ctx.prisma.game.update({
+          where: {
+            gameId: input.gameId,
+          },
+          data: {
+            [teamToIncrement]: {
+              increment: 1,
+            },
+          },
+        });
+        //Update Statistics
+        const playerStats = await ctx.prisma.gameStatistics.update({
+          where: {
+            userId_gameId: {
+              gameId: input.gameId,
+              userId: input.playerId,
+            },
+          },
+          data: {
+            [input.reason]: {
+              increment: 1,
+            },
+          },
+        });
       }
       return { pointAdded };
     }),
@@ -2502,7 +1842,7 @@ export const tournamentRouter = router({
         divisionName: z.string().min(1),
         tournamentId: z.number(),
         type: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const division = await ctx.prisma.division.create({
@@ -2597,7 +1937,7 @@ export const tournamentRouter = router({
         teammateId: z.string(),
         tournamentId: z.coerce.number(),
         divisionId: z.number(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const teamInvitation = await ctx.prisma.teamInvitation.create({
@@ -2638,7 +1978,7 @@ export const tournamentRouter = router({
         teamInvitationId: z.number(),
         inviterId: z.string(),
         tournamentId: z.coerce.number(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const teamInvitation = await ctx.prisma.teamInvitation.delete({
@@ -2764,7 +2104,7 @@ export const tournamentRouter = router({
         tournamentId: z.number(),
         typeOfEntry: z.nativeEnum(Format),
         sexOfEntry: z.enum(["MENS", "WOMENS"]).optional(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       let fullName: string, idSegment: string;
@@ -2918,12 +2258,12 @@ export const tournamentRouter = router({
                     isTournamentDirector: z.boolean(),
                     playerRating: z.number(),
                   }),
-                })
+                }),
               ),
-            })
+            }),
           ),
         }),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const newPools = createPoolsFromEntries(input.division);
@@ -3045,7 +2385,7 @@ export type TeamWithPlayerData = (Team & {
 })[];
 
 export const createPoolsFromEntries = (
-  division: DivisionEntriesForPool
+  division: DivisionEntriesForPool,
 ): Array<TeamWithPlayerData> => {
   const returnArr: Array<TeamWithPlayerData> = [];
   let zigzag = 0;

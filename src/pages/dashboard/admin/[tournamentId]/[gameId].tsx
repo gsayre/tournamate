@@ -11,14 +11,14 @@ type PointData = {
 
 export enum PointReason {
   EMPTY = "",
-SERVICEACE = "Service Ace",
- BLOCK = "Block",
-KILL = "Kill",
-HITTINGERROR = "Hitting Error",
-SERVICEERROR = "Service Error",
-NETVIOLATION = "Net Violation",
-DOUBLECONTACT = "Double Contact",
-LIFTCARRY = "Lift/Carry"
+  SERVICEACE = "aces",
+  BLOCK = "blocks",
+  KILL = "kills",
+  HITTINGERROR = "hittingErrors",
+  SERVICEERROR = "serviceErrors",
+  NETVIOLATION = "netViolations",
+  DOUBLECONTACT = "doubleContacts",
+  LIFTCARRY = "liftOrCarries",
 }
 
 export default function RefView() {
@@ -418,7 +418,23 @@ function PointExplanationThree({
       ? teamTwo[1]
       : pointData.teamNum === 2 && pointData.pointNature === "Positive"
       ? teamTwo[1]
-      : teamOne[1];
+          : teamOne[1];
+  const opponentOne =
+    pointData.teamNum === 1 && pointData.pointNature === "Positive"
+      ? teamTwo[0]
+      : pointData.teamNum === 1 && pointData.pointNature === "Negative"
+      ? teamOne[0]
+      : pointData.teamNum === 2 && pointData.pointNature === "Positive"
+      ? teamOne[0]
+          : teamTwo[0];
+  const opponentTwo =
+    pointData.teamNum === 1 && pointData.pointNature === "Positive"
+      ? teamTwo[1]
+      : pointData.teamNum === 1 && pointData.pointNature === "Negative"
+      ? teamOne[1]
+      : pointData.teamNum === 2 && pointData.pointNature === "Positive"
+      ? teamOne[1]
+      : teamTwo[1];
   const addPointToGame = trpc.tournament.addPointToGame.useMutation();
   const utils = trpc.useContext();
   return (
@@ -435,7 +451,9 @@ function PointExplanationThree({
                 pointNature: pointData.pointNature,
                 reason: pointData.reason,
                 playerId: playerOne.id,
-                isGameAboutToFinish: isGameAboutToFinish
+                isGameAboutToFinish: isGameAboutToFinish,
+                partnerId: playerTwo.id,
+                opponentIds: [opponentOne.id, opponentTwo.id]
               },
               {
                 onSuccess: () => {
@@ -470,7 +488,9 @@ function PointExplanationThree({
                 pointNature: pointData.pointNature,
                 reason: pointData.reason,
                 playerId: playerTwo.id,
-                isGameAboutToFinish: isGameAboutToFinish
+                isGameAboutToFinish: isGameAboutToFinish,
+                partnerId: playerOne.id,
+                opponentIds: [opponentOne.id,opponentTwo.id]
               },
               {
                 onSuccess: () => {

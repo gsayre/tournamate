@@ -17,6 +17,8 @@ export const MyPoolTable = ({
   currentUserName,
 }: OtherPoolTableProps) => {
 
+  console.log("Wins: " + pool.poolWins + " Losses: " + pool.poolLosses)
+
   return (
     <>
       <table className="border-seperate border-none">

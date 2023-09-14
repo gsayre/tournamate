@@ -35,6 +35,8 @@ export const PoolSchedule = ({
       <div>
         {poolSchedule &&
           poolSchedule[0].games.map((game, i, arr) => {
+            let teamOneId = game.teams[0].teamId
+            let teamTwoId = game.teams[1].teamId
             let player1: string | undefined =
               game.teams[0].Team.players[0].user.fullName;
             let player2: string | undefined =
@@ -118,13 +120,44 @@ export const PoolSchedule = ({
                   </div>
                   {(user?.fullName === ref1 || user?.fullName === ref2) &&
                   isCurrentGame(arr) === i ? (
-                    <div className="flex">
+                    <div className="flex flex-row gap-4">
                       <Link
                         className="flex items-center rounded-xl bg-green-500 p-2 text-lg"
                         href={`./${tournamentId}/${game.gameId}`}
                       >
                         Ref Game
                       </Link>
+                      <button
+                        className="flex items-center rounded-xl bg-orange-500 p-2 text-lg"
+                        onClick={() => {
+                          finishGameMock.mutate(
+                            {
+                              gameId: game.gameId,
+                              numSets: game.numSets,
+                              gameOneTeamOneScore: game.gameOneTeamOneScore,
+                              gameOneTeamTwoScore: game.gameOneTeamTwoScore,
+                              scoreCapGame1: game.gameOneScoreCap,
+                              gameTwoTeamOneScore: game.gameTwoTeamOneScore,
+                              gameTwoTeamTwoScore: game.gameTwoTeamTwoScore,
+                              scoreCapGame2: game.gameTwoScoreCap,
+                              gameThreeTeamOneScore: game.gameThreeTeamOneScore,
+                              gameThreeTeamTwoScore: game.gameThreeTeamTwoScore,
+                              scoreCapGame3: game.gameThreeScoreCap,
+                              teamOneId: teamOneId,
+                              teamTwoId: teamTwoId
+                            },
+                            {
+                              onSuccess: () => {
+                                console.log(finishGameMock.data);
+                                utils.tournament.getMyScheudule.invalidate();
+                                utils.tournament.getMyPool.invalidate();
+                              },
+                            },
+                          );
+                        }}
+                      >
+                        Finish Game
+                      </button>
                     </div>
                   ) : isCurrentGame(arr) === i ? (
                     <div className="flex flex-row gap-4">
@@ -140,7 +173,7 @@ export const PoolSchedule = ({
                               onSuccess: () => {
                                 utils.tournament.getMyScheudule.invalidate();
                               },
-                            }
+                            },
                           );
                         }}
                       >
@@ -162,13 +195,16 @@ export const PoolSchedule = ({
                               gameThreeTeamOneScore: game.gameThreeTeamOneScore,
                               gameThreeTeamTwoScore: game.gameThreeTeamTwoScore,
                               scoreCapGame3: game.gameThreeScoreCap,
+                              teamOneId: teamOneId,
+                              teamTwoId: teamTwoId
                             },
                             {
                               onSuccess: () => {
                                 console.log(finishGameMock.data);
                                 utils.tournament.getMyScheudule.invalidate();
+                                utils.tournament.getMyPool.invalidate()
                               },
-                            }
+                            },
                           );
                         }}
                       >

@@ -192,7 +192,7 @@ model GameStatistics {
   userId    String
   user      User    @relation(fields: [userId], references: [id])
   gameId    Int
-  game      Game    @relation(fields: [gameId], references: [gameId])
+  game      Game    @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
   @@unique([userId, gameId])
 }
 
