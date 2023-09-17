@@ -35,8 +35,8 @@ export const PoolSchedule = ({
       <div>
         {poolSchedule &&
           poolSchedule[0].games.map((game, i, arr) => {
-            let teamOneId = game.teams[0].teamId
-            let teamTwoId = game.teams[1].teamId
+            let teamOneId = game.teams[0].teamId;
+            let teamTwoId = game.teams[1].teamId;
             let player1: string | undefined =
               game.teams[0].Team.players[0].user.fullName;
             let player2: string | undefined =
@@ -49,6 +49,8 @@ export const PoolSchedule = ({
               game.referees.players[0]?.user.fullName;
             let ref2: string | undefined =
               game.referees.players[1]?.user.fullName;
+            const isLastGame = isCurrentGame(arr) === arr.length - 1;
+            console.log(isLastGame);
 
             return (
               <div
@@ -94,7 +96,7 @@ export const PoolSchedule = ({
                           }`}
                         >
                           <span>Reffing : </span>
-                          <span>{ref1 ? <>{ref1} -</> : <></>}</span>
+                          <span>{ref1 ? <>{ref1} - </> : <></>}</span>
                           <span>{ref2 ? <>{ref2}</> : <></>}</span>
                         </div>
                       </div>
@@ -144,7 +146,9 @@ export const PoolSchedule = ({
                               gameThreeTeamTwoScore: game.gameThreeTeamTwoScore,
                               scoreCapGame3: game.gameThreeScoreCap,
                               teamOneId: teamOneId,
-                              teamTwoId: teamTwoId
+                              teamTwoId: teamTwoId,
+                              isLastGame: isLastGame,
+                              poolId: game.poolId,
                             },
                             {
                               onSuccess: () => {
@@ -196,13 +200,15 @@ export const PoolSchedule = ({
                               gameThreeTeamTwoScore: game.gameThreeTeamTwoScore,
                               scoreCapGame3: game.gameThreeScoreCap,
                               teamOneId: teamOneId,
-                              teamTwoId: teamTwoId
+                              teamTwoId: teamTwoId,
+                              isLastGame: isLastGame,
+                              poolId: game.poolId,
                             },
                             {
                               onSuccess: () => {
                                 console.log(finishGameMock.data);
                                 utils.tournament.getMyScheudule.invalidate();
-                                utils.tournament.getMyPool.invalidate()
+                                utils.tournament.getMyPool.invalidate();
                               },
                             },
                           );

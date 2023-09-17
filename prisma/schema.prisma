@@ -118,6 +118,11 @@ model Division {
   type         String
   tournamentId Int
   isDayOf      Boolean    @default(false)
+  isPoolFinshed Boolean @default(false)
+  isBracketFinished Boolean @default(false)
+  numBreakingPool Int @default(2)
+  hasWildcards Boolean @default(false)
+  numWildcards Int?
   pools        Pool[]
   entries      Team[]
   tournament   Tournament @relation(fields: [tournamentId], references: [tournamentId])
@@ -128,6 +133,7 @@ model Division {
 
 model Pool {
   poolId     String   @id
+  isFinished Boolean @default(false)
   divisionId Int
   division   Division @relation(fields: [divisionId], references: [divisionId])
   games      Game[]

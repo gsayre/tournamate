@@ -1,5 +1,5 @@
 import { router, protectedProcedure } from "../trpc";
-import { boolean, number, z } from "zod";
+import {z } from "zod";
 import {
   Type,
   Format,
@@ -120,6 +120,9 @@ export const tournamentRouter = router({
       },
       include: {
         teams: {
+          orderBy: {
+            teamRating: "desc",
+          },
           select: {
             players: {
               select: {
@@ -128,14 +131,16 @@ export const tournamentRouter = router({
             },
             poolWins: true,
             poolLosses: true,
+            teamRating: true,
           },
         },
       },
     });
     return {
-      myPool,
+      myPool: myPool,
       firstName: ctx.user.firstName,
       lastName: ctx.user.lastName,
+      isFinished: myPool[0].isFinished,
     };
   }),
 
@@ -225,6 +230,15 @@ export const tournamentRouter = router({
             pool: {
               divisionId: input.divisionId,
             },
+          },
+        });
+        const resetUserWinLoss = await ctx.prisma.team.updateMany({
+          where: {
+            divisionId: input.divisionId,
+          },
+          data: {
+            poolWins: 0,
+            poolLosses: 0,
           },
         });
         for (let i = 0; i < divisionToAddSchedule?.pools.length; i++) {
@@ -1419,6 +1433,8 @@ export const tournamentRouter = router({
         scoreCapGame3: z.number().nullable(),
         teamOneId: z.number(),
         teamTwoId: z.number(),
+        isLastGame: z.boolean(),
+        poolId: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -1479,6 +1495,16 @@ export const tournamentRouter = router({
               },
             },
           });
+          if (input.isLastGame) {
+            const updatePoolFinish = await ctx.prisma.pool.update({
+              where: {
+                poolId: input.poolId,
+              },
+              data: {
+                isFinished: true,
+              },
+            });
+          }
           break;
         }
         case 2: {
@@ -1553,8 +1579,11 @@ export const tournamentRouter = router({
               teamId: input.teamOneId,
             },
             data: {
-              poolWins: teamOneWins,
-              poolLosses: teamOneLosses,
+              poolWins: {
+                increment: teamOneWins,
+              },
+
+              poolLosses: { increment: teamOneLosses },
             },
           });
           const updateTeamTwo = await ctx.prisma.team.update({
@@ -1562,10 +1591,20 @@ export const tournamentRouter = router({
               teamId: input.teamTwoId,
             },
             data: {
-              poolWins: teamTwoWins,
-              poolLosses: teamTwoLosses,
+              poolWins: { increment: teamTwoWins },
+              poolLosses: { increment: teamTwoLosses },
             },
           });
+          if (input.isLastGame) {
+            const updatePoolFinish = await ctx.prisma.pool.update({
+              where: {
+                poolId: input.poolId,
+              },
+              data: {
+                isFinished: true,
+              },
+            });
+          }
           break;
         }
         case 3: {
@@ -1670,8 +1709,8 @@ export const tournamentRouter = router({
               teamId: input.teamOneId,
             },
             data: {
-              poolWins: teamOneWins,
-              poolLosses: teamOneLosses,
+              poolWins: { increment: teamOneWins },
+              poolLosses: { increment: teamOneLosses },
             },
           });
           const updateLosingTeam = await ctx.prisma.team.update({
@@ -1679,10 +1718,20 @@ export const tournamentRouter = router({
               teamId: input.teamTwoId,
             },
             data: {
-              poolWins: teamTwoWins,
-              poolLosses: teamTwoLosses,
+              poolWins: { increment: teamTwoWins },
+              poolLosses: { increment: teamTwoLosses },
             },
           });
+          if (input.isLastGame) {
+            const updatePoolFinish = await ctx.prisma.pool.update({
+              where: {
+                poolId: input.poolId,
+              },
+              data: {
+                isFinished: true,
+              },
+            });
+          }
           break;
         }
       }
@@ -2366,7 +2415,7 @@ export const tournamentRouter = router({
           },
         },
       });
-      return poolsForDivision;
+      return {poolsForDivision, fullName: ctx.user.firstName + " " + ctx.user.lastName};
     }),
 });
 
