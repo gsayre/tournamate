@@ -203,7 +203,7 @@ export const DivisionAccordian = ({
                 </div>
                 <div>
                   {isDivisionFinished(poolsForDivision?.poolsForDivision) ? (
-                    <BracketSection />
+                    <BracketSection divisionId={division.divisionId} />
                   ) : null}
                 </div>
               </div>
@@ -364,12 +364,16 @@ const MyScheduleSection = ({ tournamentId }: MyScheduleSectionProps) => {
   );
 };
 
-type BracketSectionProps = {};
+type BracketSectionProps = {
+  divisionId: number
+};
 
-const BracketSection = ({}: BracketSectionProps) => {
+const BracketSection = ({ divisionId}: BracketSectionProps) => {
+  const createBracket = trpc.tournament.createBracketSchedule.useMutation()
   return (
     <div>
       <p className="pb-2 text-xl">BRACKETSECTION</p>
+      <button className="p-2 bg-purple-400 rounded-lg font-semibold text-lg" onClick={() => { createBracket.mutate({divisionId: divisionId})}}>Create Bracket Schedule</button>
     </div>
   );
 };

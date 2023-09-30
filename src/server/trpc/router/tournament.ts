@@ -1272,6 +1272,67 @@ export const tournamentRouter = router({
       };
     }),
 
+  createBracketSchedule: protectedProcedure
+    .input(z.object({ divisionId: z.number()}))
+    .mutation(async ({ ctx, input }) => {
+      const divisionToAddBracket = await ctx.prisma.division.findUnique({
+        where: {
+          divisionId: input.divisionId,
+        },
+        include: {
+          pools: {
+            include: {
+              teams: {
+                include: {
+                  players: {
+                    include: {
+                      user: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      if (divisionToAddBracket && divisionToAddBracket.pools) {
+        let teamsThatBrokePool = [];
+        const howManyBreak = divisionToAddBracket?.numBreakingPool;
+        const hasWildCard = divisionToAddBracket?.hasWildcards;
+        const numWildCard = divisionToAddBracket?.numWildcards;
+        //Add teams that clean broke to an array
+        for (let i = 0; i < divisionToAddBracket.pools.length; i++) {
+          const pool = divisionToAddBracket.pools[i];
+          const teams = pool.teams;
+          const sortedTeams = teams.sort((a, b) => {
+            return b.poolWins - a.poolWins;
+          });
+          const teamsThatBroke = sortedTeams.slice(0, howManyBreak);
+          teamsThatBrokePool.push(teamsThatBroke);
+        }
+        //Check for wildcards and if so add them to the array
+        if (hasWildCard && numWildCard) {
+        let wildcardArray = [];
+          for (let i = 0; i < divisionToAddBracket.pools.length; i++) {
+            const pool = divisionToAddBracket.pools[i];
+            const teams = pool.teams;
+            const sortedTeams = teams.sort((a, b) => {
+              return b.poolWins - a.poolWins;
+            });
+            const teamsThatEarnedWildcard = sortedTeams.slice(howManyBreak, howManyBreak + 1);
+            wildcardArray.push(teamsThatEarnedWildcard);
+          }
+          const sortedWildCardArray = wildcardArray.sort((a, b) => {
+            return b.poolWins - a.poolWins;
+          });
+          for (let i = 0; i < wildcardArray.length; i++) {
+            console.log(wildcardArray[i])
+          }
+        }
+      }
+      return {};
+    }),
+
   addPointToGameMock: protectedProcedure
     .input(z.object({ gameId: z.number(), gameNumber: z.number() }))
     .mutation(async ({ ctx, input }) => {
@@ -2415,7 +2476,10 @@ export const tournamentRouter = router({
           },
         },
       });
-      return {poolsForDivision, fullName: ctx.user.firstName + " " + ctx.user.lastName};
+      return {
+        poolsForDivision,
+        fullName: ctx.user.firstName + " " + ctx.user.lastName,
+      };
     }),
 });
 
