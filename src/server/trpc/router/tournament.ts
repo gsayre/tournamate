@@ -1,5 +1,5 @@
 import { router, protectedProcedure } from "../trpc";
-import {z } from "zod";
+import { z } from "zod";
 import {
   Type,
   Format,
@@ -1273,36 +1273,303 @@ export const tournamentRouter = router({
     }),
 
   createBracketSchedule: protectedProcedure
-    .input(z.object({ divisionId: z.number()}))
+    .input(z.object({ divisionId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      const divisionToAddBracket = await ctx.prisma.division.findUnique({
-        where: {
-          divisionId: input.divisionId,
-        },
-        include: {
-          pools: {
-            include: {
-              teams: {
-                include: {
-                  players: {
-                    include: {
-                      user: true,
-                    },
-                  },
-                },
-              },
+      // const divisionToAddBracket = await ctx.prisma.division.findUnique({
+      //   where: {
+      //     divisionId: input.divisionId,
+      //   },
+      //   include: {
+      //     pools: {
+      //       include: {
+      //         teams: {
+      //           include: {
+      //             players: {
+      //               include: {
+      //                 user: true,
+      //               },
+      //             },
+      //           },
+      //         },
+      //       },
+      //     },
+      //   },
+      // });
+      type FakeDivisions = {
+        numBreakingPool: number;
+        hasWildcards: boolean;
+        numWildcards: number;
+        pools: Array<Array<FakeTeamInFakeDivision>>;
+      };
+      type FakeTeamInFakeDivision = {
+        teamId: number;
+        poolWins: number;
+        poolLosses: number;
+        poolPointDifferential: number;
+      };
+      const fakeTwoPoolDivision: FakeDivisions = {
+        numBreakingPool: 2,
+        hasWildcards: true,
+        numWildcards: 1,
+        pools: [
+          [
+            {
+              teamId: 1,
+              poolWins: 3,
+              poolLosses: 3,
+              poolPointDifferential: 4,
             },
-          },
-        },
-      });
-      if (divisionToAddBracket && divisionToAddBracket.pools) {
+            {
+              teamId: 2,
+              poolWins: 6,
+              poolLosses: 0,
+              poolPointDifferential: 34,
+            },
+            {
+              teamId: 3,
+              poolWins: 3,
+              poolLosses: 3,
+              poolPointDifferential: 10,
+            },
+            {
+              teamId: 4,
+              poolWins: 0,
+              poolLosses: 6,
+              poolPointDifferential: -23,
+            },
+          ],
+          [
+            {
+              teamId: 5,
+              poolWins: 2,
+              poolLosses: 4,
+              poolPointDifferential: -1,
+            },
+            {
+              teamId: 6,
+              poolWins: 4,
+              poolLosses: 2,
+              poolPointDifferential: 27,
+            },
+            {
+              teamId: 7,
+              poolWins: 1,
+              poolLosses: 5,
+              poolPointDifferential: -12,
+            },
+            {
+              teamId: 8,
+              poolWins: 5,
+              poolLosses: 1,
+              poolPointDifferential: 22,
+            },
+          ],
+        ],
+      };
+      const fakeThreePoolDivision: FakeDivisions = {
+        numBreakingPool: 2,
+        hasWildcards: true,
+        numWildcards: 1,
+        pools: [
+          [
+            {
+              teamId: 1,
+              poolWins: 3,
+              poolLosses: 3,
+              poolPointDifferential: 4,
+            },
+            {
+              teamId: 2,
+              poolWins: 6,
+              poolLosses: 0,
+              poolPointDifferential: 34,
+            },
+            {
+              teamId: 3,
+              poolWins: 3,
+              poolLosses: 3,
+              poolPointDifferential: 10,
+            },
+            {
+              teamId: 4,
+              poolWins: 0,
+              poolLosses: 6,
+              poolPointDifferential: -23,
+            },
+          ],
+          [
+            {
+              teamId: 5,
+              poolWins: 2,
+              poolLosses: 4,
+              poolPointDifferential: -1,
+            },
+            {
+              teamId: 6,
+              poolWins: 4,
+              poolLosses: 2,
+              poolPointDifferential: 27,
+            },
+            {
+              teamId: 7,
+              poolWins: 1,
+              poolLosses: 5,
+              poolPointDifferential: -12,
+            },
+            {
+              teamId: 8,
+              poolWins: 5,
+              poolLosses: 1,
+              poolPointDifferential: 22,
+            },
+          ],
+          [
+            {
+              teamId: 9,
+              poolWins: 2,
+              poolLosses: 4,
+              poolPointDifferential: -1,
+            },
+            {
+              teamId: 10,
+              poolWins: 4,
+              poolLosses: 2,
+              poolPointDifferential: 27,
+            },
+            {
+              teamId: 11,
+              poolWins: 1,
+              poolLosses: 5,
+              poolPointDifferential: -12,
+            },
+            {
+              teamId: 12,
+              poolWins: 5,
+              poolLosses: 1,
+              poolPointDifferential: 22,
+            },
+          ],
+        ],
+      };
+      const fakeFourPoolDivision: FakeDivisions = {
+        numBreakingPool: 2,
+        hasWildcards: true,
+        numWildcards: 1,
+        pools: [
+          [
+            {
+              teamId: 1,
+              poolWins: 3,
+              poolLosses: 3,
+              poolPointDifferential: 4,
+            },
+            {
+              teamId: 2,
+              poolWins: 6,
+              poolLosses: 0,
+              poolPointDifferential: 34,
+            },
+            {
+              teamId: 3,
+              poolWins: 3,
+              poolLosses: 3,
+              poolPointDifferential: 10,
+            },
+            {
+              teamId: 4,
+              poolWins: 0,
+              poolLosses: 6,
+              poolPointDifferential: -23,
+            },
+          ],
+          [
+            {
+              teamId: 5,
+              poolWins: 2,
+              poolLosses: 4,
+              poolPointDifferential: -1,
+            },
+            {
+              teamId: 6,
+              poolWins: 4,
+              poolLosses: 2,
+              poolPointDifferential: 27,
+            },
+            {
+              teamId: 7,
+              poolWins: 1,
+              poolLosses: 5,
+              poolPointDifferential: -12,
+            },
+            {
+              teamId: 8,
+              poolWins: 5,
+              poolLosses: 1,
+              poolPointDifferential: 22,
+            },
+          ],
+          [
+            {
+              teamId: 9,
+              poolWins: 2,
+              poolLosses: 4,
+              poolPointDifferential: -1,
+            },
+            {
+              teamId: 10,
+              poolWins: 4,
+              poolLosses: 2,
+              poolPointDifferential: 27,
+            },
+            {
+              teamId: 11,
+              poolWins: 1,
+              poolLosses: 5,
+              poolPointDifferential: -12,
+            },
+            {
+              teamId: 12,
+              poolWins: 5,
+              poolLosses: 1,
+              poolPointDifferential: 22,
+            },
+          ],
+          [
+            {
+              teamId: 13,
+              poolWins: 3,
+              poolLosses: 3,
+              poolPointDifferential: 4,
+            },
+            {
+              teamId: 14,
+              poolWins: 6,
+              poolLosses: 0,
+              poolPointDifferential: 34,
+            },
+            {
+              teamId: 15,
+              poolWins: 3,
+              poolLosses: 3,
+              poolPointDifferential: 10,
+            },
+            {
+              teamId: 16,
+              poolWins: 0,
+              poolLosses: 6,
+              poolPointDifferential: -23,
+            },
+          ],
+        ],
+      };
+      if (fakeTwoPoolDivision && fakeTwoPoolDivision.pools) {
         let teamsThatBrokePool = [];
-        const howManyBreak = divisionToAddBracket?.numBreakingPool;
-        const hasWildCard = divisionToAddBracket?.hasWildcards;
-        const numWildCard = divisionToAddBracket?.numWildcards;
+        const howManyBreak = fakeTwoPoolDivision?.numBreakingPool;
+        const hasWildCard = fakeTwoPoolDivision?.hasWildcards;
+        const numWildCard = fakeTwoPoolDivision?.numWildcards;
         //Add teams that clean broke to an array
-        for (let i = 0; i < divisionToAddBracket.pools.length; i++) {
-          const pool = divisionToAddBracket.pools[i];
+        for (let i = 0; i < fakeTwoPoolDivision.pools.length; i++) {
+          const pool = fakeTwoPoolDivision.pools[i];
           const teams = pool.teams;
           const sortedTeams = teams.sort((a, b) => {
             return b.poolWins - a.poolWins;
@@ -1312,21 +1579,24 @@ export const tournamentRouter = router({
         }
         //Check for wildcards and if so add them to the array
         if (hasWildCard && numWildCard) {
-        let wildcardArray = [];
+          let wildcardArray = [];
           for (let i = 0; i < divisionToAddBracket.pools.length; i++) {
             const pool = divisionToAddBracket.pools[i];
             const teams = pool.teams;
             const sortedTeams = teams.sort((a, b) => {
               return b.poolWins - a.poolWins;
             });
-            const teamsThatEarnedWildcard = sortedTeams.slice(howManyBreak, howManyBreak + 1);
+            const teamsThatEarnedWildcard = sortedTeams.slice(
+              howManyBreak,
+              howManyBreak + 1,
+            );
             wildcardArray.push(teamsThatEarnedWildcard);
           }
           const sortedWildCardArray = wildcardArray.sort((a, b) => {
             return b.poolWins - a.poolWins;
           });
-          for (let i = 0; i < wildcardArray.length; i++) {
-            console.log(wildcardArray[i])
+          for (let i = 0; i < sortedWildCardArray.length; i++) {
+            console.log(sortedWildCardArray[i]);
           }
         }
       }
