@@ -1295,12 +1295,18 @@ export const tournamentRouter = router({
       //     },
       //   },
       // });
+      let teamsThatBrokePool = [];
+      let potentialWildcardArray = [];
+      let wildcardArray = [];
       type FakeDivisions = {
         numBreakingPool: number;
         hasWildcards: boolean;
         numWildcards: number;
-        pools: Array<Array<FakeTeamInFakeDivision>>;
+        pools: Array<FakePoolInDivision>;
       };
+      type FakePoolInDivision = {
+        teams: Array<FakeTeamInFakeDivision>;
+      }
       type FakeTeamInFakeDivision = {
         teamId: number;
         poolWins: number;
@@ -1312,7 +1318,7 @@ export const tournamentRouter = router({
         hasWildcards: true,
         numWildcards: 1,
         pools: [
-          [
+           {teams: [
             {
               teamId: 1,
               poolWins: 3,
@@ -1337,8 +1343,8 @@ export const tournamentRouter = router({
               poolLosses: 6,
               poolPointDifferential: -23,
             },
-          ],
-          [
+          ]},
+          {teams: [
             {
               teamId: 5,
               poolWins: 2,
@@ -1363,7 +1369,7 @@ export const tournamentRouter = router({
               poolLosses: 1,
               poolPointDifferential: 22,
             },
-          ],
+          ]},
         ],
       };
       const fakeThreePoolDivision: FakeDivisions = {
@@ -1371,7 +1377,7 @@ export const tournamentRouter = router({
         hasWildcards: true,
         numWildcards: 1,
         pools: [
-          [
+          {teams:[
             {
               teamId: 1,
               poolWins: 3,
@@ -1396,8 +1402,8 @@ export const tournamentRouter = router({
               poolLosses: 6,
               poolPointDifferential: -23,
             },
-          ],
-          [
+          ]},
+          {teams:[
             {
               teamId: 5,
               poolWins: 2,
@@ -1422,8 +1428,8 @@ export const tournamentRouter = router({
               poolLosses: 1,
               poolPointDifferential: 22,
             },
-          ],
-          [
+          ]},
+          {teams:[
             {
               teamId: 9,
               poolWins: 2,
@@ -1448,7 +1454,7 @@ export const tournamentRouter = router({
               poolLosses: 1,
               poolPointDifferential: 22,
             },
-          ],
+          ]},
         ],
       };
       const fakeFourPoolDivision: FakeDivisions = {
@@ -1456,7 +1462,7 @@ export const tournamentRouter = router({
         hasWildcards: true,
         numWildcards: 1,
         pools: [
-          [
+          {teams:[
             {
               teamId: 1,
               poolWins: 3,
@@ -1481,8 +1487,8 @@ export const tournamentRouter = router({
               poolLosses: 6,
               poolPointDifferential: -23,
             },
-          ],
-          [
+          ]},
+          {teams: [
             {
               teamId: 5,
               poolWins: 2,
@@ -1507,8 +1513,8 @@ export const tournamentRouter = router({
               poolLosses: 1,
               poolPointDifferential: 22,
             },
-          ],
-          [
+          ]},
+          {teams:[
             {
               teamId: 9,
               poolWins: 2,
@@ -1533,8 +1539,8 @@ export const tournamentRouter = router({
               poolLosses: 1,
               poolPointDifferential: 22,
             },
-          ],
-          [
+          ]},
+          {teams: [
             {
               teamId: 13,
               poolWins: 3,
@@ -1559,49 +1565,43 @@ export const tournamentRouter = router({
               poolLosses: 6,
               poolPointDifferential: -23,
             },
-          ],
+          ]},
         ],
       };
       if (fakeTwoPoolDivision && fakeTwoPoolDivision.pools) {
-        let teamsThatBrokePool = [];
+        
         const howManyBreak = fakeTwoPoolDivision?.numBreakingPool;
         const hasWildCard = fakeTwoPoolDivision?.hasWildcards;
         const numWildCard = fakeTwoPoolDivision?.numWildcards;
+        
         //Add teams that clean broke to an array
         for (let i = 0; i < fakeTwoPoolDivision.pools.length; i++) {
           const pool = fakeTwoPoolDivision.pools[i];
           const teams = pool.teams;
           const sortedTeams = teams.sort((a, b) => {
-            return b.poolWins - a.poolWins;
+            return (b.poolWins/b.poolLosses) - (a.poolWins/a.poolLosses) || b.poolPointDifferential - a.poolPointDifferential;
           });
+          console.log(sortedTeams)
           const teamsThatBroke = sortedTeams.slice(0, howManyBreak);
-          teamsThatBrokePool.push(teamsThatBroke);
-        }
-        //Check for wildcards and if so add them to the array
-        if (hasWildCard && numWildCard) {
-          let wildcardArray = [];
-          for (let i = 0; i < divisionToAddBracket.pools.length; i++) {
-            const pool = divisionToAddBracket.pools[i];
-            const teams = pool.teams;
-            const sortedTeams = teams.sort((a, b) => {
-              return b.poolWins - a.poolWins;
-            });
-            const teamsThatEarnedWildcard = sortedTeams.slice(
+          //Check for wildcards and if so add them to the array
+          if (hasWildCard && numWildCard) {
+            const teamsThatCouldEarnedWildcard = sortedTeams.slice(
               howManyBreak,
-              howManyBreak + 1,
+              sortedTeams.length,
             );
-            wildcardArray.push(teamsThatEarnedWildcard);
+            potentialWildcardArray.push(teamsThatCouldEarnedWildcard);
           }
-          const sortedWildCardArray = wildcardArray.sort((a, b) => {
-            return b.poolWins - a.poolWins;
+            teamsThatBrokePool.push(teamsThatBroke);
+          }
+          let flattentedWildcardArray = potentialWildcardArray.flat();
+          const orderedWildcardCandidates = flattentedWildcardArray.sort((a: FakeTeamInFakeDivision, b: FakeTeamInFakeDivision) => {
+            return (b.poolWins/b.poolLosses) - (a.poolWins/a.poolLosses) || b.poolPointDifferential - a.poolPointDifferential;
           });
-          for (let i = 0; i < sortedWildCardArray.length; i++) {
-            console.log(sortedWildCardArray[i]);
-          }
-        }
+        console.log(orderedWildcardCandidates)
+         wildcardArray = orderedWildcardCandidates.slice(0, numWildCard);
       }
-      return {};
-    }),
+      return {teamsThatBroke: teamsThatBrokePool.flat(), wildcardArray: wildcardArray};
+      }),
 
   addPointToGameMock: protectedProcedure
     .input(z.object({ gameId: z.number(), gameNumber: z.number() }))
