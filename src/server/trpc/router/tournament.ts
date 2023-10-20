@@ -1581,7 +1581,6 @@ export const tournamentRouter = router({
           const sortedTeams = teams.sort((a, b) => {
             return (b.poolWins/b.poolLosses) - (a.poolWins/a.poolLosses) || b.poolPointDifferential - a.poolPointDifferential;
           });
-          console.log(sortedTeams)
           const teamsThatBroke = sortedTeams.slice(0, howManyBreak);
           //Check for wildcards and if so add them to the array
           if (hasWildCard && numWildCard) {
@@ -1597,7 +1596,6 @@ export const tournamentRouter = router({
           const orderedWildcardCandidates = flattentedWildcardArray.sort((a: FakeTeamInFakeDivision, b: FakeTeamInFakeDivision) => {
             return (b.poolWins/b.poolLosses) - (a.poolWins/a.poolLosses) || b.poolPointDifferential - a.poolPointDifferential;
           });
-        console.log(orderedWildcardCandidates)
          wildcardArray = orderedWildcardCandidates.slice(0, numWildCard);
       }
       return {teamsThatBroke: teamsThatBrokePool.flat(), wildcardArray: wildcardArray};
