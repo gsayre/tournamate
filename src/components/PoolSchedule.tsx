@@ -1,9 +1,4 @@
-import { FakeEntriesTeamArr } from "../utils/types/team";
-import { useState, useEffect } from "react";
-import { amIReffing } from "utils/lib/am-i-in-utils";
-import { FakeGame } from "../utils/types/game";
 import Link from "next/link";
-import { getAuth, buildClerkProps } from "@clerk/nextjs/server";
 import { useUser } from "@clerk/nextjs";
 import { trpc } from "utils/trpc";
 
@@ -146,7 +141,9 @@ export const PoolSchedule = ({
                               gameThreeTeamTwoScore: game.gameThreeTeamTwoScore,
                               scoreCapGame3: game.gameThreeScoreCap,
                               teamOneId: teamOneId,
+                              teamOneRating: game.teams[0].teamRating,
                               teamTwoId: teamTwoId,
+                              teamTwoRating: game.teams[1].teamRating,
                               isLastGame: isLastGame,
                               poolId: game.poolId,
                             },
@@ -230,7 +227,7 @@ export const PoolSchedule = ({
   );
 };
 
-function isCurrentGame(gameArray: any) {
+export function isCurrentGame(gameArray: any): number | undefined {
   for (let i = 0; i < gameArray.length; i++) {
     if (!gameArray[i].gameFinished) {
       return i;

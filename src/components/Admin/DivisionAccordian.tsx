@@ -1,5 +1,12 @@
 import { PoolTable } from "@components/PoolTable";
-import { Division, Team, UsersInTeam, User, Format } from "@prisma/client";
+import {
+  Division,
+  Team,
+  UsersInTeam,
+  User,
+  Format,
+  Game,
+} from "@prisma/client";
 import { FakeEntriesTeamArr } from "../../utils/types/team";
 import { useEffect, useState } from "react";
 import {
@@ -9,7 +16,7 @@ import {
 import { trpc } from "utils/trpc";
 import { z } from "zod";
 import { MyPoolTable } from "@components/MyPoolTable";
-import { PoolSchedule } from "@components/PoolSchedule";
+import { PoolSchedule, isCurrentGame } from "@components/PoolSchedule";
 
 export type divAccordianProps = {
   division: Division & {
@@ -114,7 +121,7 @@ export const DivisionAccordian = ({
                   {
                     onSuccess: () => {
                       utils.tournament.getMyScheudule.invalidate();
-                      utils.tournament.getMyPool.invalidate()
+                      utils.tournament.getMyPool.invalidate();
                     },
                   },
                 );
@@ -199,6 +206,7 @@ export const DivisionAccordian = ({
                 <div className="flex flex-row">
                   <PoolSection
                     poolsForDivision={poolsForDivision?.poolsForDivision}
+                    fullName={poolsForDivision?.fullName}
                   />
                 </div>
                 <div>
@@ -257,19 +265,101 @@ const EntrySection = ({ division }: EntrySectionProps) => {
 
 type PoolSectionProps = {
   poolsForDivision: any;
+  fullName: string | undefined;
 };
 
-const PoolSection = ({ poolsForDivision }: PoolSectionProps) => {
+type CurrentGameT = Game & {
+  referees: Team;
+  players: Team[];
+};
+
+const PoolSection = ({ poolsForDivision, fullName }: PoolSectionProps) => {
+  const finishGameMock = trpc.tournament.finishGameMock.useMutation();
+  const utils = trpc.useContext();
+
+  const poolsWithSeeds = poolsForDivision;
+  if (poolsWithSeeds) {
+    for (let i = 0; i < poolsWithSeeds.length; i++) {
+      poolsWithSeeds[i].teams = poolsWithSeeds[i].teams.map((team, i) => ({
+        ...team,
+        seed: i + 1,
+      }));
+    }
+  }
   return (
     <div className="flex flex-col pt-2">
       <p className="pb-2 text-2xl">Pools</p>
       <div className="flex grow flex-row flex-wrap gap-4">
-        {poolsForDivision &&
-          poolsForDivision.poolsForDivision &&
-          poolsForDivision.poolsForDivision.map((pool, i, arr) => {
+        {poolsWithSeeds &&
+          fullName &&
+          poolsWithSeeds.map((pool, i, arr) => {
+            let currentGame: CurrentGameT;
+            if (pool.games) {
+              currentGame = pool.games[isCurrentGame(pool.games)];
+            }
+            const isLastGame =
+              isCurrentGame(pool.games) === pool.games.length - 1;
+            console.log(isCurrentGame(pool.games), pool.games.length - 1);
             return (
               <div key={i}>
-                <PoolTable pool={pool} poolNumber={i + 1} pools={arr} />
+                <div className="flex flex-row items-center gap-4">
+                  {pool.isFinished.toString() ? (
+                    <div className="text-md">
+                      isFinished: {pool.isFinished.toString()}{" "}
+                    </div>
+                  ) : null}
+                  <div className="text-md">
+                    isLastGame: {isLastGame.toString()}{" "}
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => {
+                        finishGameMock.mutate(
+                          {
+                            gameId: currentGame.gameId,
+                            numSets: currentGame.numSets,
+                            gameOneTeamOneScore:
+                              currentGame.gameOneTeamOneScore,
+                            gameOneTeamTwoScore:
+                              currentGame.gameOneTeamTwoScore,
+                            scoreCapGame1: currentGame.gameOneScoreCap,
+                            gameTwoTeamOneScore:
+                              currentGame.gameTwoTeamOneScore,
+                            gameTwoTeamTwoScore:
+                              currentGame.gameTwoTeamTwoScore,
+                            scoreCapGame2: currentGame.gameTwoScoreCap,
+                            gameThreeTeamOneScore:
+                              currentGame.gameThreeTeamOneScore,
+                            gameThreeTeamTwoScore:
+                              currentGame.gameThreeTeamTwoScore,
+                            scoreCapGame3: currentGame.gameThreeScoreCap,
+                            teamOneId: currentGame.teams[0].teamId,
+                            teamOneRating: currentGame.teams[0].Team.teamRating,
+                            teamTwoId: currentGame.teams[1].teamId,
+                            teamTwoRating: currentGame.teams[1].Team.teamRating,
+                            isLastGame: isLastGame,
+                            poolId: currentGame.poolId,
+                          },
+                          {
+                            onSuccess: () => {
+                              utils.tournament.getPoolsByDivision.invalidate();
+                            },
+                          },
+                        );
+                      }}
+                      className="text-md rounded-lg border bg-orange-500 p-2"
+                    >
+                      Finish Next Game
+                    </button>
+                  </div>
+                </div>
+                <PoolTable
+                  pool={pool}
+                  poolNumber={i + 1}
+                  pools={arr}
+                  numBreaking={pool.numBreaking}
+                  hasWildcards={pool.hasWildcards}
+                />
               </div>
             );
           })}
@@ -318,9 +408,12 @@ const MyPoolSection = ({
   const myPool: getMyPoolReturnType = trpc.tournament.getMyPool.useQuery(
     {},
   ).data;
-  const poolWithSeeds = myPool?.myPool
+  const poolWithSeeds = myPool?.myPool;
   if (poolWithSeeds) {
-    poolWithSeeds[0].teams = poolWithSeeds[0].teams.map((team, i) => ({...team, seed: i+1}));
+    poolWithSeeds[0].teams = poolWithSeeds[0].teams.map((team, i) => ({
+      ...team,
+      seed: i + 1,
+    }));
   }
   return (
     <div>
@@ -365,15 +458,22 @@ const MyScheduleSection = ({ tournamentId }: MyScheduleSectionProps) => {
 };
 
 type BracketSectionProps = {
-  divisionId: number
+  divisionId: number;
 };
 
-const BracketSection = ({ divisionId}: BracketSectionProps) => {
-  const createBracket = trpc.tournament.createBracketSchedule.useMutation()
+const BracketSection = ({ divisionId }: BracketSectionProps) => {
+  const createBracket = trpc.bracket.createBracketSchedule.useMutation();
   return (
     <div>
       <p className="pb-2 text-xl">BRACKETSECTION</p>
-      <button className="p-2 bg-purple-400 rounded-lg font-semibold text-lg" onClick={() => { createBracket.mutate({divisionId: divisionId})}}>Create Bracket Schedule</button>
+      <button
+        className="rounded-lg bg-purple-400 p-2 text-lg font-semibold"
+        onClick={() => {
+          createBracket.mutate({ divisionId: divisionId });
+        }}
+      >
+        Create Bracket Schedule
+      </button>
     </div>
   );
 };

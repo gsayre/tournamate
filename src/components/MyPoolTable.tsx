@@ -21,8 +21,6 @@ export const MyPoolTable = ({
   hasWildcards
 }: OtherPoolTableProps) => {
 
-  console.log("HERE", hasWildcards)
-
   return (
     <>
       <table className="border-seperate border-none">

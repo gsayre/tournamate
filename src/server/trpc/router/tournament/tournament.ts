@@ -1,4 +1,4 @@
-import { router, protectedProcedure } from "../trpc";
+import { router, protectedProcedure } from "../../trpc";
 import { z } from "zod";
 import {
   Type,
@@ -28,7 +28,7 @@ export const tournamentRouter = router({
         dayOneDate: z.date(),
         dayTwoDate: z.date().optional().nullable(),
         location: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       if (!input.dayTwo) {
@@ -239,6 +239,7 @@ export const tournamentRouter = router({
           data: {
             poolWins: 0,
             poolLosses: 0,
+            poolPointDifferential: 0
           },
         });
         for (let i = 0; i < divisionToAddSchedule?.pools.length; i++) {
@@ -1227,7 +1228,7 @@ export const tournamentRouter = router({
                 game6,
                 game7,
                 game8,
-                game9
+                game9,
               );
               for (let i = 0; i < gamesCreated.length; i++) {
                 for (let j = 0; j < gamesCreated[i].teams.length; j++) {
@@ -1269,364 +1270,6 @@ export const tournamentRouter = router({
         divisionForAdding: divisionToAddSchedule,
         deletedSchedules: deletedSchedule,
         schedulesCreated: schedulesCreated,
-      };
-    }),
-
-  createBracketSchedule: protectedProcedure
-    .input(z.object({ divisionId: z.number() }))
-    .mutation(async ({ ctx, input }) => {
-      // const divisionToAddBracket = await ctx.prisma.division.findUnique({
-      //   where: {
-      //     divisionId: input.divisionId,
-      //   },
-      //   include: {
-      //     pools: {
-      //       include: {
-      //         teams: {
-      //           include: {
-      //             players: {
-      //               include: {
-      //                 user: true,
-      //               },
-      //             },
-      //           },
-      //         },
-      //       },
-      //     },
-      //   },
-      // });
-      let teamsThatBrokePool = [];
-      let potentialWildcardArray = [];
-      let wildcardArray = [];
-      type FakeDivisions = {
-        numBreakingPool: number;
-        hasWildcards: boolean;
-        numWildcards: number;
-        pools: Array<FakePoolInDivision>;
-      };
-      type FakePoolInDivision = {
-        teams: Array<FakeTeamInFakeDivision>;
-      };
-      type FakeTeamInFakeDivision = {
-        teamId: number;
-        poolWins: number;
-        poolLosses: number;
-        poolPointDifferential: number;
-      };
-      const fakeTwoPoolDivision: FakeDivisions = {
-        numBreakingPool: 2,
-        hasWildcards: false,
-        numWildcards: 1,
-        pools: [
-          {
-            teams: [
-              {
-                teamId: 1,
-                poolWins: 3,
-                poolLosses: 3,
-                poolPointDifferential: 4,
-              },
-              {
-                teamId: 2,
-                poolWins: 6,
-                poolLosses: 0,
-                poolPointDifferential: 34,
-              },
-              {
-                teamId: 3,
-                poolWins: 3,
-                poolLosses: 3,
-                poolPointDifferential: 10,
-              },
-              {
-                teamId: 4,
-                poolWins: 0,
-                poolLosses: 6,
-                poolPointDifferential: -23,
-              },
-            ],
-          },
-          {
-            teams: [
-              {
-                teamId: 5,
-                poolWins: 2,
-                poolLosses: 4,
-                poolPointDifferential: -1,
-              },
-              {
-                teamId: 6,
-                poolWins: 4,
-                poolLosses: 2,
-                poolPointDifferential: 27,
-              },
-              {
-                teamId: 7,
-                poolWins: 1,
-                poolLosses: 5,
-                poolPointDifferential: -12,
-              },
-              {
-                teamId: 8,
-                poolWins: 5,
-                poolLosses: 1,
-                poolPointDifferential: 22,
-              },
-            ],
-          },
-        ],
-      };
-      const fakeThreePoolDivision: FakeDivisions = {
-        numBreakingPool: 2,
-        hasWildcards: true,
-        numWildcards: 1,
-        pools: [
-          {
-            teams: [
-              {
-                teamId: 1,
-                poolWins: 3,
-                poolLosses: 3,
-                poolPointDifferential: 4,
-              },
-              {
-                teamId: 2,
-                poolWins: 6,
-                poolLosses: 0,
-                poolPointDifferential: 34,
-              },
-              {
-                teamId: 3,
-                poolWins: 3,
-                poolLosses: 3,
-                poolPointDifferential: 10,
-              },
-              {
-                teamId: 4,
-                poolWins: 0,
-                poolLosses: 6,
-                poolPointDifferential: -23,
-              },
-            ],
-          },
-          {
-            teams: [
-              {
-                teamId: 5,
-                poolWins: 2,
-                poolLosses: 4,
-                poolPointDifferential: -1,
-              },
-              {
-                teamId: 6,
-                poolWins: 4,
-                poolLosses: 2,
-                poolPointDifferential: 27,
-              },
-              {
-                teamId: 7,
-                poolWins: 1,
-                poolLosses: 5,
-                poolPointDifferential: -12,
-              },
-              {
-                teamId: 8,
-                poolWins: 5,
-                poolLosses: 1,
-                poolPointDifferential: 22,
-              },
-            ],
-          },
-          {
-            teams: [
-              {
-                teamId: 9,
-                poolWins: 2,
-                poolLosses: 4,
-                poolPointDifferential: -1,
-              },
-              {
-                teamId: 10,
-                poolWins: 4,
-                poolLosses: 2,
-                poolPointDifferential: 27,
-              },
-              {
-                teamId: 11,
-                poolWins: 1,
-                poolLosses: 5,
-                poolPointDifferential: -12,
-              },
-              {
-                teamId: 12,
-                poolWins: 5,
-                poolLosses: 1,
-                poolPointDifferential: 22,
-              },
-            ],
-          },
-        ],
-      };
-      const fakeFourPoolDivision: FakeDivisions = {
-        numBreakingPool: 2,
-        hasWildcards: true,
-        numWildcards: 1,
-        pools: [
-          {
-            teams: [
-              {
-                teamId: 1,
-                poolWins: 3,
-                poolLosses: 3,
-                poolPointDifferential: 4,
-              },
-              {
-                teamId: 2,
-                poolWins: 6,
-                poolLosses: 0,
-                poolPointDifferential: 34,
-              },
-              {
-                teamId: 3,
-                poolWins: 3,
-                poolLosses: 3,
-                poolPointDifferential: 10,
-              },
-              {
-                teamId: 4,
-                poolWins: 0,
-                poolLosses: 6,
-                poolPointDifferential: -23,
-              },
-            ],
-          },
-          {
-            teams: [
-              {
-                teamId: 5,
-                poolWins: 2,
-                poolLosses: 4,
-                poolPointDifferential: -1,
-              },
-              {
-                teamId: 6,
-                poolWins: 4,
-                poolLosses: 2,
-                poolPointDifferential: 27,
-              },
-              {
-                teamId: 7,
-                poolWins: 1,
-                poolLosses: 5,
-                poolPointDifferential: -12,
-              },
-              {
-                teamId: 8,
-                poolWins: 5,
-                poolLosses: 1,
-                poolPointDifferential: 22,
-              },
-            ],
-          },
-          {
-            teams: [
-              {
-                teamId: 9,
-                poolWins: 2,
-                poolLosses: 4,
-                poolPointDifferential: -1,
-              },
-              {
-                teamId: 10,
-                poolWins: 4,
-                poolLosses: 2,
-                poolPointDifferential: 27,
-              },
-              {
-                teamId: 11,
-                poolWins: 1,
-                poolLosses: 5,
-                poolPointDifferential: -12,
-              },
-              {
-                teamId: 12,
-                poolWins: 5,
-                poolLosses: 1,
-                poolPointDifferential: 22,
-              },
-            ],
-          },
-          {
-            teams: [
-              {
-                teamId: 13,
-                poolWins: 3,
-                poolLosses: 3,
-                poolPointDifferential: 4,
-              },
-              {
-                teamId: 14,
-                poolWins: 6,
-                poolLosses: 0,
-                poolPointDifferential: 34,
-              },
-              {
-                teamId: 15,
-                poolWins: 3,
-                poolLosses: 3,
-                poolPointDifferential: 10,
-              },
-              {
-                teamId: 16,
-                poolWins: 0,
-                poolLosses: 6,
-                poolPointDifferential: -23,
-              },
-            ],
-          },
-        ],
-      };
-      const DivisionTypeToMock = fakeFourPoolDivision;
-      if (DivisionTypeToMock && DivisionTypeToMock.pools) {
-        const howManyBreak = DivisionTypeToMock?.numBreakingPool;
-        const hasWildCard = DivisionTypeToMock?.hasWildcards;
-        const numWildCard = DivisionTypeToMock?.numWildcards;
-
-        //Add teams that clean broke to an array
-        for (let i = 0; i < DivisionTypeToMock.pools.length; i++) {
-          const pool = DivisionTypeToMock.pools[i];
-          const teams = pool.teams;
-          const sortedTeams = teams.sort((a, b) => {
-            return (
-              b.poolWins / b.poolLosses - a.poolWins / a.poolLosses ||
-              b.poolPointDifferential - a.poolPointDifferential
-            );
-          });
-          const teamsThatBroke = sortedTeams.slice(0, howManyBreak);
-          //Check for wildcards and if so add them to the array
-          if (hasWildCard && numWildCard) {
-            const teamsThatCouldEarnedWildcard = sortedTeams.slice(
-              howManyBreak,
-              sortedTeams.length
-            );
-            potentialWildcardArray.push(teamsThatCouldEarnedWildcard);
-          }
-          teamsThatBrokePool.push(teamsThatBroke);
-        }
-        let flattentedWildcardArray = potentialWildcardArray.flat();
-        const orderedWildcardCandidates = flattentedWildcardArray.sort(
-          (a: FakeTeamInFakeDivision, b: FakeTeamInFakeDivision) => {
-            return (
-              b.poolWins / b.poolLosses - a.poolWins / a.poolLosses ||
-              b.poolPointDifferential - a.poolPointDifferential
-            );
-          }
-        );
-        wildcardArray = orderedWildcardCandidates.slice(0, numWildCard);
-      }
-      return {
-        teamsThatBroke: teamsThatBrokePool.flat(),
-        wildcardArray: wildcardArray,
       };
     }),
 
@@ -1790,10 +1433,12 @@ export const tournamentRouter = router({
         gameThreeTeamTwoScore: z.number().nullable(),
         scoreCapGame3: z.number().nullable(),
         teamOneId: z.number(),
+        teamOneRating: z.number(),
         teamTwoId: z.number(),
+        teamTwoRating: z.number(),
         isLastGame: z.boolean(),
         poolId: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       console.log(input);
@@ -1810,7 +1455,7 @@ export const tournamentRouter = router({
             gameOneteamOneScore < input.scoreCapGame1 &&
             gameOneteamTwoScore < input.scoreCapGame1
           ) {
-            if (Math.random() < 0.5) {
+            if (Math.random() < (0.5 * (input.teamOneRating/ input.teamTwoRating))) {
               gameOneteamOneScore++;
             } else {
               gameOneteamTwoScore++;
@@ -1822,6 +1467,11 @@ export const tournamentRouter = router({
               : input.teamTwoId;
           let LosingTeam =
             WinningTeam === input.teamOneId ? input.teamTwoId : input.teamOneId;
+          let WinningTeamPointDifferential =
+            gameOneteamOneScore > gameOneteamTwoScore
+              ? gameOneteamOneScore - gameOneteamTwoScore
+              : gameOneteamTwoScore - gameOneteamOneScore;
+          let LosingTeamPointDifferential = WinningTeamPointDifferential * -1;
 
           updatedGame = await ctx.prisma.game.update({
             where: {
@@ -1841,6 +1491,9 @@ export const tournamentRouter = router({
               poolWins: {
                 increment: 1,
               },
+              poolPointDifferential: {
+                increment: WinningTeamPointDifferential,
+              },
             },
           });
           const updateLosingTeam = await ctx.prisma.team.update({
@@ -1850,6 +1503,9 @@ export const tournamentRouter = router({
             data: {
               poolLosses: {
                 increment: 1,
+              },
+              poolPointDifferential: {
+                increment: LosingTeamPointDifferential,
               },
             },
           });
@@ -1870,7 +1526,10 @@ export const tournamentRouter = router({
             gameOneteamOneScore < input.scoreCapGame1 &&
             gameOneteamTwoScore < input.scoreCapGame1
           ) {
-            if (Math.random() < 0.5) {
+            if (
+              Math.random() <
+              0.5 * (input.teamOneRating / input.teamTwoRating)
+            ) {
               gameOneteamOneScore++;
             } else {
               gameOneteamTwoScore++;
@@ -1885,7 +1544,10 @@ export const tournamentRouter = router({
               gameTwoteamOneScore < input.scoreCapGame2 &&
               gameTwoteamTwoScore < input.scoreCapGame2
             ) {
-              if (Math.random() < 0.5) {
+              if (
+                Math.random() <
+                0.5 * (input.teamOneRating / input.teamTwoRating)
+              ) {
                 gameTwoteamOneScore++;
               } else {
                 gameTwoteamTwoScore++;
@@ -1896,6 +1558,8 @@ export const tournamentRouter = router({
             teamOneLosses = 0,
             teamTwoWins = 0,
             teamTwoLosses = 0;
+          let teamOnePoolPointDifferential = 0,
+            teamTwoPoolPointDifferential = 0;
           if (
             gameOneteamOneScore !== null &&
             gameOneteamTwoScore !== null &&
@@ -1906,20 +1570,32 @@ export const tournamentRouter = router({
             if (gameOneTeamOneWin) {
               teamOneWins++;
               teamTwoLosses++;
+              teamOnePoolPointDifferential +=
+                gameOneteamOneScore - gameOneteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameOneteamTwoScore - gameOneteamOneScore;
             } else {
               teamOneLosses++;
               teamTwoWins++;
+              teamOnePoolPointDifferential +=
+                gameOneteamOneScore - gameOneteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameOneteamTwoScore - gameOneteamOneScore;
             }
             const gameTwoTeamOneWin = gameTwoteamOneScore > gameTwoteamTwoScore;
             if (gameTwoTeamOneWin) {
               teamOneWins++;
               teamTwoLosses++;
+              teamOnePoolPointDifferential += gameTwoteamOneScore - gameTwoteamTwoScore;
+              teamTwoPoolPointDifferential += gameTwoteamTwoScore - gameTwoteamOneScore;
             } else {
               teamOneLosses++;
               teamTwoWins++;
+              teamOnePoolPointDifferential += gameTwoteamOneScore - gameTwoteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameTwoteamTwoScore - gameTwoteamOneScore;
             }
           }
-
           updatedGame = await ctx.prisma.game.update({
             where: {
               gameId: input.gameId,
@@ -1940,8 +1616,10 @@ export const tournamentRouter = router({
               poolWins: {
                 increment: teamOneWins,
               },
-
               poolLosses: { increment: teamOneLosses },
+              poolPointDifferential: {
+                increment: teamOnePoolPointDifferential,
+              },
             },
           });
           const updateTeamTwo = await ctx.prisma.team.update({
@@ -1951,6 +1629,9 @@ export const tournamentRouter = router({
             data: {
               poolWins: { increment: teamTwoWins },
               poolLosses: { increment: teamTwoLosses },
+              poolPointDifferential: {
+                increment: teamTwoPoolPointDifferential,
+              },
             },
           });
           if (input.isLastGame) {
@@ -1970,7 +1651,10 @@ export const tournamentRouter = router({
             gameOneteamOneScore < input.scoreCapGame1 &&
             gameOneteamTwoScore < input.scoreCapGame1
           ) {
-            if (Math.random() < 0.5) {
+            if (
+              Math.random() <
+              0.5 * (input.teamOneRating / input.teamTwoRating)
+            ) {
               gameOneteamOneScore++;
             } else {
               gameOneteamTwoScore++;
@@ -1985,7 +1669,10 @@ export const tournamentRouter = router({
               gameTwoteamOneScore < input.scoreCapGame2 &&
               gameTwoteamTwoScore < input.scoreCapGame2
             ) {
-              if (Math.random() < 0.5) {
+              if (
+                Math.random() <
+                0.5 * (input.teamOneRating / input.teamTwoRating)
+              ) {
                 gameTwoteamOneScore++;
               } else {
                 gameTwoteamTwoScore++;
@@ -2001,7 +1688,10 @@ export const tournamentRouter = router({
               gameThreeteamOneScore < input.scoreCapGame3 &&
               gameThreeteamTwoScore < input.scoreCapGame3
             ) {
-              if (Math.random() < 0.5) {
+              if (
+                Math.random() <
+                0.5 * (input.teamOneRating / input.teamTwoRating)
+              ) {
                 gameThreeteamOneScore++;
               } else {
                 gameThreeteamTwoScore++;
@@ -2013,6 +1703,8 @@ export const tournamentRouter = router({
             teamOneLosses = 0,
             teamTwoWins = 0,
             teamTwoLosses = 0;
+          let teamOnePoolPointDifferential = 0,
+            teamTwoPoolPointDifferential = 0;
           if (
             gameOneteamOneScore !== null &&
             gameOneteamTwoScore !== null &&
@@ -2025,26 +1717,50 @@ export const tournamentRouter = router({
             if (gameOneTeamOneWin) {
               teamOneWins++;
               teamTwoLosses++;
+              teamOnePoolPointDifferential +=
+                gameOneteamOneScore - gameOneteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameOneteamTwoScore - gameOneteamOneScore;
             } else {
               teamOneLosses++;
               teamTwoWins++;
+              teamOnePoolPointDifferential +=
+                gameOneteamOneScore - gameOneteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameOneteamTwoScore - gameOneteamOneScore;
             }
             const gameTwoTeamOneWin = gameTwoteamOneScore > gameTwoteamTwoScore;
             if (gameTwoTeamOneWin) {
               teamOneWins++;
               teamTwoLosses++;
+              teamOnePoolPointDifferential +=
+                gameTwoteamOneScore - gameTwoteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameTwoteamTwoScore - gameTwoteamOneScore;
             } else {
               teamOneLosses++;
               teamTwoWins++;
+              teamOnePoolPointDifferential +=
+                gameTwoteamOneScore - gameTwoteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameTwoteamTwoScore - gameTwoteamOneScore;
             }
             const gameThreeTeamOneWin =
               gameThreeteamOneScore > gameThreeteamTwoScore;
             if (gameThreeTeamOneWin) {
               teamOneWins++;
               teamTwoLosses++;
+              teamOnePoolPointDifferential +=
+                gameThreeteamOneScore - gameThreeteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameThreeteamTwoScore - gameThreeteamOneScore;
             } else {
               teamOneLosses++;
               teamTwoWins++;
+              teamOnePoolPointDifferential +=
+                gameThreeteamOneScore - gameThreeteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameThreeteamTwoScore - gameThreeteamOneScore;
             }
           }
 
@@ -2069,6 +1785,9 @@ export const tournamentRouter = router({
             data: {
               poolWins: { increment: teamOneWins },
               poolLosses: { increment: teamOneLosses },
+              poolPointDifferential: {
+                increment: teamOnePoolPointDifferential
+              }
             },
           });
           const updateLosingTeam = await ctx.prisma.team.update({
@@ -2078,6 +1797,9 @@ export const tournamentRouter = router({
             data: {
               poolWins: { increment: teamTwoWins },
               poolLosses: { increment: teamTwoLosses },
+              poolPointDifferential: {
+                increment: teamTwoPoolPointDifferential
+              }
             },
           });
           if (input.isLastGame) {
@@ -2109,7 +1831,7 @@ export const tournamentRouter = router({
         isGameAboutToFinish: z.boolean(),
         partnerId: z.string(),
         opponentIds: z.array(z.string()),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       let pointAdded;
@@ -2249,7 +1971,7 @@ export const tournamentRouter = router({
         divisionName: z.string().min(1),
         tournamentId: z.number(),
         type: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const division = await ctx.prisma.division.create({
@@ -2344,7 +2066,7 @@ export const tournamentRouter = router({
         teammateId: z.string(),
         tournamentId: z.coerce.number(),
         divisionId: z.number(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const teamInvitation = await ctx.prisma.teamInvitation.create({
@@ -2385,7 +2107,7 @@ export const tournamentRouter = router({
         teamInvitationId: z.number(),
         inviterId: z.string(),
         tournamentId: z.coerce.number(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const teamInvitation = await ctx.prisma.teamInvitation.delete({
@@ -2511,7 +2233,7 @@ export const tournamentRouter = router({
         tournamentId: z.number(),
         typeOfEntry: z.nativeEnum(Format),
         sexOfEntry: z.enum(["MENS", "WOMENS"]).optional(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       let fullName: string, idSegment: string;
@@ -2592,7 +2314,7 @@ export const tournamentRouter = router({
           teammateTwoId = entryTwoBoy?.id;
         } else if (input.sexOfEntry === "WOMENS") {
           teammateOne = entryOneGirl;
-          teammateTwo = entryTwoBoy;
+          teammateTwo = entryTwoGirl;
           teammateOneId = entryOneGirl?.id;
           teammateTwoId = entryTwoGirl?.id;
         }
@@ -2665,21 +2387,23 @@ export const tournamentRouter = router({
                     isTournamentDirector: z.boolean(),
                     playerRating: z.number(),
                   }),
-                })
+                }),
               ),
-            })
+            }),
           ),
         }),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const newPools = createPoolsFromEntries(input.division);
+      console.log(newPools);
       const newPoolsWithoutEntries = newPools.map((pool, i) => {
         return {
           divisionId: input.divisionId,
           poolId: "Division " + input.divisionId + " Pool " + i,
         };
       });
+      console.log(newPoolsWithoutEntries);
       const newPoolsWithEntries = newPools.map((pool, i) => {
         return {
           poolId: "Division " + input.divisionId + " Pool " + i,
@@ -2688,7 +2412,7 @@ export const tournamentRouter = router({
           }),
         };
       });
-
+      console.log(newPoolsWithEntries);
       const deletedPools = await ctx.prisma.pool.deleteMany({
         where: {
           divisionId: input.divisionId,
@@ -2770,6 +2494,9 @@ export const tournamentRouter = router({
               },
               referees: true,
             },
+            orderBy: {
+              gameOrder: "asc",
+            },
           },
         },
       });
@@ -2795,7 +2522,7 @@ export type TeamWithPlayerData = (Team & {
 })[];
 
 export const createPoolsFromEntries = (
-  division: DivisionEntriesForPool
+  division: DivisionEntriesForPool,
 ): Array<TeamWithPlayerData> => {
   const returnArr: Array<TeamWithPlayerData> = [];
   let zigzag = 0;
