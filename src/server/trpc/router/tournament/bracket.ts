@@ -97,18 +97,18 @@ const BracketMakerHelper = ({
   teamsThatGotWildCard,
   numPools,
 }: BracketMakerHelperProps): void => {
-    let fullBracketTeams;
-    let numByes;
+  let fullBracketTeams;
+  let numByes;
   if (teamsThatGotWildCard) {
     fullBracketTeams = teamsThatCleanBroke.concat(teamsThatGotWildCard);
   } else {
     fullBracketTeams = teamsThatCleanBroke;
-    }
-    if (fullBracketTeams.length < 4) {
-        numByes = fullBracketTeams.length % 2
-    } else {
-        numByes = fullBracketTeams.length % 4
-    }
+  }
+  if (fullBracketTeams.length < 4) {
+    numByes = fullBracketTeams.length % 2;
+  } else {
+    numByes = fullBracketTeams.length % 4;
+  }
   const upperEschelonPogchamps: TeamsForBracketT[] = [];
   for (let i = 0; i < teamsThatCleanBroke.length; i++) {
     if (Array.isArray(upperEschelonPogchamps[i % numPools])) {
@@ -119,14 +119,47 @@ const BracketMakerHelper = ({
     } else {
       upperEschelonPogchamps[i % numPools] = [teamsThatCleanBroke[i]];
     }
+  }
+  // splice from the 0 position in the sorted upper eschelon array based on the number of teams that get a bye
+  let teamsThatGetByes: TeamsForBracketT = [];
+  for (let i = 0; i < upperEschelonPogchamps.length; i++) {
+    upperEschelonPogchamps[i].sort((a, b) => {
+      return (
+        b.poolWins / b.poolLosses - a.poolWins / a.poolLosses ||
+        b.poolPointDifferential - a.poolPointDifferential
+      );
+    });
+  }
+    teamsThatGetByes = pullOutByes(teamsThatGetByes, upperEschelonPogchamps, numByes);
+    console.log(teamsThatGetByes);
+  // if the number of teams that get a bye are greater than the length of the first array in the upper eschelon array move to the next array and so on
+  // you'll then be able to make the bracket by sorting and flattening the upper eschelon array and concatting it with the wildcard array and matching the top and bottom
+  // teams up until you have no more teams, then you have to create the next round of the bracket by taking the winners of those rounds and matching them up against each other
+  // or the teams that got a bye. You'll have to take into account that you don't want to put teams early in playoffs against each other if they played in pool play
+};
+
+const pullOutByes = (
+  teamThatGetByesArr: TeamsForBracketT,
+  demGoodBois: TeamsForBracketT[],
+  numByes: number,
+): TeamsForBracketT => {
+  for (let i = 0; i < demGoodBois.length; i++) {
+    if (numByes === 0) {
+      return teamThatGetByesArr;
     }
-    // splice from the 0 position in the sorted upper eschelon array based on the number of teams that get a bye
-    // if the number of teams that get a bye are greater than the length of the first array in the upper eschelon array move to the next array and so on
-    // you'll then be able to make the bracket by sorting and flattening the upper eschelon array and concatting it with the wildcard array and matching the top and bottom
-    // teams up until you have no more teams, then you have to create the next round of the bracket by taking the winners of those rounds and matching them up against each other
-    // or the teams that got a bye. You'll have to take into account that you don't want to put teams early in playoffs against each other if they played in pool play
-    
-  console.log(upperEschelonPogchamps);
+    if (numByes >= demGoodBois[i].length) {
+      teamThatGetByesArr = teamThatGetByesArr.concat(
+        demGoodBois[i].slice(0, demGoodBois[i].length),
+      );
+      numByes = numByes - demGoodBois[i].length;
+    } else {
+      teamThatGetByesArr = teamThatGetByesArr.concat(
+        demGoodBois[i].slice(0, numByes),
+      );
+      numByes = 0;
+    }
+    }
+    return [];
 };
 
 type FakeDivisions = {
