@@ -159,6 +159,7 @@ model Game {
   bracketId             Int?
   currentSet            Int          @default(1)
   gameFinished          Boolean      @default(false)
+  nextGame  Int?
   gameOneScoreCap       Int
   gameOneTeamOneScore   Int          @default(0)
   gameOneTeamTwoScore   Int          @default(0)

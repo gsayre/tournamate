@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../../trpc";
-import { Team, User, UsersInTeam } from "@prisma/client";
+import { Game, Team, User, UsersInTeam } from "@prisma/client";
 
 export const bracketRouter = router({
   createBracketSchedule: protectedProcedure
@@ -66,7 +66,14 @@ export const bracketRouter = router({
             );
           },
         );
-        wildcardArray = orderedWildcardCandidates.slice(0, numWildCard);
+        wildcardArray = orderedWildcardCandidates
+          .slice(0, numWildCard)
+          .sort((a: FakeTeamInFakeDivision, b: FakeTeamInFakeDivision) => {
+            return (
+              b.poolWins / b.poolLosses - a.poolWins / a.poolLosses ||
+              b.poolPointDifferential - a.poolPointDifferential
+            );
+          });
         BracketMakerHelper({
           teamsThatCleanBroke: teamsThatBrokePool.flat(),
           teamsThatGotWildCard: wildcardArray,
@@ -104,11 +111,20 @@ const BracketMakerHelper = ({
   } else {
     fullBracketTeams = teamsThatCleanBroke;
   }
-  if (fullBracketTeams.length < 4) {
-    numByes = fullBracketTeams.length % 2;
-  } else {
-    numByes = fullBracketTeams.length % 4;
-  }
+  const lowerPower = Math.pow(
+    2,
+    Math.floor(Math.log2(fullBracketTeams.length)),
+  );
+  const higherPower = Math.pow(
+    2,
+    Math.ceil(Math.log2(fullBracketTeams.length)),
+  );
+
+  numByes = Math.min(
+    Math.abs(fullBracketTeams.length - lowerPower),
+    Math.abs(fullBracketTeams.length - higherPower),
+  );
+
   const upperEschelonPogchamps: TeamsForBracketT[] = [];
   for (let i = 0; i < teamsThatCleanBroke.length; i++) {
     if (Array.isArray(upperEschelonPogchamps[i % numPools])) {
@@ -130,8 +146,28 @@ const BracketMakerHelper = ({
       );
     });
   }
-    teamsThatGetByes = pullOutByes(teamsThatGetByes, upperEschelonPogchamps, numByes);
-    console.log(teamsThatGetByes);
+  teamsThatGetByes = pullOutByes(
+    teamsThatGetByes,
+    upperEschelonPogchamps,
+    numByes,
+  );
+  const teamsThatAreUpper = upperEschelonPogchamps
+    .flat()
+    .filter((team) => !teamsThatGetByes.includes(team))
+    .sort((a: FakeTeamInFakeDivision, b: FakeTeamInFakeDivision) => {
+      return (
+        b.poolWins / b.poolLosses - a.poolWins / a.poolLosses ||
+        b.poolPointDifferential - a.poolPointDifferential
+      );
+    });
+  console.log(
+    "Byes: ",
+    teamsThatGetByes,
+    "Uppers: ",
+    teamsThatAreUpper,
+    "Lowers: ",
+    teamsThatGotWildCard,
+  );
   // if the number of teams that get a bye are greater than the length of the first array in the upper eschelon array move to the next array and so on
   // you'll then be able to make the bracket by sorting and flattening the upper eschelon array and concatting it with the wildcard array and matching the top and bottom
   // teams up until you have no more teams, then you have to create the next round of the bracket by taking the winners of those rounds and matching them up against each other
@@ -158,10 +194,62 @@ const pullOutByes = (
       );
       numByes = 0;
     }
-    }
-    return [];
+  }
+  return [];
 };
 
+const createGameArray = (
+  teamThatGetByesArr: TeamsForBracketT,
+  teamThatGetRegular: TeamsForBracketT,
+  teamThatGetWildcards: TeamsForBracketT,
+): Game[] => {
+  const games: Game[] = [];
+  if (teamThatGetByesArr?.length > 0) {
+    if (teamThatGetWildcards.length > 0) {
+      // if there are byes and wildcards
+      const numRounds = Math.ceil(
+        Math.log2(
+          teamThatGetByesArr.length +
+            teamThatGetRegular.length +
+            teamThatGetWildcards.length,
+        ),
+      );
+      for (let i = 0; i < numRounds; i++) {
+        if (i === numRounds - 1) {
+          const numGames = Math.pow(2, numRounds - 1);
+          for (let j = 0; j < numGames; j++) {
+            if (teamThatGetByesArr.length > 0) {
+              const byeTeam = teamThatGetByesArr.shift();
+              if (byeTeam) {
+                games.push({
+                  teamOne: byeTeam,
+                  teamTwo: null,
+                  gameOrder: j,
+                  round: i,
+                  isBye: true,
+                });
+              }
+            } else {
+              const teamOne = teamThatGetRegular.pop();
+              const teamTwo = teamThatGetWildcards.pop();
+              if (teamOne && teamTwo) {
+                games.push({
+                  teamOne,
+                  teamTwo,
+                  gameOrder: j,
+                  round: i,
+                  isBye: false,
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+    return games;
+  }
+  return [];
+};
 type FakeDivisions = {
   numBreakingPool: number;
   hasWildcards: boolean;
