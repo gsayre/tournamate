@@ -93,6 +93,12 @@ type TeamsForBracketT = (Team & {
   })[];
 })[];
 
+type TeamInBracketT = (Team & {
+  players: (UsersInTeam & {
+    user: User;
+  })[]
+});
+
 type BracketMakerHelperProps = {
   teamsThatCleanBroke: TeamsForBracketT;
   teamsThatGotWildCard?: TeamsForBracketT;
@@ -160,14 +166,17 @@ const BracketMakerHelper = ({
         b.poolPointDifferential - a.poolPointDifferential
       );
     });
-  console.log(
-    "Byes: ",
-    teamsThatGetByes,
-    "Uppers: ",
-    teamsThatAreUpper,
-    "Lowers: ",
-    teamsThatGotWildCard,
+  const gameArray = createGameArray(
+    fullBracketTeams.sort(
+      (a: FakeTeamInFakeDivision, b: FakeTeamInFakeDivision) => {
+        return (
+          b.poolWins / b.poolLosses - a.poolWins / a.poolLosses ||
+          b.poolPointDifferential - a.poolPointDifferential
+        );
+      },
+    ),
   );
+  createGames(gameArray[0], gameArray[1]);
   // if the number of teams that get a bye are greater than the length of the first array in the upper eschelon array move to the next array and so on
   // you'll then be able to make the bracket by sorting and flattening the upper eschelon array and concatting it with the wildcard array and matching the top and bottom
   // teams up until you have no more teams, then you have to create the next round of the bracket by taking the winners of those rounds and matching them up against each other
@@ -198,58 +207,70 @@ const pullOutByes = (
   return [];
 };
 
-const createGameArray = (
-  teamThatGetByesArr: TeamsForBracketT,
-  teamThatGetRegular: TeamsForBracketT,
-  teamThatGetWildcards: TeamsForBracketT,
-): Game[] => {
+const createGameArray = (wholeBracket: TeamsForBracketT): any[] => {
   const games: Game[] = [];
-  if (teamThatGetByesArr?.length > 0) {
-    if (teamThatGetWildcards.length > 0) {
-      // if there are byes and wildcards
-      const numRounds = Math.ceil(
-        Math.log2(
-          teamThatGetByesArr.length +
-            teamThatGetRegular.length +
-            teamThatGetWildcards.length,
-        ),
-      );
-      for (let i = 0; i < numRounds; i++) {
-        if (i === numRounds - 1) {
-          const numGames = Math.pow(2, numRounds - 1);
-          for (let j = 0; j < numGames; j++) {
-            if (teamThatGetByesArr.length > 0) {
-              const byeTeam = teamThatGetByesArr.shift();
-              if (byeTeam) {
-                games.push({
-                  teamOne: byeTeam,
-                  teamTwo: null,
-                  gameOrder: j,
-                  round: i,
-                  isBye: true,
-                });
-              }
-            } else {
-              const teamOne = teamThatGetRegular.pop();
-              const teamTwo = teamThatGetWildcards.pop();
-              if (teamOne && teamTwo) {
-                games.push({
-                  teamOne,
-                  teamTwo,
-                  gameOrder: j,
-                  round: i,
-                  isBye: false,
-                });
-              }
-            }
-          }
-        }
-      }
-    }
-    return games;
+  // if there are byes and wildcards
+  const twoSidesOfBracket: Array<TeamsForBracketT | TeamInBracketT> = [[], []];
+  let sideOfBracket: number = 0;
+  let sideOfBracketXtra = "0";
+  for (let i = 0; i < wholeBracket.length; i++) {
+    sideOfBracket =
+      sideOfBracketXtra === "0"
+        ? 0
+        : sideOfBracketXtra === "0+"
+        ? 0
+        : sideOfBracketXtra === "1"
+        ? 1
+        : sideOfBracketXtra === "1+"
+        ? 1
+              : 69420;
+    console.log(wholeBracket[i].poolWins, wholeBracket[i].poolLosses, wholeBracket[i].poolPointDifferential, sideOfBracket);
+    twoSidesOfBracket[sideOfBracket].push(wholeBracket[i]);
+    sideOfBracketXtra =
+      sideOfBracketXtra === "0"
+        ? "1"
+        : sideOfBracketXtra === "1"
+        ? "1+"
+        : sideOfBracketXtra === "1+"
+        ? "0+"
+        : sideOfBracketXtra === "0+"
+        ? "0"
+        : "69420";
   }
-  return [];
+  console.log("--------------------");
+  if ("length" in twoSidesOfBracket[0] && twoSidesOfBracket[0].length > 2) {
+    twoSidesOfBracket[0] = createGameArray(twoSidesOfBracket[0]);
+  }
+  if ("length" in twoSidesOfBracket[1] && twoSidesOfBracket[1].length > 2) {
+    twoSidesOfBracket[1] =createGameArray(twoSidesOfBracket[1]);
+  }
+  if ( "length" in twoSidesOfBracket[0] &&twoSidesOfBracket[0].length === 1) {
+    twoSidesOfBracket[0] = twoSidesOfBracket[0][0];
+  }
+  if ( "length" in twoSidesOfBracket[1] &&twoSidesOfBracket[1].length === 1) {
+    twoSidesOfBracket[0] = twoSidesOfBracket[1][0];
+  }
+  return twoSidesOfBracket;
 };
+
+const createGames = (team1: any[] | TeamInBracketT, team2: any[] | TeamInBracketT, nextGameId?:number): void => {
+  const team1Id = "teamId" in team1 ? team1.teamId : null;
+  const team2Id = "teamId" in team2 ? team2.teamId : null;
+  if (team1Id && team2Id) {
+    console.log(team1Id, team2Id);
+  } else if (team1Id && "length" in team2) {
+    console.log(team1Id);
+    createGames(team2[0], team2[1]);
+  } else if (team2Id && "length" in team1) {
+    console.log(team2Id);
+    createGames(team1[0], team1[1]);
+  } else if ("length" in team1 && "length" in team2) {
+    console.log("no teams");
+    createGames(team1[0], team1[1]);
+    createGames(team2[0], team2[1])
+  }
+}
+
 type FakeDivisions = {
   numBreakingPool: number;
   hasWildcards: boolean;

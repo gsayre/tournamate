@@ -154,7 +154,7 @@ model Bracket {
 
 model Game {
   gameId                Int          @id @default(autoincrement())
-  refereeId             Int
+  refereeId             Int?
   poolId                String?
   bracketId             Int?
   currentSet            Int          @default(1)
@@ -174,7 +174,7 @@ model Game {
   numSets               Int
   teams                 TeamInGame[]
   gameStatistics        GameStatistics[]
-  referees              Team         @relation(fields: [refereeId], references: [teamId])
+  referees              Team?         @relation(fields: [refereeId], references: [teamId])
   pool                  Pool?        @relation(fields: [poolId], references: [poolId])
   bracket               Bracket?     @relation(fields: [bracketId], references: [bracketId])
 }
