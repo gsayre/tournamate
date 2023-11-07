@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../../trpc";
-import { Game, Team, User, UsersInTeam } from "@prisma/client";
+import { Game, Prisma, PrismaClient, Team, User, UsersInTeam } from "@prisma/client";
+import { DefaultArgs } from "@prisma/client/runtime/library";
 
 export const bracketRouter = router({
   createBracketSchedule: protectedProcedure
@@ -78,6 +79,8 @@ export const bracketRouter = router({
           teamsThatCleanBroke: teamsThatBrokePool.flat(),
           teamsThatGotWildCard: wildcardArray,
           numPools: DivisionTypeToMock?.pools.length,
+          prismaContext: ctx.prisma,
+          divisionId: input.divisionId
         });
       }
       return {
@@ -103,13 +106,17 @@ type BracketMakerHelperProps = {
   teamsThatCleanBroke: TeamsForBracketT;
   teamsThatGotWildCard?: TeamsForBracketT;
   numPools: number;
+  prismaContext: PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>;
+  divisionId: number;
 };
 
-const BracketMakerHelper = ({
+const BracketMakerHelper = async ({
   teamsThatCleanBroke,
   teamsThatGotWildCard,
   numPools,
-}: BracketMakerHelperProps): void => {
+  prismaContext,
+  divisionId
+}: BracketMakerHelperProps): Promise<void> => {
   let fullBracketTeams;
   let numByes;
   if (teamsThatGotWildCard) {
@@ -176,7 +183,30 @@ const BracketMakerHelper = ({
       },
     ),
   );
-  createGames(gameArray[0], gameArray[1]);
+  const previousBracket = await prismaContext.bracket.findFirst({
+    where: {
+      divisionId: divisionId,
+    },
+  });
+
+  console.log("previous bracket",previousBracket);
+  if (previousBracket) {
+    const bracketDeleted = await prismaContext.bracket.delete({
+      where: {
+        bracketId: previousBracket.bracketId,
+      },
+    });
+    console.log('bracket deleted',bracketDeleted);
+  }
+  const bracketCreated = await prismaContext.bracket.create({
+    data: {
+    divisionId: divisionId,
+    }
+  })
+  
+  console.log('bracket created', bracketCreated);
+  createGames(gameArray[0], gameArray[1],prismaContext, bracketCreated.bracketId);
+
   // if the number of teams that get a bye are greater than the length of the first array in the upper eschelon array move to the next array and so on
   // you'll then be able to make the bracket by sorting and flattening the upper eschelon array and concatting it with the wildcard array and matching the top and bottom
   // teams up until you have no more teams, then you have to create the next round of the bracket by taking the winners of those rounds and matching them up against each other
@@ -253,23 +283,222 @@ const createGameArray = (wholeBracket: TeamsForBracketT): any[] => {
   return twoSidesOfBracket;
 };
 
-const createGames = (team1: any[] | TeamInBracketT, team2: any[] | TeamInBracketT, nextGameId?:number): void => {
+const createGames = async (
+  team1: any[] | TeamInBracketT,
+  team2: any[] | TeamInBracketT,
+  prismaContext: PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>,
+  bracketId: number,
+  nextGameId?: number,
+): Promise<void> => {
   const team1Id = "teamId" in team1 ? team1.teamId : null;
   const team2Id = "teamId" in team2 ? team2.teamId : null;
   if (team1Id && team2Id) {
     console.log(team1Id, team2Id);
+    // These are first round games
+    if (nextGameId) {
+      const gameCreated = await prismaContext.game.create({
+        data: {
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          gameThreeScoreCap: 15,
+          bracketId: bracketId,
+          numSets: 3,
+          nextGame: nextGameId,
+          teams: {
+            create: [
+              {
+                Team: {
+                  connect: {
+                    teamId: team1Id,
+                  },
+                },
+              },
+              {
+                Team: {
+                  connect: {
+                    teamId: team2Id,
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+    } else {
+      const gameCreated = await prismaContext.game.create({
+        data: {
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          gameThreeScoreCap: 15,
+          bracketId: bracketId,
+          numSets: 3,
+          teams: {
+            create: [
+              {
+                Team: {
+                  connect: {
+                    teamId: team1Id,
+                  },
+                },
+              },
+              {
+                Team: {
+                  connect: {
+                    teamId: team2Id
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+    }
   } else if (team1Id && "length" in team2) {
     console.log(team1Id);
-    createGames(team2[0], team2[1]);
+    // These are games where one team got a bye
+    let createdGameId: number = 42069;
+    if (nextGameId) {
+      const gameCreated = await prismaContext.game.create({
+        data: {
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          gameThreeScoreCap: 15,
+          bracketId: bracketId,
+          numSets: 3,
+          nextGame: nextGameId,
+          teams: {
+            create: [
+              {
+                Team: {
+                  connect: {
+                    teamId: team1Id,
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+      if (gameCreated) {
+        createdGameId = gameCreated.gameId;
+      }
+    } else {
+      const gameCreated = await prismaContext.game.create({
+        data: {
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          gameThreeScoreCap: 15,
+          bracketId: bracketId,
+          numSets: 3,
+          teams: {
+            create: [
+              {
+                Team: {
+                  connect: {
+                    teamId: team1Id,
+                  },
+                },
+              }
+            ],
+          },
+        },
+      });
+      if (gameCreated) {
+        createdGameId = gameCreated.gameId;
+      }
+    }
+    createGames(team2[0], team2[1], prismaContext, bracketId, createdGameId);
   } else if (team2Id && "length" in team1) {
     console.log(team2Id);
-    createGames(team1[0], team1[1]);
+    // These are games where one team got a bye
+    let createdGameId: number = 42069;
+    if (nextGameId) {
+      const gameCreated = await prismaContext.game.create({
+        data: {
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          gameThreeScoreCap: 15,
+          bracketId: bracketId,
+          numSets: 3,
+          nextGame: nextGameId,
+          teams: {
+            create: [
+              {
+                Team: {
+                  connect: {
+                    teamId: team2Id,
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+      if (gameCreated) {
+        createdGameId = gameCreated.gameId;
+      }
+    } else {
+      const gameCreated = await prismaContext.game.create({
+        data: {
+          gameOneScoreCap: 21,
+          gameTwoScoreCap: 21,
+          gameThreeScoreCap: 15,
+          bracketId: bracketId,
+          numSets: 3,
+          teams: {
+            create: [
+              {
+                Team: {
+                  connect: {
+                    teamId: team2Id,
+                  },
+                },
+              },
+            ],
+          },
+        },
+      });
+      if (gameCreated) {
+        createdGameId = gameCreated.gameId;
+      }
+    } 
+    createGames(team1[0], team1[1], prismaContext, bracketId, createdGameId);
   } else if ("length" in team1 && "length" in team2) {
     console.log("no teams");
-    createGames(team1[0], team1[1]);
-    createGames(team2[0], team2[1])
+    // These are later round games 
+        let createdGameId: number = 42069;
+        if (nextGameId) {
+          const gameCreated = await prismaContext.game.create({
+            data: {
+              gameOneScoreCap: 21,
+              gameTwoScoreCap: 21,
+              gameThreeScoreCap: 15,
+              bracketId: bracketId,
+              numSets: 3,
+              nextGame: nextGameId,
+            },
+          });
+          if (gameCreated) {
+            createdGameId = gameCreated.gameId;
+          }
+        } else {
+          const gameCreated = await prismaContext.game.create({
+            data: {
+              gameOneScoreCap: 21,
+              gameTwoScoreCap: 21,
+              gameThreeScoreCap: 15,
+              bracketId: bracketId,
+              numSets: 3,
+            },
+          });
+          if (gameCreated) {
+            createdGameId = gameCreated.gameId;
+          }
+        }
+    createGames(team1[0], team1[1], prismaContext, bracketId, createdGameId);
+    createGames(team2[0], team2[1], prismaContext, bracketId, createdGameId);
   }
-}
+};
 
 type FakeDivisions = {
   numBreakingPool: number;

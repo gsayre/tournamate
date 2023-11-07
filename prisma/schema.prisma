@@ -147,7 +147,7 @@ model Bracket {
   bracketId  Int      @id @default(autoincrement())
   divisionId Int      @unique
   division   Division @relation(fields: [divisionId], references: [divisionId])
-  games      Game[]
+  games      Game[] 
 
   @@unique([bracketId, divisionId])
 }
@@ -163,7 +163,7 @@ model Game {
   gameOneScoreCap       Int
   gameOneTeamOneScore   Int          @default(0)
   gameOneTeamTwoScore   Int          @default(0)
-  gameOrder             Int
+  gameOrder             Int?
   gameThreeScoreCap     Int?
   gameThreeTeamOneScore Int?         @default(0)
   gameThreeTeamTwoScore Int?         @default(0)
@@ -176,7 +176,7 @@ model Game {
   gameStatistics        GameStatistics[]
   referees              Team?         @relation(fields: [refereeId], references: [teamId])
   pool                  Pool?        @relation(fields: [poolId], references: [poolId])
-  bracket               Bracket?     @relation(fields: [bracketId], references: [bracketId])
+  bracket               Bracket?     @relation(fields: [bracketId], references: [bracketId], onDelete: Cascade)
 }
 
 model GameStatistics {
