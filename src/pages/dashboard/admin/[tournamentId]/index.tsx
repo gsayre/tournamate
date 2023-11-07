@@ -37,6 +37,9 @@ export default function AdminTournamentView() {
   const currentUserName = trpc.user.findUsername.useQuery({
     id: userId as string,
   }).data;
+  // const poolsForDivision = trpc.tournament.getPoolsByDivision.useQuery({
+  //   divisionId: division.divisionId,
+  // }).data;
 
   const tournamentData = trpc.tournament.getTournament.useQuery({
     id: tId,
@@ -47,61 +50,6 @@ export default function AdminTournamentView() {
     []
   );
   const [pools, setPools] = useState<Array<FakeEntriesTeamArr>>([]);
-  const [myPool, setMyPool] = useState<FakeEntriesTeamArr>([]);
-
-  useEffect(() => {
-    if (currentUserName && userId) {
-      const myEntry = {
-        teamId: 69, //nice
-        divisionId: 1,
-        tournamentId: tId,
-        teamRating: 420,
-        poolId: "1",
-        poolWins: 0,
-        poolLosses: 0,
-        players: [
-          {
-            userId: userId,
-            teamId: 69,
-            user: {
-              id: userId,
-              fullName: currentUserName,
-              isAdmin: true,
-              isTournamentDirector: true,
-              playerRating: 420,
-            },
-          },
-          {
-            userId: "222",
-            teamId: 69,
-            user: {
-              id: "222",
-              fullName: "Joe Mama",
-              isAdmin: false,
-              isTournamentDirector: false,
-              playerRating: 420,
-            },
-          },
-        ],
-      };
-      const fakeEntriesToInsert = [...createFakeEntriesAnyTeams(11), myEntry];
-      setFakeEntriesToUse(fakeEntriesToInsert);
-    }
-  }, [currentUserName, userId]);
-
-  useEffect(() => {
-    const poolsFromEntries = createPoolsFromEntries(fakeEntriesToUse);
-    const poolWithMe = poolsFromEntries.filter(function (element) {
-      return amIInThePool(element, currentUserName as string);
-    });
-    const poolsWithoutMe = poolsFromEntries.filter(function (element) {
-      return !amIInThePool(element, currentUserName as string);
-    });
-    console.log("Pool with me", poolWithMe);
-    console.log("Pools without me", poolsWithoutMe);
-    setMyPool(poolWithMe[0]);
-    setPools(poolsWithoutMe);
-  }, [fakeEntriesToUse]);
 
   return (
     <div className="flex h-screen w-screen">
@@ -141,7 +89,6 @@ export default function AdminTournamentView() {
                         <p className="text-3xl">My Pool:</p>
                         <div className="flex justify-center py-2">
                           <MyPoolTable
-                            pool={myPool}
                             poolNumber={1}
                             pools={pools}
                             setPools={setPools}
@@ -156,7 +103,6 @@ export default function AdminTournamentView() {
                           <PoolSchedule
                             pool={myPool}
                             currentUserName={currentUserName as string}
-                            setMyPool={setMyPool}
                             tournamentId={tId}
                           />
                         </div>
@@ -208,14 +154,22 @@ export default function AdminTournamentView() {
                   </button>
                   {tournamentData.tournament.dayTwoStarted ? (
                     <div className="flex flex-col">
-                      <div className="flex flex-row">
+                      <div className="flex flex-row gap-4">
                         <div className="flex flex-col">
-                          <p>Pool</p>
+                          <p>My Pool</p>
+                          <MyPoolTable
+                            pool={myPool}
+                            poolNumber={1}
+                            pools={pools}
+                            setPools={setPools}
+                            isMyPool={true}
+                            currentUserName={currentUserName as string}
+                          />
                         </div>
                         <div className="flex flex-col">
                           <p>Pool Schedule</p>
                           <div>
-                            {/* <PoolSchedule pool={myPool}  currentUserName={currentUserName as string}/> */}
+                            <PoolSchedule pool={myPool}  currentUserName={currentUserName as string} tournamentId={tId}/>
                           </div>
                         </div>
                       </div>
