@@ -88,6 +88,33 @@ export const bracketRouter = router({
         wildcards: wildcardArray,
       };
     }),
+  getBracketByDivision: protectedProcedure.input(z.object({ divisionId: z.number() })).query(async ({ ctx, input }) => {
+    const bracket = await ctx.prisma.bracket.findUnique({
+      where: {
+        divisionId: input.divisionId,
+      },
+      include: {
+        games: {
+          include: {
+            teams: {
+              include: {
+                Team: {
+                  include: {
+                    players: {
+                      include: {
+                        user: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        }
+    })
+    return bracket;
+  }),
 });
 
 type TeamsForBracketT = (Team & {
