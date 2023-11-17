@@ -463,20 +463,156 @@ type BracketSectionProps = {
 
 const BracketSection = ({ divisionId }: BracketSectionProps) => {
   const createBracket = trpc.bracket.createBracketSchedule.useMutation();
+  const divisionBraket = trpc.bracket.getBracketByDivision.useQuery({
+    divisionId: divisionId,
+  }).data;
+  const numCols =
+    divisionBraket && Math.ceil(Math.log2(divisionBraket.games.length));
+  const numRows = numCols && Math.pow(2, numCols);
+  let divBracketWithBlanks =
+    divisionBraket?.games.length === numRows ? divisionBraket : null;
+  if (numRows) {
+    console.log(AddBlankGamesToBracket(divisionBraket, numRows));
+  }
+  console.log("Div with blanks", divBracketWithBlanks);
   return (
-    <div>
-      <p className="pb-2 text-xl">BRACKETSECTION</p>
+    <div className="h-fit flex flex-col">
+      <p className="pb-2 text-2xl">Bracket</p>
       <button
-        className="rounded-lg bg-purple-400 p-2 text-lg font-semibold"
+        className="rounded-lg bg-purple-400 p-2 text-md font-semibold w-48"
         onClick={() => {
           createBracket.mutate({ divisionId: divisionId });
         }}
       >
         Create Bracket Schedule
       </button>
+      <div className={`flex flex-row-reverse gap-8 justify-end`}>
+        {numCols &&
+          [...Array(numCols)].map((x, i) => {
+            return (
+              <div className="flex flex-col items-center justify-around gap-4 ">
+                {divisionBraket &&
+                  divisionBraket.games.map((game, j) => {
+                    console.log("game", game);
+                    const colToBeIn = Math.floor(Math.log2(j + 1));
+                    // const rowHeight = Math.pow(2, numCols - colToBeIn);
+                    // const rowHeightStr = 'row-span-' + rowHeight;
+                    return (
+                      <>
+                        {colToBeIn === i && game ? (
+                          <div className="flex w-64 flex-col border border-gray-300">
+                            <div className="flex border-b border-gray-300 bg-slate-300 px-2 py-1 font-semibold">
+                              Game {game.gameId}
+                            </div>
+                            <div className="flex h-36 w-full flex-col p-2">
+                              {game.teams.map((team, k) => {
+                                return (
+                                  <div className="flex h-full flex-col ">
+                                    {k === game.teams.length - 1 &&
+                                    game.teams.length !== 1 ? (
+                                      <div className="flex w-full justify-center">
+                                        {" "}
+                                        VS.{" "}
+                                      </div>
+                                    ) : null}
+                                    <div className="flex items-center gap-4">
+                                      <div className="flex flex-col ">
+                                        {team.Team.players.map((player) => {
+                                          return (
+                                            <div className="tracking-wider">
+                                              {player.user.fullName}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                      {k === 0 && game.teams.length !== 1 ? (
+                                        <>
+                                          <div>{game.gameOneTeamOneScore}</div>
+                                          <div>{game.gameTwoTeamOneScore}</div>
+                                          <div>
+                                            {game.gameThreeTeamOneScore}
+                                          </div>
+                                        </>
+                                      ) : k === 1 && game.teams.length !== 1 ? (
+                                        <>
+                                          <div>{game.gameOneTeamTwoScore}</div>
+                                          <div>{game.gameTwoTeamTwoScore}</div>
+                                          <div>
+                                            {game.gameThreeTeamTwoScore}
+                                          </div>
+                                        </>
+                                      ) : null}
+                                    </div>
+                                    {game.teams.length === 1 ? (
+                                      <div className="flex flex-col">
+                                        <div className="flex w-full items-center justify-center">
+                                          {" "}
+                                          VS.{" "}
+                                        </div>
+                                        <div className="flex h-full w-full grow items-center justify-center font-bold">
+                                          TBD
+                                        </div>
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                );
+                              })}
+                              {game.teams.length === 0 ? (
+                                <>
+                                  <div className="flex h-full w-full grow items-center justify-center font-bold">
+                                    TBD
+                                  </div>
+                                  <div className="flex justify-center items-center"> VS. </div>
+                                  <div className="flex h-full w-full grow items-center justify-center font-bold">
+                                    TBD
+                                  </div>
+                                </>
+                              ) : null}
+                            </div>
+                          </div>
+                        ) : null}
+                        {colToBeIn === i && game === null ? (
+                          <div className="invisible h-48 w-48 border border-l-teal-600">
+                            <p>null</p>
+                          </div>
+                        ) : null}
+                      </>
+                    );
+                  })}
+              </div>
+            );
+          })}
+      </div>
     </div>
   );
 };
+
+function AddBlankGamesToBracket(divisionBracket: any, numRows: number) {
+  let positionToEnter: number = 0;
+  let positionToEnterXtra = "High";
+  let numGames: number = numRows / 2;
+  let numGamesToEnter =
+    numGames - divisionBracket.games.slice(numGames - 1).length;
+  let divBracketGames = divisionBracket.games;
+  const positionsToEnter = {
+    "32": [0, 1, 2, 3, 4, 5, 6, 7],
+    "16": [0, 1, 2, 3, 4, 5, 6, 7],
+    "8": [7, 11, 13, 9, 10, 14, 12, 8],
+    "4": [3, 5, 5],
+    "2": [1],
+  };
+  if (numGames) {
+    const positionsArray = positionsToEnter[numGames.toString()];
+    for (let i = 0; i < positionsArray.length; i++) {
+      if (numGamesToEnter > 0) {
+        divBracketGames.splice(positionsArray[i], 0, null);
+        numGamesToEnter--;
+      }
+    }
+  }
+  console.log(divBracketGames);
+  return { numGames, numGamesToEnter };
+}
 
 type DivisionControlProps = {
   divisionId: number;
