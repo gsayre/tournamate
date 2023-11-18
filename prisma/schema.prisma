@@ -140,6 +140,7 @@ model Pool {
   games      Game[]
   teams      Team[]
 
+  @@index([divisionId])
   @@unique([poolId, divisionId])
 }
 

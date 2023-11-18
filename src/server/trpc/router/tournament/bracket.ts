@@ -80,7 +80,7 @@ export const bracketRouter = router({
           teamsThatGotWildCard: wildcardArray,
           numPools: DivisionTypeToMock?.pools.length,
           prismaContext: ctx.prisma,
-          divisionId: input.divisionId
+          divisionId: input.divisionId,
         });
       }
       return {
@@ -88,21 +88,24 @@ export const bracketRouter = router({
         wildcards: wildcardArray,
       };
     }),
-  getBracketByDivision: protectedProcedure.input(z.object({ divisionId: z.number() })).query(async ({ ctx, input }) => {
-    const bracket = await ctx.prisma.bracket.findUnique({
-      where: {
-        divisionId: input.divisionId,
-      },
-      include: {
-        games: {
-          include: {
-            teams: {
-              include: {
-                Team: {
-                  include: {
-                    players: {
-                      include: {
-                        user: true,
+  getBracketByDivision: protectedProcedure
+    .input(z.object({ divisionId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const bracket = await ctx.prisma.bracket.findUnique({
+        where: {
+          divisionId: input.divisionId,
+        },
+        include: {
+          games: {
+            include: {
+              teams: {
+                include: {
+                  Team: {
+                    include: {
+                      players: {
+                        include: {
+                          user: true,
+                        },
                       },
                     },
                   },
@@ -111,10 +114,423 @@ export const bracketRouter = router({
             },
           },
         },
+      });
+      return bracket;
+    }),
+  finishBracketGameMock: protectedProcedure
+    .input(
+      z.object({
+        gameId: z.number(),
+        numSets: z.number(),
+        gameOneTeamOneScore: z.number(),
+        gameOneTeamTwoScore: z.number(),
+        scoreCapGame1: z.number(),
+        gameTwoTeamOneScore: z.number().nullable(),
+        gameTwoTeamTwoScore: z.number().nullable(),
+        scoreCapGame2: z.number().nullable(),
+        gameThreeTeamOneScore: z.number().nullable(),
+        gameThreeTeamTwoScore: z.number().nullable(),
+        scoreCapGame3: z.number().nullable(),
+        teamOneId: z.number(),
+        teamOneRating: z.number(),
+        teamTwoId: z.number(),
+        teamTwoRating: z.number(),
+        nextGame: z.number().optional().nullable(),
+        bracketId: z.number().nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      console.log(input);
+      let gameOneteamOneScore: number = input.gameOneTeamOneScore;
+      let gameOneteamTwoScore: number = input.gameOneTeamTwoScore;
+      let gameTwoteamOneScore: number | null = input.gameTwoTeamOneScore;
+      let gameTwoteamTwoScore: number | null = input.gameTwoTeamTwoScore;
+      let gameThreeteamOneScore: number | null = input.gameThreeTeamOneScore;
+      let gameThreeteamTwoScore: number | null = input.gameThreeTeamTwoScore;
+      let updatedGame;
+      switch (input.numSets) {
+        case 1: {
+          while (
+            gameOneteamOneScore < input.scoreCapGame1 &&
+            gameOneteamTwoScore < input.scoreCapGame1
+          ) {
+            if (
+              Math.random() <
+              0.5 * (input.teamOneRating / input.teamTwoRating)
+            ) {
+              gameOneteamOneScore++;
+            } else {
+              gameOneteamTwoScore++;
+            }
+          }
+          let WinningTeam =
+            gameOneteamOneScore > gameOneteamTwoScore
+              ? input.teamOneId
+              : input.teamTwoId;
+          let LosingTeam =
+            WinningTeam === input.teamOneId ? input.teamTwoId : input.teamOneId;
+          let WinningTeamPointDifferential =
+            gameOneteamOneScore > gameOneteamTwoScore
+              ? gameOneteamOneScore - gameOneteamTwoScore
+              : gameOneteamTwoScore - gameOneteamOneScore;
+          let LosingTeamPointDifferential = WinningTeamPointDifferential * -1;
+
+          updatedGame = await ctx.prisma.game.update({
+            where: {
+              gameId: input.gameId,
+            },
+            data: {
+              gameOneTeamOneScore: gameOneteamOneScore,
+              gameOneTeamTwoScore: gameOneteamTwoScore,
+              gameFinished: true,
+            },
+          });
+          const updateWinningTeam = await ctx.prisma.team.update({
+            where: {
+              teamId: WinningTeam,
+            },
+            data: {
+              poolWins: {
+                increment: 1,
+              },
+              poolPointDifferential: {
+                increment: WinningTeamPointDifferential,
+              },
+            },
+          });
+          const updateLosingTeam = await ctx.prisma.team.update({
+            where: {
+              teamId: LosingTeam,
+            },
+            data: {
+              poolLosses: {
+                increment: 1,
+              },
+              poolPointDifferential: {
+                increment: LosingTeamPointDifferential,
+              },
+            },
+          });
+          if (input.nextGame) {
+            const updateNextBracketGame = await ctx.prisma.game.update({
+              where: {
+                gameId: input.nextGame,
+              },
+              data: {
+                teams: {
+                  create: {
+                    Team: {
+                      connect: {
+                        teamId: WinningTeam
+                      }
+                    }
+                  }
+                }
+              }
+            });
+          }
+          break;
         }
-    })
-    return bracket;
-  }),
+        case 2: {
+          while (
+            gameOneteamOneScore < input.scoreCapGame1 &&
+            gameOneteamTwoScore < input.scoreCapGame1
+          ) {
+            if (
+              Math.random() <
+              0.5 * (input.teamOneRating / input.teamTwoRating)
+            ) {
+              gameOneteamOneScore++;
+            } else {
+              gameOneteamTwoScore++;
+            }
+          }
+          if (
+            gameTwoteamOneScore !== null &&
+            gameTwoteamTwoScore !== null &&
+            input.scoreCapGame2 !== null
+          ) {
+            while (
+              gameTwoteamOneScore < input.scoreCapGame2 &&
+              gameTwoteamTwoScore < input.scoreCapGame2
+            ) {
+              if (
+                Math.random() <
+                0.5 * (input.teamOneRating / input.teamTwoRating)
+              ) {
+                gameTwoteamOneScore++;
+              } else {
+                gameTwoteamTwoScore++;
+              }
+            }
+          }
+          let teamOneWins = 0,
+            teamOneLosses = 0,
+            teamTwoWins = 0,
+            teamTwoLosses = 0;
+          let teamOnePoolPointDifferential = 0,
+            teamTwoPoolPointDifferential = 0;
+          if (
+            gameOneteamOneScore !== null &&
+            gameOneteamTwoScore !== null &&
+            gameTwoteamOneScore !== null &&
+            gameTwoteamTwoScore !== null
+          ) {
+            const gameOneTeamOneWin = gameOneteamOneScore > gameOneteamTwoScore;
+            if (gameOneTeamOneWin) {
+              teamOneWins++;
+              teamTwoLosses++;
+              teamOnePoolPointDifferential +=
+                gameOneteamOneScore - gameOneteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameOneteamTwoScore - gameOneteamOneScore;
+            } else {
+              teamOneLosses++;
+              teamTwoWins++;
+              teamOnePoolPointDifferential +=
+                gameOneteamOneScore - gameOneteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameOneteamTwoScore - gameOneteamOneScore;
+            }
+            const gameTwoTeamOneWin = gameTwoteamOneScore > gameTwoteamTwoScore;
+            if (gameTwoTeamOneWin) {
+              teamOneWins++;
+              teamTwoLosses++;
+              teamOnePoolPointDifferential +=
+                gameTwoteamOneScore - gameTwoteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameTwoteamTwoScore - gameTwoteamOneScore;
+            } else {
+              teamOneLosses++;
+              teamTwoWins++;
+              teamOnePoolPointDifferential +=
+                gameTwoteamOneScore - gameTwoteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameTwoteamTwoScore - gameTwoteamOneScore;
+            }
+          }
+          updatedGame = await ctx.prisma.game.update({
+            where: {
+              gameId: input.gameId,
+            },
+            data: {
+              gameOneTeamOneScore: gameOneteamOneScore,
+              gameOneTeamTwoScore: gameOneteamTwoScore,
+              gameTwoTeamOneScore: gameTwoteamOneScore,
+              gameTwoTeamTwoScore: gameTwoteamTwoScore,
+              gameFinished: true,
+            },
+          });
+          const updateTeamOne = await ctx.prisma.team.update({
+            where: {
+              teamId: input.teamOneId,
+            },
+            data: {
+              poolWins: {
+                increment: teamOneWins,
+              },
+              poolLosses: { increment: teamOneLosses },
+              poolPointDifferential: {
+                increment: teamOnePoolPointDifferential,
+              },
+            },
+          });
+          const updateTeamTwo = await ctx.prisma.team.update({
+            where: {
+              teamId: input.teamTwoId,
+            },
+            data: {
+              poolWins: { increment: teamTwoWins },
+              poolLosses: { increment: teamTwoLosses },
+              poolPointDifferential: {
+                increment: teamTwoPoolPointDifferential,
+              },
+            },
+          });
+          break;
+        }
+        case 3: {
+          while (
+            gameOneteamOneScore < input.scoreCapGame1 &&
+            gameOneteamTwoScore < input.scoreCapGame1
+          ) {
+            if (
+              Math.random() <
+              0.5 * (input.teamOneRating / input.teamTwoRating)
+            ) {
+              gameOneteamOneScore++;
+            } else {
+              gameOneteamTwoScore++;
+            }
+          }
+          if (
+            gameTwoteamOneScore !== null &&
+            gameTwoteamTwoScore !== null &&
+            input.scoreCapGame2 !== null
+          ) {
+            while (
+              gameTwoteamOneScore < input.scoreCapGame2 &&
+              gameTwoteamTwoScore < input.scoreCapGame2
+            ) {
+              if (
+                Math.random() <
+                0.5 * (input.teamOneRating / input.teamTwoRating)
+              ) {
+                gameTwoteamOneScore++;
+              } else {
+                gameTwoteamTwoScore++;
+              }
+            }
+          }
+          if (
+            gameThreeteamOneScore !== null &&
+            gameThreeteamTwoScore !== null &&
+            input.scoreCapGame3 !== null
+          ) {
+            while (
+              gameThreeteamOneScore < input.scoreCapGame3 &&
+              gameThreeteamTwoScore < input.scoreCapGame3
+            ) {
+              if (
+                Math.random() <
+                0.5 * (input.teamOneRating / input.teamTwoRating)
+              ) {
+                gameThreeteamOneScore++;
+              } else {
+                gameThreeteamTwoScore++;
+              }
+            }
+          }
+
+          let teamOneWins = 0,
+            teamOneLosses = 0,
+            teamTwoWins = 0,
+            teamTwoLosses = 0;
+          let teamOnePoolPointDifferential = 0,
+            teamTwoPoolPointDifferential = 0;
+          if (
+            gameOneteamOneScore !== null &&
+            gameOneteamTwoScore !== null &&
+            gameTwoteamOneScore !== null &&
+            gameTwoteamTwoScore !== null &&
+            gameThreeteamOneScore !== null &&
+            gameThreeteamTwoScore !== null
+          ) {
+            const gameOneTeamOneWin = gameOneteamOneScore > gameOneteamTwoScore;
+            if (gameOneTeamOneWin) {
+              teamOneWins++;
+              teamTwoLosses++;
+              teamOnePoolPointDifferential +=
+                gameOneteamOneScore - gameOneteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameOneteamTwoScore - gameOneteamOneScore;
+            } else {
+              teamOneLosses++;
+              teamTwoWins++;
+              teamOnePoolPointDifferential +=
+                gameOneteamOneScore - gameOneteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameOneteamTwoScore - gameOneteamOneScore;
+            }
+            const gameTwoTeamOneWin = gameTwoteamOneScore > gameTwoteamTwoScore;
+            if (gameTwoTeamOneWin) {
+              teamOneWins++;
+              teamTwoLosses++;
+              teamOnePoolPointDifferential +=
+                gameTwoteamOneScore - gameTwoteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameTwoteamTwoScore - gameTwoteamOneScore;
+            } else {
+              teamOneLosses++;
+              teamTwoWins++;
+              teamOnePoolPointDifferential +=
+                gameTwoteamOneScore - gameTwoteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameTwoteamTwoScore - gameTwoteamOneScore;
+            }
+            const gameThreeTeamOneWin =
+              gameThreeteamOneScore > gameThreeteamTwoScore;
+            if (gameThreeTeamOneWin) {
+              teamOneWins++;
+              teamTwoLosses++;
+              teamOnePoolPointDifferential +=
+                gameThreeteamOneScore - gameThreeteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameThreeteamTwoScore - gameThreeteamOneScore;
+            } else {
+              teamOneLosses++;
+              teamTwoWins++;
+              teamOnePoolPointDifferential +=
+                gameThreeteamOneScore - gameThreeteamTwoScore;
+              teamTwoPoolPointDifferential +=
+                gameThreeteamTwoScore - gameThreeteamOneScore;
+            }
+          }
+
+          updatedGame = await ctx.prisma.game.update({
+            where: {
+              gameId: input.gameId,
+            },
+            data: {
+              gameOneTeamOneScore: gameOneteamOneScore,
+              gameOneTeamTwoScore: gameOneteamTwoScore,
+              gameTwoTeamOneScore: gameTwoteamOneScore,
+              gameTwoTeamTwoScore: gameTwoteamTwoScore,
+              gameThreeTeamOneScore: gameThreeteamOneScore,
+              gameThreeTeamTwoScore: gameThreeteamTwoScore,
+              gameFinished: true,
+            },
+          });
+          const updateFirstTeam = await ctx.prisma.team.update({
+            where: {
+              teamId: input.teamOneId,
+            },
+            data: {
+              poolWins: { increment: teamOneWins },
+              poolLosses: { increment: teamOneLosses },
+              poolPointDifferential: {
+                increment: teamOnePoolPointDifferential,
+              },
+            },
+          });
+          const updateSecondTeam = await ctx.prisma.team.update({
+            where: {
+              teamId: input.teamTwoId,
+            },
+            data: {
+              poolWins: { increment: teamTwoWins },
+              poolLosses: { increment: teamTwoLosses },
+              poolPointDifferential: {
+                increment: teamTwoPoolPointDifferential,
+              },
+            },
+          });
+          let WinningTeam = teamOneWins > teamTwoWins ? input.teamOneId : input.teamTwoId;
+          if (input.nextGame) {
+            const updateNextBracketGame = await ctx.prisma.game.update({
+              where: {
+                gameId: input.nextGame,
+              },
+              data: {
+                teams: {
+                  create: {
+                    Team: {
+                      connect: {
+                        teamId: WinningTeam,
+                      },
+                    },
+                  },
+                },
+              },
+            });
+          }
+          break;
+        }
+      }
+      return {
+        updatedGame,
+      };
+    }),
 });
 
 type TeamsForBracketT = (Team & {
