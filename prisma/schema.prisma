@@ -147,6 +147,7 @@ model Pool {
 model Bracket {
   bracketId  Int      @id @default(autoincrement())
   divisionId Int      @unique
+  isFinished Boolean @default(false)
   division   Division @relation(fields: [divisionId], references: [divisionId])
   games      Game[] 
 

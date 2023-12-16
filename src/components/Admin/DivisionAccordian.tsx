@@ -489,6 +489,9 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
       >
         Create Bracket Schedule
       </button>
+      <div>
+        isFinished: {divisionBraket?.isFinished.toString()}
+      </div>
       <div className={`flex flex-row-reverse justify-end gap-8`}>
         {numCols &&
           [...Array(numCols)].map((x, i) => {

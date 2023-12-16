@@ -481,30 +481,30 @@ export const bracketRouter = router({
               gameFinished: true,
             },
           });
-          const updateFirstTeam = await ctx.prisma.team.update({
-            where: {
-              teamId: input.teamOneId,
-            },
-            data: {
-              poolWins: { increment: teamOneWins },
-              poolLosses: { increment: teamOneLosses },
-              poolPointDifferential: {
-                increment: teamOnePoolPointDifferential,
-              },
-            },
-          });
-          const updateSecondTeam = await ctx.prisma.team.update({
-            where: {
-              teamId: input.teamTwoId,
-            },
-            data: {
-              poolWins: { increment: teamTwoWins },
-              poolLosses: { increment: teamTwoLosses },
-              poolPointDifferential: {
-                increment: teamTwoPoolPointDifferential,
-              },
-            },
-          });
+          // const updateFirstTeam = await ctx.prisma.team.update({
+          //   where: {
+          //     teamId: input.teamOneId,
+          //   },
+          //   data: {
+          //     poolWins: { increment: teamOneWins },
+          //     poolLosses: { increment: teamOneLosses },
+          //     poolPointDifferential: {
+          //       increment: teamOnePoolPointDifferential,
+          //     },
+          //   },
+          // });
+          // const updateSecondTeam = await ctx.prisma.team.update({
+          //   where: {
+          //     teamId: input.teamTwoId,
+          //   },
+          //   data: {
+          //     poolWins: { increment: teamTwoWins },
+          //     poolLosses: { increment: teamTwoLosses },
+          //     poolPointDifferential: {
+          //       increment: teamTwoPoolPointDifferential,
+          //     },
+          //   },
+          // });
           let WinningTeam = teamOneWins > teamTwoWins ? input.teamOneId : input.teamTwoId;
           if (input.nextGame) {
             const updateNextBracketGame = await ctx.prisma.game.update({
@@ -523,6 +523,15 @@ export const bracketRouter = router({
                 },
               },
             });
+          } else if(input.bracketId) {
+            const updateBracket = await ctx.prisma.bracket.update({
+              where: {
+                bracketId: input.bracketId
+              },
+              data: {
+                isFinished: true
+              }
+            })
           }
           break;
         }
