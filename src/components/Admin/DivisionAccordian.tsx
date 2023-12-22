@@ -1,22 +1,16 @@
+import { MyPoolTable } from "@components/MyPoolTable";
+import { PoolSchedule, isCurrentGame } from "@components/PoolSchedule";
 import { PoolTable } from "@components/PoolTable";
 import {
   Division,
-  Team,
-  UsersInTeam,
-  User,
   Format,
   Game,
+  Team,
+  User,
+  UsersInTeam,
 } from "@prisma/client";
-import { FakeEntriesTeamArr } from "../../utils/types/team";
-import { useEffect, useState } from "react";
-import {
-  createFakeEntriesAnyTeams,
-  createPoolsFromEntries,
-} from "utils/lib/team-utils";
+import { useState } from "react";
 import { trpc } from "utils/trpc";
-import { z } from "zod";
-import { MyPoolTable } from "@components/MyPoolTable";
-import { PoolSchedule, isCurrentGame } from "@components/PoolSchedule";
 
 export type divAccordianProps = {
   division: Division & {
