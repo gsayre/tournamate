@@ -1,22 +1,16 @@
+import { MyPoolTable } from "@components/MyPoolTable";
+import { PoolSchedule, isCurrentGame } from "@components/PoolSchedule";
 import { PoolTable } from "@components/PoolTable";
 import {
   Division,
-  Team,
-  UsersInTeam,
-  User,
   Format,
   Game,
+  Team,
+  User,
+  UsersInTeam,
 } from "@prisma/client";
-import { FakeEntriesTeamArr } from "../../utils/types/team";
-import { useEffect, useState } from "react";
-import {
-  createFakeEntriesAnyTeams,
-  createPoolsFromEntries,
-} from "utils/lib/team-utils";
+import { useState } from "react";
 import { trpc } from "utils/trpc";
-import { z } from "zod";
-import { MyPoolTable } from "@components/MyPoolTable";
-import { PoolSchedule, isCurrentGame } from "@components/PoolSchedule";
 
 export type divAccordianProps = {
   division: Division & {
@@ -463,6 +457,9 @@ type BracketSectionProps = {
 
 const BracketSection = ({ divisionId }: BracketSectionProps) => {
   const createBracket = trpc.bracket.createBracketSchedule.useMutation();
+  const finishBracketGameMock =
+    trpc.bracket.finishBracketGameMock.useMutation();
+  const utils = trpc.useContext();
   const divisionBraket = trpc.bracket.getBracketByDivision.useQuery({
     divisionId: divisionId,
   }).data;
@@ -474,19 +471,20 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
   if (numRows) {
     console.log(AddBlankGamesToBracket(divisionBraket, numRows));
   }
+
   console.log("Div with blanks", divBracketWithBlanks);
   return (
-    <div className="h-fit flex flex-col">
+    <div className="flex h-fit flex-col">
       <p className="pb-2 text-2xl">Bracket</p>
       <button
-        className="rounded-lg bg-purple-400 p-2 text-md font-semibold w-48"
+        className="text-md w-48 rounded-lg bg-purple-400 p-2 font-semibold"
         onClick={() => {
           createBracket.mutate({ divisionId: divisionId });
         }}
       >
         Create Bracket Schedule
       </button>
-      <div className={`flex flex-row-reverse gap-8 justify-end`}>
+      <div className={`flex flex-row-reverse justify-end gap-8`}>
         {numCols &&
           [...Array(numCols)].map((x, i) => {
             return (
@@ -500,10 +498,57 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
                     return (
                       <>
                         {colToBeIn === i && game ? (
-                          <div className="flex w-64 flex-col border border-gray-300">
-                            <div className="flex border-b border-gray-300 bg-slate-300 px-2 py-1 font-semibold">
-                              Game {game.gameId}
+                          <div className="flex w-72 flex-col border border-gray-300">
+                            <div className="flex justify-between border-b border-gray-300 bg-slate-300 px-2 py-1 font-semibold">
+                              <div className="flex">Game {game.gameId}</div>
+                              <div className="mr-2 flex gap-2">
+                                <button
+                                  onClick={() => {
+                                    finishBracketGameMock.mutate(
+                                      {
+                                        gameId: game.gameId,
+                                        numSets: game.numSets,
+                                        gameOneTeamOneScore:
+                                          game.gameOneTeamOneScore,
+                                        gameOneTeamTwoScore:
+                                          game.gameOneTeamTwoScore,
+                                        scoreCapGame1: game.gameOneScoreCap,
+                                        gameTwoTeamOneScore:
+                                          game.gameTwoTeamOneScore,
+                                        gameTwoTeamTwoScore:
+                                          game.gameTwoTeamTwoScore,
+                                        scoreCapGame2: game.gameTwoScoreCap,
+                                        gameThreeTeamOneScore:
+                                          game.gameThreeTeamOneScore,
+                                        gameThreeTeamTwoScore:
+                                          game.gameThreeTeamTwoScore,
+                                        scoreCapGame3: game.gameThreeScoreCap,
+                                        teamOneId: game.teams[0].teamId,
+                                        teamOneRating:
+                                          game.teams[0].Team.teamRating,
+                                        teamTwoId: game.teams[1].teamId,
+                                        teamTwoRating:
+                                          game.teams[1].Team.teamRating,
+                                        nextGame: game.nextGame,
+                                        bracketId: game.bracketId,
+                                      },
+                                      {
+                                        onSuccess: () => {
+                                          utils.bracket.getBracketByDivision.invalidate();
+                                        },
+                                      },
+                                    );
+                                  }}
+                                  className="text-md rounded-md bg-green-500 p-2 font-bold"
+                                >
+                                  F
+                                </button>
+                                <button className="text-md rounded-md bg-red-500 p-2 font-bold">
+                                  R
+                                </button>
+                              </div>
                             </div>
+
                             <div className="flex h-36 w-full flex-col p-2">
                               {game.teams.map((team, k) => {
                                 return (
@@ -516,6 +561,7 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
                                       </div>
                                     ) : null}
                                     <div className="flex items-center gap-4">
+                                      <div>{team.Team.teamId}</div>
                                       <div className="flex flex-col ">
                                         {team.Team.players.map((player) => {
                                           return (
@@ -562,7 +608,10 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
                                   <div className="flex h-full w-full grow items-center justify-center font-bold">
                                     TBD
                                   </div>
-                                  <div className="flex justify-center items-center"> VS. </div>
+                                  <div className="flex items-center justify-center">
+                                    {" "}
+                                    VS.{" "}
+                                  </div>
                                   <div className="flex h-full w-full grow items-center justify-center font-bold">
                                     TBD
                                   </div>
@@ -582,6 +631,179 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
               </div>
             );
           })}
+      </div>
+      {divisionBraket?.isFinished ? (
+        <StandingsSection divisionId={divisionId} />
+      ) : null}
+    </div>
+  );
+};
+
+const StandingsSection = ({ divisionId }: { divisionId: number }) => {
+  const finalStandings = trpc.bracket.getBracketWinnerByDivision.useQuery({
+    divisionId: divisionId,
+  }).data;
+  return (
+    <>
+      <div className="mt-8">
+        <div className="text-3xl font-semibold">Final Standings</div>
+        <div className="mt-8 text-xl">Podium</div>
+        <div className="flex flex-row mt-2">
+          {finalStandings && (
+            <div className=" flex flex-row items-end">
+              <SmallPodium
+                teamOne={finalStandings?.finalStandings[2]}
+                teamTwo={finalStandings?.finalStandings[3]}
+              />
+              <LargePodium team={finalStandings?.finalStandings[0]} />
+              <MediumPodium team={finalStandings?.finalStandings[1]} />
+            </div>
+          )}
+        </div>
+        <div className="mt-8 text-xl">Other Standings</div>
+        <div className="flex flex-col mt-2">
+          {finalStandings &&
+            finalStandings.finalStandings?.map((team, i) => {
+              let standing = i < 7 ? 5 : null;
+              if (i <= 3) {
+                return null;
+              } else {
+                return (
+                  <div className="flex flex-row items-center gap-4">
+                    <div>{standing}</div>
+                    <div className="flex flex-row gap-2">
+                      {team.players.map((player, i) => {
+                        return (
+                          <div className="tracking-wider">
+                            {player.user.fullName}
+                            {i===0 ? " & " : null }
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              }
+            })}
+        </div>
+      </div>
+    </>
+  );
+};
+
+type SmallPodiumProps = {
+  teamOne: {
+    teamId: number;
+    players: ({
+      user: {
+        id: string;
+        fullName: string;
+        isAdmin: boolean;
+        isTournamentDirector: boolean;
+        playerRating: number;
+      };
+    } & {
+      userId: string;
+      teamId: number;
+    })[];
+  };
+  teamTwo: {
+    teamId: number;
+    players: ({
+      user: {
+        id: string;
+        fullName: string;
+        isAdmin: boolean;
+        isTournamentDirector: boolean;
+        playerRating: number;
+      };
+    } & {
+      userId: string;
+      teamId: number;
+    })[];
+  };
+};
+
+const SmallPodium = ({ teamOne, teamTwo }: SmallPodiumProps) => {
+  return (
+    <div className="flex flex-col">
+      <div className="flex flex-col justify-center items-center">
+        {teamOne.players.map((player) => {
+          return <div className="tracking-wider">{player.user.fullName}</div>;
+        })}
+        <div>&</div>
+        {teamTwo.players.map((player) => {
+          return <div className="tracking-wider">{player.user.fullName}</div>;
+        })}
+      </div>
+      <div className="flex h-24 w-40 items-center justify-center bg-amber-800 text-4xl font-bold text-white">
+        3<sup>rd</sup>
+      </div>
+    </div>
+  );
+};
+
+type MediumPodiumProps = {
+  team: {
+    teamId: number;
+    players: ({
+      user: {
+        id: string;
+        fullName: string;
+        isAdmin: boolean;
+        isTournamentDirector: boolean;
+        playerRating: number;
+      };
+    } & {
+      userId: string;
+      teamId: number;
+    })[];
+  };
+};
+
+const MediumPodium = ({ team }: MediumPodiumProps) => {
+  return (
+    <div className="flex flex-col">
+      <div className="flex flex-col items-center justify-center">
+        {team.players.map((player) => {
+          return <div className="tracking-wider">{player.user.fullName}</div>;
+        })}
+      </div>
+      <div className="flex h-40 w-40 items-center justify-center bg-zinc-400 text-4xl font-bold text-white">
+        2<sup>nd</sup>
+      </div>
+    </div>
+  );
+};
+
+type LargePodiumProps = {
+  team: {
+    teamId: number;
+    players: ({
+      user: {
+        id: string;
+        fullName: string;
+        isAdmin: boolean;
+        isTournamentDirector: boolean;
+        playerRating: number;
+      };
+    } & {
+      userId: string;
+      teamId: number;
+    })[];
+  };
+};
+
+const LargePodium = ({ team }: LargePodiumProps) => {
+  return (
+    <div className="flex flex-col">
+      <div className="flex flex-col items-center justify-center">
+        {team.players.map((player) => {
+          return <div className="tracking-wider">{player.user.fullName}</div>;
+        })}
+      </div>
+    <div className="flex h-56 w-40 items-center justify-center bg-yellow-500 text-4xl font-bold text-white">
+      1<sup>st</sup>
       </div>
     </div>
   );

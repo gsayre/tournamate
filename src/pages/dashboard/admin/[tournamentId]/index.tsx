@@ -1,19 +1,14 @@
+import { useAuth } from "@clerk/nextjs";
+import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
+import { DivisionPannel } from "@components/DivisionPannel";
+import { MyPoolTable } from "@components/MyPoolTable";
+import { PoolSchedule } from "@components/PoolSchedule";
+import { useRouter } from "next/router";
+import { useState } from "react";
 import Sidebar from "../../../../components/Sidebar";
 import TopBar from "../../../../components/TopBar";
 import { trpc } from "../../../../utils/trpc";
-import { useRouter } from "next/router";
-import { Division } from "@prisma/client";
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
-import { useAuth } from "@clerk/nextjs";
-import { MyPoolTable } from "@components/MyPoolTable";
-import { PoolSchedule } from "@components/PoolSchedule";
 import { FakeEntriesTeamArr } from "../../../../utils/types/team";
-import { amIInThePool } from "utils/lib/am-i-in-utils";
-import { createFakeEntriesAnyTeams, createPoolsFromEntries } from "utils/lib/team-utils";
-import { NewDivisionForm } from "@components/DivisionForm";
-import { DivisionPannel } from "@components/DivisionPannel";
 
 export async function getServerSideProps(context: any) {
   const { userId } = getAuth(context.req);
@@ -47,7 +42,7 @@ export default function AdminTournamentView() {
   const startTournamentForDay =
     trpc.tournament.startTournamentDay.useMutation();
   const [fakeEntriesToUse, setFakeEntriesToUse] = useState<FakeEntriesTeamArr>(
-    []
+    [],
   );
   const [pools, setPools] = useState<Array<FakeEntriesTeamArr>>([]);
 
@@ -57,7 +52,7 @@ export default function AdminTournamentView() {
         <Sidebar />
         <div className="flex h-full w-full flex-col ">
           <TopBar />
-          <div className=" h-full w-full p-4 overflow-auto">
+          <div className=" h-full w-full overflow-auto p-4">
             <p className="text-2xl text-gray-500">
               {tournamentData?.tournament.name}
             </p>
@@ -155,23 +150,31 @@ export default function AdminTournamentView() {
                   {tournamentData.tournament.dayTwoStarted ? (
                     <div className="flex flex-col">
                       <div className="flex flex-row gap-4">
-                        <div className="flex flex-col">
-                          <p>My Pool</p>
-                          <MyPoolTable
-                            pool={myPool}
-                            poolNumber={1}
-                            pools={pools}
-                            setPools={setPools}
-                            isMyPool={true}
-                            currentUserName={currentUserName as string}
-                          />
-                        </div>
-                        <div className="flex flex-col">
-                          <p>Pool Schedule</p>
+                        {myPool !== undefined && (
                           <div>
-                            <PoolSchedule pool={myPool}  currentUserName={currentUserName as string} tournamentId={tId}/>
+                            <div className="flex flex-col">
+                              <p>My Pool</p>
+                              <MyPoolTable
+                                pool={myPool}
+                                poolNumber={1}
+                                pools={pools}
+                                setPools={setPools}
+                                isMyPool={true}
+                                currentUserName={currentUserName as string}
+                              />
+                            </div>
+                            <div className="flex flex-col">
+                              <p>Pool Schedule</p>
+                              <div>
+                                <PoolSchedule
+                                  pool={myPool}
+                                  currentUserName={currentUserName as string}
+                                  tournamentId={tId}
+                                />
+                              </div>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                       <div>
                         <p>Other Pools</p>
