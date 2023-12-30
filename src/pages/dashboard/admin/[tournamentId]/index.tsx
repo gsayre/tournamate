@@ -5,7 +5,6 @@ import { MyPoolTable } from "@components/MyPoolTable";
 import { PoolSchedule } from "@components/PoolSchedule";
 import { useRouter } from "next/router";
 import { useState } from "react";
-import Sidebar from "../../../../components/Sidebar";
 import TopBar from "../../../../components/TopBar";
 import { trpc } from "../../../../utils/trpc";
 import { FakeEntriesTeamArr } from "../../../../utils/types/team";
@@ -49,7 +48,6 @@ export default function AdminTournamentView() {
   return (
     <div className="flex h-screen w-screen">
       <div className="flex h-full w-full flex-row">
-        <Sidebar />
         <div className="flex h-full w-full flex-col ">
           <TopBar />
           <div className=" h-full w-full overflow-auto p-4">

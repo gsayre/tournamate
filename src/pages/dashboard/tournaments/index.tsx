@@ -3,7 +3,6 @@ import { Tournament } from "@prisma/client";
 import moment from "moment";
 import Link from "next/link";
 import type { NextPage } from "next/types";
-import Sidebar from "../../../components/Sidebar";
 import TopBar from "../../../components/TopBar";
 import { trpc } from "../../../utils/trpc";
 
@@ -27,7 +26,6 @@ const Tournaments: NextPage = () => {
   return (
     <div className="flex h-screen w-screen">
       <div className="flex h-full w-full flex-row">
-        <Sidebar />
         <div className="flex h-full w-full flex-col ">
           <TopBar />
           <div className=" h-full w-full p-4">
