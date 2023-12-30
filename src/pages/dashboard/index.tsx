@@ -3,7 +3,6 @@ import type { NextPage } from "next";
 import { redirect } from "next/dist/server/api-utils";
 import { NextResponse } from "next/server";
 import { PropsWithChildren, useEffect } from "react";
-import Sidebar from "@components/Sidebar";
 import TopBar from "@components/TopBar";
 import { getAuth, buildClerkProps } from "@clerk/nextjs/server";
 import { trpc } from "../../utils/trpc";
@@ -31,7 +30,6 @@ export default function Dashboard({ children }: PropsWithChildren) {
   return (
     <div className="flex h-screen w-screen">
       <div className="flex h-full w-full flex-row">
-        <Sidebar />
         <div className="flex h-full w-full flex-col ">
           <TopBar />
           <div className=" h-full w-full p-4">

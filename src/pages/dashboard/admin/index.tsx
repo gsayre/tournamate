@@ -1,6 +1,5 @@
 import { FC, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import Sidebar from "../../../components/Sidebar";
 import TopBar from "../../../components/TopBar";
 import { trpc } from "../../../utils/trpc";
 import { Format, Tournament, Type } from "@prisma/client";
@@ -27,7 +26,6 @@ export default function Admin() {
   return (
     <div className="flex h-screen w-screen">
       <div className="flex h-full w-full flex-row">
-        <Sidebar />
         <div className="flex h-full w-full flex-col ">
           <TopBar />
           <div className=" h-full w-full  p-4">

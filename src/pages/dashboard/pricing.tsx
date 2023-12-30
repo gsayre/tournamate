@@ -1,5 +1,4 @@
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
-import Sidebar from "../../components/Sidebar";
 import TopBar from "../../components/TopBar";
 
 export async function getServerSideProps(context: any) {
@@ -20,7 +19,6 @@ export default function Pricing() {
   return (
     <div className="flex h-screen w-screen">
       <div className="flex h-full w-full flex-row">
-        <Sidebar />
         <div className="flex h-full w-full flex-col ">
           <TopBar />
           <div className=" h-full w-full p-4">

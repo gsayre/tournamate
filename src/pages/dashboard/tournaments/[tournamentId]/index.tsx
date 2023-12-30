@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 import React, { useEffect } from "react";
 import { Dispatch, SetStateAction, useState } from "react";
-import Sidebar from "../../../../components/Sidebar";
 import TopBar from "../../../../components/TopBar";
 import { trpc } from "../../../../utils/trpc";
 
@@ -64,7 +63,6 @@ export default function TournamentView() {
       ) : (
         <div className="flex h-screen w-screen">
           <div className="flex h-full w-full flex-row">
-            <Sidebar />
             <div className="flex h-full w-full flex-col ">
               <TopBar />
               <div className=" h-full w-full ">

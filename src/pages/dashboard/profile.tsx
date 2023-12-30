@@ -1,8 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
 import { useAuth } from "@clerk/nextjs";
-import type { NextPage } from "next";;
-import Sidebar from "../../components/Sidebar";
+import type { NextPage } from "next";
 import TopBar from "../../components/TopBar";
 
 export async function getServerSideProps(context: any) {
@@ -24,7 +23,6 @@ const Profile: NextPage = () => {
   return (
     <div className="flex h-screen w-screen">
       <div className="flex h-full w-full flex-row">
-        <Sidebar />
         <div className="flex h-full w-full flex-col ">
           <TopBar />
           <div className="overflow-y-scroll p-2">
