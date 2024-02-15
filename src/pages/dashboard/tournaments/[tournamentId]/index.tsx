@@ -28,6 +28,15 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Search, Send } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export async function getServerSideProps(context: any) {
   const { userId } = getAuth(context.req);
@@ -559,8 +568,6 @@ const SignupModal2 = ({
   const [playingDayTwo, setPlayingDayTwo] = useState(false);
   const [playerOneName, setPlayerOneName] = useState("");
   const [playerTwoName, setPlayerTwoName] = useState("");
-  const [partnerOneSelection, setPartnerOneSelection] = useState("");
-  const [partnerTwoSelection, setPartnerTwoSelection] = useState("");
   const [partnerOneDivisionSelection, setPartnerOneDivisionSelection] =
     useState(0);
   const [partnerTwoDivisionSelection, setPartnerTwoDivisionSelection] =
@@ -588,7 +595,7 @@ const SignupModal2 = ({
             Pick the dates you are wanting to play in
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col items-start space-x-2 space-y-2">
+        <div className="flex flex-col items-start space-y-2">
           <div className="flex gap-4">
             <div className="flex space-x-2">
               <p>Day One</p>
@@ -599,15 +606,17 @@ const SignupModal2 = ({
                 onChange={() => setPlayingDayOne(!playingDayOne)}
               ></input>
             </div>
-            <div className="flex space-x-2">
-              <p>Day Two</p>
-              <input
-                type="checkbox"
-                name="dayTwo"
-                id="dayTwo"
-                onChange={() => setPlayingDayTwo(!playingDayTwo)}
-              />
-            </div>
+            {tournamentData.tournament.dayTwo ? (
+              <div className="flex space-x-2">
+                <p>Day Two</p>
+                <input
+                  type="checkbox"
+                  name="dayTwo"
+                  id="dayTwo"
+                  onChange={() => setPlayingDayTwo(!playingDayTwo)}
+                />
+              </div>
+            ) : null}
           </div>
           <div className="flex w-full flex-col">
             {playingDayOne ? (
@@ -642,7 +651,9 @@ const SignupModal2 = ({
                           key={partner.id}
                           partner={partner}
                           tournamentId={tId}
-                          divisionId={partnerOneDivisionSelection}
+                          divisionSelections={divisionsPerDay[0]}
+                          divisionSelected={partnerOneDivisionSelection}
+                          setPartnerDivision={setPartnerOneDivisionSelection}
                         />
                       );
                     })}
@@ -682,7 +693,9 @@ const SignupModal2 = ({
                           key={partner.id}
                           partner={partner}
                           tournamentId={tId}
-                          divisionId={partnerTwoDivisionSelection}
+                          divisionSelections={divisionsPerDay[1]}
+                          divisionSelected={partnerTwoDivisionSelection}
+                          setPartnerDivision={setPartnerTwoDivisionSelection}
                         />
                       );
                     })}
@@ -746,10 +759,18 @@ const PartnerCard = (props: PartnerCardProps) => {
 type PartnerCard2Props = {
   partner: User;
   tournamentId: number;
-  divisionId: number;
+  divisionSelections: Division[];
+  divisionSelected: number;
+  setPartnerDivision: React.Dispatch<React.SetStateAction<number>>;
 };
 
-const PartnerCard2 = (props: PartnerCard2Props) => {
+const PartnerCard2 = ({
+  partner,
+  tournamentId,
+  divisionSelected,
+  divisionSelections,
+  setPartnerDivision,
+}: PartnerCard2Props) => {
   const submitTeamInvitation =
     trpc.tournament.createTeamInvitation.useMutation();
   const { toast } = useToast();
@@ -759,29 +780,49 @@ const PartnerCard2 = (props: PartnerCard2Props) => {
       <p
         className={`text-md flex items-center justify-center font-semibold group-odd:text-emerald-500 group-even:text-indigo-500`}
       >
-        {props.partner.fullName}
+        {partner.fullName}
       </p>
       <Separator
         orientation="vertical"
         className="flex h-6 items-center justify-center bg-slate-400"
       />
       <p className={`flex items-center justify-center text-sm `}>
-        {props.partner.playerRating}
+        {partner.playerRating}
       </p>
       <div className="flex grow justify-end">
+        <Select onValueChange={() => setPartnerDivision()} defaultValue={}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select Division" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Division</SelectLabel>
+              {divisionSelections.map((division) => {
+                return (
+                  <SelectItem
+                    key={division.name + division.type}
+                    value={division.divisionId}
+                  >
+                    {division.type + " - " + division.name}
+                  </SelectItem>
+                );
+              })}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
         <button
           onClick={() => {
             submitTeamInvitation.mutate(
               {
-                teammateId: props.partner.id,
-                tournamentId: props.tournamentId,
-                divisionId: props.divisionId,
+                teammateId: partner.id,
+                tournamentId: tournamentId,
+                divisionId: divisionSelected,
               },
               {
                 onSuccess: () => {
                   toast({
                     title: "Invitation Sent",
-                    description: `Invitation has been sent to ${props.partner.fullName}`,
+                    description: `Invitation has been sent to ${partner.fullName}`,
                   });
                 },
               },
