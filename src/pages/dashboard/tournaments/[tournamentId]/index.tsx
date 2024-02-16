@@ -1,12 +1,18 @@
 /* eslint-disable @next/next/no-img-element */
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
-import { Division, Team, TeamInvitation, User, UsersInTeam } from "@prisma/client";
-import Image from "next/image";
+import { SignupModal } from "@components/SignupModal";
+import {
+  Division,
+  Team,
+  TeamInvitation,
+  User,
+  UsersInTeam,
+} from "@prisma/client";
 import { useRouter } from "next/router";
-import React, { useEffect } from "react";
-import { Dispatch, SetStateAction, useState } from "react";
+import { useState } from "react";
 import TopBar from "../../../../components/TopBar";
 import { trpc } from "../../../../utils/trpc";
+import { InvitationCard } from "@components/InvitationCard";
 
 export async function getServerSideProps(context: any) {
   const { userId } = getAuth(context.req);
@@ -43,24 +49,18 @@ export default function TournamentView() {
   ) {
     firstDayDivisions = filterDivisions(
       divisionData,
-      tournamentData.tournament.dayOneFormat
+      tournamentData.tournament.dayOneFormat,
     );
     if (tournamentData.tournament.dayTwoFormat) {
       secondDayDivisions = filterDivisions(
         divisionData,
-        tournamentData.tournament.dayTwoFormat
+        tournamentData.tournament.dayTwoFormat,
       );
     }
   }
 
   return (
     <>
-      {modalOpen && firstDayDivisions && secondDayDivisions ? (
-        <SignupModal
-          setModalOpen={setModalOpen}
-          divisionsPerDay={[firstDayDivisions, secondDayDivisions]}
-        />
-      ) : (
         <div className="flex h-screen w-screen">
           <div className="flex h-full w-full flex-row">
             <div className="flex h-full w-full flex-col ">
@@ -84,12 +84,15 @@ export default function TournamentView() {
                   <div className="h-5/6 w-0.5 bg-black" />
                   <div className="flex w-1/2 flex-col">
                     <div className="flex w-1/2 flex-row justify-end p-2">
-                      <button
-                        className="h-8 w-32 items-center justify-center rounded-xl bg-white py-2 px-4 text-sm hover:bg-green-700"
-                        onClick={() => setModalOpen(true)}
-                      >
-                        Register
-                      </button>
+                      {firstDayDivisions && secondDayDivisions ? (
+                        <SignupModal
+                          divisionsPerDay={[
+                            firstDayDivisions,
+                            secondDayDivisions,
+                          ]}
+                          tournamentData={tournamentData}
+                        />
+                      ) : null}
                     </div>
                     <div className="flex flex-row space-x-4 p-4">
                       {inviteData?.map((invite) => {
@@ -120,7 +123,6 @@ export default function TournamentView() {
             </div>
           </div>
         </div>
-      )}
     </>
   );
 }
@@ -128,77 +130,43 @@ export default function TournamentView() {
 function filterDivisions(divisions: Division[], dayFormat: string) {
   return divisions.filter((div) => {
     if (div.type == "MENS" || div.type == "WOMENS") {
-      if (dayFormat == "SAME_SEX_DOUBLES" || dayFormat == "SAME_SEX_SIXES" || dayFormat == "SAME_SEX_TRIPLES") {
+      if (
+        dayFormat == "SAME_SEX_DOUBLES" ||
+        dayFormat == "SAME_SEX_SIXES" ||
+        dayFormat == "SAME_SEX_TRIPLES"
+      ) {
         return true;
       }
     }
     if (div.type == "COED") {
-      if (dayFormat == "COED_DOUBLES" || dayFormat == "COED_SIXES" || dayFormat == "REVERSE_COED_DOUBLES" || dayFormat == "REVERSE_COED_QUADS") {
+      if (
+        dayFormat == "COED_DOUBLES" ||
+        dayFormat == "COED_SIXES" ||
+        dayFormat == "REVERSE_COED_DOUBLES" ||
+        dayFormat == "REVERSE_COED_QUADS"
+      ) {
         return true;
       }
     }
   });
 }
 
-type invitationCardProps = {
-  inviterId: string;
-  inviteDetails: TeamInvitation;
-  tournamentId: number
-};
 
-const InvitationCard = ({ inviterId, inviteDetails, tournamentId }: invitationCardProps) => {
-  const inviterData = trpc.user.getUser.useQuery({ inviterId: inviterId }).data;
-  const divisionData = trpc.tournament.getDivision.useQuery({ divisionId: inviteDetails.divisionId }).data;
-  const acceptInvitation = trpc.tournament.acceptTeamInvitation.useMutation()
-  const declineInvitation = trpc.tournament.declineTeamInvitation.useMutation()
-  return (
-    <div className="flex h-32 w-72 flex-col justify-between rounded-xl bg-white p-4">
-      <div className="flex flex-col ">
-        <p className="pb-2 text-center text-lg font-semibold">
-          {inviterData?.fullName}
-        </p>
-        <p className="text-xs text-[#515151]">
-          Invited you to play{" "}
-          <span className="font-bold capitalize">
-            {divisionData?.type.toLocaleLowerCase() + " " + divisionData?.name}
-          </span>{" "}
-          in this tournament
-        </p>
-      </div>
-      <div className="flex flex-row space-x-4">
-        <button
-          className="h-8 w-32 items-center justify-center rounded-xl bg-white py-2 px-4 text-sm hover:bg-green-700"
-          onClick={() => acceptInvitation.mutate({ teamInvitationId: inviteDetails.inviteId, inviterId: inviterId, tournamentId: tournamentId})}
-        >
-          {" "}
-          Accept
-        </button>
-        <button
-          className="h-8 w-32 items-center justify-center rounded-xl bg-white py-2 px-4 text-sm hover:bg-red-700"
-          onClick={() => declineInvitation.mutate({teamInvitationId: inviteDetails.inviteId})}
-        >
-          {" "}
-          Decline
-        </button>
-      </div>
-    </div>
-  );
-};
 
 type divAccordianProps = {
-  division: (Division & {
+  division: Division & {
     entries: (Team & {
       players: (UsersInTeam & {
         user: User;
       })[];
     })[];
-  });
+  };
 };
 
-const DivisionAccordian = ({division} : divAccordianProps) => {
+const DivisionAccordian = ({ division }: divAccordianProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDayOf, setIsDayOf] = useState(true);
-  console.log(division)
+  console.log(division);
 
   return (
     <div
@@ -300,261 +268,5 @@ const PoolTable = (props: any) => {
     </div>
   );
 };
-type SignupModalProps = {
-  setModalOpen: Dispatch<SetStateAction<boolean>>;
-  divisionsPerDay: Array<Division[]>;
-};
 
-function SignupModal({ setModalOpen, divisionsPerDay }: SignupModalProps) {
-  const router = useRouter();
-  const { tournamentId } = router.query;
-  const tId: number = parseInt(tournamentId as string);
-  const [daysToPlay, setDaysToPlay] = useState("1");
-  const [playerOneName, setPlayerOneName] = useState("");
-  const [playerTwoName, setPlayerTwoName] = useState("");
-  const [partnerOneSelection, setPartnerOneSelection] = useState("");
-  const [partnerTwoSelection, setPartnerTwoSelection] = useState("");
-  const [partnerOneDivisionSelection, setPartnerOneDivisionSelection] =
-    useState(0);
-  const [partnerTwoDivisionSelection, setPartnerTwoDivisionSelection] =
-    useState(0);
-  const { data } = trpc.tournament.getTopFiveParnterResults.useQuery(
-    { partner: playerOneName },
-    { enabled: !!playerOneName }
-  );
-  const { data: data2 } = trpc.tournament.getTopFiveParnterResults.useQuery(
-    { partner: playerTwoName },
-    { enabled: !!playerTwoName }
-  );
-  const submitTeamInvitation =
-    trpc.tournament.createTeamInvitation.useMutation();
 
-  return (
-    <div className="absolute inset-0 flex items-center justify-center bg-black/75">
-      <div className="flex w-fit flex-col space-y-4 rounded-lg bg-white p-8">
-        <p className="text-2xl font-semibold">Sign Up</p>
-        <div className="flex w-full flex-col space-y-2">
-          <label>Which day would you like to play?</label>
-          <select
-            name="type"
-            id="type"
-            className="border-2"
-            onChange={(e) => {
-              setDaysToPlay(e.target.value);
-              setPlayerOneName("");
-              setPlayerTwoName("");
-              setPartnerOneSelection("");
-              setPartnerTwoSelection("");
-              setPartnerOneDivisionSelection(0);
-              setPartnerTwoDivisionSelection(0);
-            }}
-          >
-            <option value={"1"}>Day One</option>
-            <option value={"2"}>Day Two</option>
-            <option value={"B"}>Both</option>
-          </select>
-          {daysToPlay === "B" ? (
-            <div className="flex flex-row space-x-8">
-              <div className="flex w-1/2 flex-col">
-                <label>Who is your partner for day one?</label>
-                <input
-                  type="text"
-                  className="border-b-2 border-black focus:outline-none"
-                  value={playerOneName}
-                  onChange={(e) => setPlayerOneName(e.target.value)}
-                ></input>
-                <div>
-                  <p>Partner Results</p>
-                  {data && (
-                    <div>
-                      {data.map((partner) => {
-                        return (
-                          <PartnerCard
-                            key={partner.id}
-                            partner={partner}
-                            setPartnerSelection={setPartnerOneSelection}
-                            partnerSelection={partnerOneSelection}
-                          />
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-                <DivisionSelector
-                  divisionSelections={divisionsPerDay[0]}
-                  divisionSelected={partnerOneDivisionSelection}
-                  setPartnerDivision={setPartnerOneDivisionSelection}
-                />
-              </div>
-              <div className="flex w-1/2 flex-col">
-                <label>Who is your partner for day two?</label>
-                <input
-                  type="text"
-                  className="border-b-2 border-black focus:outline-none"
-                  value={playerTwoName}
-                  onChange={(e) => setPlayerTwoName(e.target.value)}
-                ></input>
-                <div>
-                  <p>Partner Results</p>
-                  {data2 && (
-                    <div>
-                      {data2.map((partner) => {
-                        return (
-                          <PartnerCard
-                            key={partner.id}
-                            partner={partner}
-                            setPartnerSelection={setPartnerTwoSelection}
-                            partnerSelection={partnerTwoSelection}
-                          />
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-                <DivisionSelector
-                  divisionSelections={divisionsPerDay[1]}
-                  divisionSelected={partnerTwoDivisionSelection}
-                  setPartnerDivision={setPartnerTwoDivisionSelection}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col">
-              <label>Who is your partner for this day?</label>
-              <div className="flex flex-row space-x-2">
-                <input
-                  type="text"
-                  className="border-b-2 border-black focus:outline-none"
-                  value={playerOneName}
-                  onChange={(e) => setPlayerOneName(e.target.value)}
-                ></input>
-              </div>
-              <div>
-                <p>Partner Results</p>
-                {data && (
-                  <div className="flex flex-col space-y-2">
-                    {data.map((partner) => {
-                      return (
-                        <PartnerCard
-                          key={partner.id}
-                          partner={partner}
-                          setPartnerSelection={setPartnerOneSelection}
-                          partnerSelection={partnerOneSelection}
-                        />
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-              <DivisionSelector
-                divisionSelections={divisionsPerDay[0]}
-                divisionSelected={partnerOneDivisionSelection}
-                setPartnerDivision={setPartnerOneDivisionSelection}
-              />
-            </div>
-          )}
-        </div>
-        <div className="flex w-full justify-end space-x-2">
-          <button
-            onClick={() => {
-              partnerOneSelection !== ""
-                ? submitTeamInvitation.mutate({
-                    teammateId: partnerOneSelection,
-                    tournamentId: tId,
-                    divisionId: partnerOneDivisionSelection,
-                  })
-                : null;
-              partnerTwoSelection !== ""
-                ? submitTeamInvitation.mutate({
-                    teammateId: partnerTwoSelection,
-                    tournamentId: tId,
-                    divisionId: partnerTwoDivisionSelection,
-                  })
-                : null;
-              setModalOpen(false);
-            }}
-            className="h-10 w-28 rounded-3xl bg-green-500 p-2 text-xl font-semibold text-white hover:bg-green-600"
-          >
-            Submit
-          </button>
-          <button
-            onClick={() => setModalOpen(false)}
-            className="h-10 w-28 rounded-3xl bg-red-500 p-2 text-xl font-semibold text-white hover:bg-red-600"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-type PartnerCardProps = {
-  partner: User;
-  partnerSelection: string;
-  setPartnerSelection: React.Dispatch<React.SetStateAction<string>>;
-};
-
-const PartnerCard = (props: PartnerCardProps) => {
-  return (
-    <div className="flex flex-row space-x-2 rounded-lg bg-white p-4 drop-shadow-lg">
-      <p className="text-xl font-semibold">{props.partner.fullName}</p>
-      <button
-        onClick={() => {
-          if (props.partnerSelection === props.partner.id) {
-            props.setPartnerSelection("");
-          } else {
-            props.setPartnerSelection(props.partner.id);
-          }
-        }}
-      >
-        {props.partnerSelection === props.partner.id ? (
-          <div>
-            <img
-              src={"/icons/icons8-checked-checkbox-48.png"}
-              alt=""
-              className="h-14 w-14"
-            />
-          </div>
-        ) : (
-          <img
-            src={"/icons/icons8-unchecked-checkbox-50.png"}
-            alt=""
-            className="h-10 w-10"
-          />
-        )}
-      </button>
-    </div>
-  );
-};
-
-type DivisionSelectorProps = {
-  divisionSelections: Division[];
-  divisionSelected: number;
-  setPartnerDivision: React.Dispatch<React.SetStateAction<number>>;
-};
-
-const DivisionSelector = ({
-  divisionSelections,
-  divisionSelected,
-  setPartnerDivision,
-}: DivisionSelectorProps) => {
-  return (
-    <div className="flex flex-col ">
-      <label className="pb-2">What division are you playing in?</label>
-      <div className="flex flex-row flex-wrap gap-2">
-        {divisionSelections.map((divisionSelection) => {
-          return (
-            <div
-              key={divisionSelection.divisionId}
-              onClick={() => setPartnerDivision(divisionSelection.divisionId)}
-              className={"flex h-28 w-28 rounded-lg bg-white p-4 drop-shadow-lg text-xl text-center font-semibold items-center" + (divisionSelection.divisionId === divisionSelected ? " bg-green-500 text-white" : "")}
-            >
-              {divisionSelection.type + " - " + divisionSelection.name}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
