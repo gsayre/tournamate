@@ -6,6 +6,7 @@ import { tournamentRouter } from "./tournament/tournament";
 import { divisionRouter } from "./tournament/division";
 import { scheduleRouter } from "./tournament/schedule";
 import { bracketRouter } from "./tournament/bracket";
+import { comingSoonRouter } from "./comingsoon";
 
 export const appRouter = router({
   auth: authRouter,
@@ -14,6 +15,7 @@ export const appRouter = router({
   division: divisionRouter,
   schedule: scheduleRouter,
   bracket: bracketRouter,
+  comingSoon: comingSoonRouter
 });
 
 // export type definition of API
