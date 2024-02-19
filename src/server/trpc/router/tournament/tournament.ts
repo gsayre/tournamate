@@ -2028,7 +2028,7 @@ export const tournamentRouter = router({
   getDivisionsByType: protectedProcedure
     .input(z.object({ tournamentId: z.number(), type: z.string() }))
     .query(async ({ ctx, input }) => {
-      const divisions: Division[] = await ctx.prisma.division.findMany({
+      const divisions = await ctx.prisma.division.findMany({
         where: {
           tournamentId: input.tournamentId,
           type: input.type,
