@@ -5,11 +5,15 @@ import {
   Division,
   Format,
   Game,
+  Pool,
+  Prisma,
   Team,
   User,
   UsersInTeam,
 } from "@prisma/client";
+import { inferRouterOutputs } from "@trpc/server";
 import { useState } from "react";
+import { AppRouter } from "server/trpc/router/_app";
 import { trpc } from "utils/trpc";
 
 export type divAccordianProps = {
@@ -198,10 +202,12 @@ export const DivisionAccordian = ({
                   </div>
                 ) : null}
                 <div className="flex flex-row">
-                  <PoolSection
-                    poolsForDivision={poolsForDivision?.poolsForDivision}
-                    fullName={poolsForDivision?.fullName}
-                  />
+                  {poolsForDivision?.poolsForDivision && (
+                    <PoolSection
+                      poolsForDivision={poolsForDivision?.poolsForDivision}
+                      fullName={poolsForDivision?.fullName}
+                    />
+                  )}
                 </div>
                 <div>
                   {isDivisionFinished(poolsForDivision?.poolsForDivision) ? (
@@ -218,7 +224,13 @@ export const DivisionAccordian = ({
 };
 
 type EntrySectionProps = {
-  division: any;
+  division: Division & {
+    entries: (Team & {
+      players: (UsersInTeam & {
+        user: User;
+      })[];
+    })[];
+  };
 };
 
 const EntrySection = ({ division }: EntrySectionProps) => {
@@ -257,17 +269,72 @@ const EntrySection = ({ division }: EntrySectionProps) => {
   );
 };
 
+type RouterOutputs = inferRouterOutputs<AppRouter>;
+type InferredPoolsForDivisionType =
+  RouterOutputs["tournament"]["getPoolsByDivision"];
+type gamesPickType = Pick<
+  InferredPoolsForDivisionType["poolsForDivision"][number],
+  "games"
+>;
+type gamePickType = Pick<
+  gamesPickType["games"][number],
+  | "gameId"
+  | "numSets"
+  | "gameOneTeamOneScore"
+  | "gameOneTeamTwoScore"
+  | "gameOneScoreCap"
+  | "gameTwoTeamOneScore"
+  | "gameTwoTeamTwoScore"
+  | "gameTwoScoreCap"
+  | "gameThreeTeamOneScore"
+  | "gameThreeTeamTwoScore"
+  | "gameThreeScoreCap"
+  | "poolId"
+  | "teams"
+  | "referees"
+>;
 type PoolSectionProps = {
-  poolsForDivision: any;
+  poolsForDivision: Pool &
+    {
+      teams: (Team & {
+        players: (UsersInTeam & {
+          user: User;
+        })[];
+      })[];
+      games: Game &
+        {
+          teams: (Team & {
+            players: (UsersInTeam & {
+              user: User;
+            })[];
+          })[];
+          referees: Team & {
+            players: (UsersInTeam & {
+              user: User;
+            })[];
+          };
+        }[];
+    }[];
   fullName: string | undefined;
 };
 
 type CurrentGameT = Game & {
-  referees: Team;
-  players: Team[];
+  teams: (Team & {
+    players: (UsersInTeam & {
+      user: User;
+    })[];
+  })[];
+  referees: Team & {
+    players: (UsersInTeam & {
+      user: User;
+    })[];
+  };
 };
 
-const PoolSection = ({ poolsForDivision, fullName }: PoolSectionProps) => {
+const PoolSection = ({
+  poolsForDivision,
+  fullName,
+}: InferredPoolsForDivisionType) => {
   const finishGameMock = trpc.tournament.finishGameMock.useMutation();
   const utils = trpc.useContext();
 
@@ -287,9 +354,10 @@ const PoolSection = ({ poolsForDivision, fullName }: PoolSectionProps) => {
         {poolsWithSeeds &&
           fullName &&
           poolsWithSeeds.map((pool, i, arr) => {
-            let currentGame: CurrentGameT;
-            if (pool.games) {
-              currentGame = pool.games[isCurrentGame(pool.games)];
+            let currentGame: gamePickType;
+            let currGameIdx: number | undefined = isCurrentGame(pool.games);
+            if (pool.games && currGameIdx) {
+              currentGame = pool.games[currGameIdx];
             }
             const isLastGame =
               isCurrentGame(pool.games) === pool.games.length - 1;
@@ -308,39 +376,42 @@ const PoolSection = ({ poolsForDivision, fullName }: PoolSectionProps) => {
                   <div>
                     <button
                       onClick={() => {
-                        finishGameMock.mutate(
-                          {
-                            gameId: currentGame.gameId,
-                            numSets: currentGame.numSets,
-                            gameOneTeamOneScore:
-                              currentGame.gameOneTeamOneScore,
-                            gameOneTeamTwoScore:
-                              currentGame.gameOneTeamTwoScore,
-                            scoreCapGame1: currentGame.gameOneScoreCap,
-                            gameTwoTeamOneScore:
-                              currentGame.gameTwoTeamOneScore,
-                            gameTwoTeamTwoScore:
-                              currentGame.gameTwoTeamTwoScore,
-                            scoreCapGame2: currentGame.gameTwoScoreCap,
-                            gameThreeTeamOneScore:
-                              currentGame.gameThreeTeamOneScore,
-                            gameThreeTeamTwoScore:
-                              currentGame.gameThreeTeamTwoScore,
-                            scoreCapGame3: currentGame.gameThreeScoreCap,
-                            teamOneId: currentGame.teams[0].teamId,
-                            teamOneRating: currentGame.teams[0].Team.teamRating,
-                            teamTwoId: currentGame.teams[1].teamId,
-                            teamTwoRating: currentGame.teams[1].Team.teamRating,
-                            isLastGame: isLastGame,
-                            poolId: currentGame.poolId,
-                          },
-                          {
-                            onSuccess: () => {
-                              utils.tournament.getPoolsByDivision.invalidate();
+                        if (currentGame.poolId) {
+                          finishGameMock.mutate(
+                            {
+                              gameId: currentGame.gameId,
+                              numSets: currentGame.numSets,
+                              gameOneTeamOneScore:
+                                currentGame.gameOneTeamOneScore,
+                              gameOneTeamTwoScore:
+                                currentGame.gameOneTeamTwoScore,
+                              scoreCapGame1: currentGame.gameOneScoreCap,
+                              gameTwoTeamOneScore:
+                                currentGame.gameTwoTeamOneScore,
+                              gameTwoTeamTwoScore:
+                                currentGame.gameTwoTeamTwoScore,
+                              scoreCapGame2: currentGame.gameTwoScoreCap,
+                              gameThreeTeamOneScore:
+                                currentGame.gameThreeTeamOneScore,
+                              gameThreeTeamTwoScore:
+                                currentGame.gameThreeTeamTwoScore,
+                              scoreCapGame3: currentGame.gameThreeScoreCap,
+                              teamOneId: currentGame.teams[0].teamId,
+                              teamOneRating: currentGame.teams[0].Team.teamRating,
+                              teamTwoId: currentGame.teams[1].teamId,
+                              teamTwoRating: currentGame.teams[1].Team.teamRating,
+                              isLastGame: isLastGame,
+                              poolId: currentGame.poolId,
                             },
-                          },
-                        );
-                      }}
+                            {
+                              onSuccess: () => {
+                                utils.tournament.getPoolsByDivision.invalidate();
+                              },
+                            },
+                          );
+                        }
+                        }
+                        }
                       className="text-md rounded-lg border bg-orange-500 p-2"
                     >
                       Finish Next Game
@@ -454,6 +525,8 @@ const MyScheduleSection = ({ tournamentId }: MyScheduleSectionProps) => {
 type BracketSectionProps = {
   divisionId: number;
 };
+type InferredDivisionBracketType =
+  RouterOutputs["bracket"]["getBracketByDivision"];
 
 const BracketSection = ({ divisionId }: BracketSectionProps) => {
   const createBracket = trpc.bracket.createBracketSchedule.useMutation();
@@ -466,7 +539,7 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
   const numCols =
     divisionBraket && Math.ceil(Math.log2(divisionBraket.games.length));
   const numRows = numCols && Math.pow(2, numCols);
-  let divBracketWithBlanks =
+  let divBracketWithBlanks: InferredDivisionBracketType | null =
     divisionBraket?.games.length === numRows ? divisionBraket : null;
   if (numRows) {
     console.log(AddBlankGamesToBracket(divisionBraket, numRows));
@@ -496,7 +569,7 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
                     // const rowHeight = Math.pow(2, numCols - colToBeIn);
                     // const rowHeightStr = 'row-span-' + rowHeight;
                     return (
-                      <>
+                      <div key={game.gameId.toString() + colToBeIn.toString()}>
                         {colToBeIn === i && game ? (
                           <div className="flex w-72 flex-col border border-gray-300">
                             <div className="flex justify-between border-b border-gray-300 bg-slate-300 px-2 py-1 font-semibold">
@@ -625,7 +698,7 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
                             <p>null</p>
                           </div>
                         ) : null}
-                      </>
+                      </div>
                     );
                   })}
               </div>
@@ -648,7 +721,7 @@ const StandingsSection = ({ divisionId }: { divisionId: number }) => {
       <div className="mt-8">
         <div className="text-3xl font-semibold">Final Standings</div>
         <div className="mt-8 text-xl">Podium</div>
-        <div className="flex flex-row mt-2">
+        <div className="mt-2 flex flex-row">
           {finalStandings && (
             <div className=" flex flex-row items-end">
               <SmallPodium
@@ -661,7 +734,7 @@ const StandingsSection = ({ divisionId }: { divisionId: number }) => {
           )}
         </div>
         <div className="mt-8 text-xl">Other Standings</div>
-        <div className="flex flex-col mt-2">
+        <div className="mt-2 flex flex-col">
           {finalStandings &&
             finalStandings.finalStandings?.map((team, i) => {
               let standing = i < 7 ? 5 : null;
@@ -676,7 +749,7 @@ const StandingsSection = ({ divisionId }: { divisionId: number }) => {
                         return (
                           <div className="tracking-wider">
                             {player.user.fullName}
-                            {i===0 ? " & " : null }
+                            {i === 0 ? " & " : null}
                           </div>
                         );
                       })}
@@ -727,7 +800,7 @@ type SmallPodiumProps = {
 const SmallPodium = ({ teamOne, teamTwo }: SmallPodiumProps) => {
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col justify-center items-center">
+      <div className="flex flex-col items-center justify-center">
         {teamOne.players.map((player) => {
           return <div className="tracking-wider">{player.user.fullName}</div>;
         })}
@@ -802,29 +875,39 @@ const LargePodium = ({ team }: LargePodiumProps) => {
           return <div className="tracking-wider">{player.user.fullName}</div>;
         })}
       </div>
-    <div className="flex h-56 w-40 items-center justify-center bg-yellow-500 text-4xl font-bold text-white">
-      1<sup>st</sup>
+      <div className="flex h-56 w-40 items-center justify-center bg-yellow-500 text-4xl font-bold text-white">
+        1<sup>st</sup>
       </div>
     </div>
   );
+};
+
+type positionsToEnterMap = {
+  32: number[];
+  16: number[];
+  8: number[];
+  4: number[];
+  2: number[];
 };
 
 function AddBlankGamesToBracket(divisionBracket: any, numRows: number) {
   let positionToEnter: number = 0;
   let positionToEnterXtra = "High";
   let numGames: number = numRows / 2;
+  let numGamesAsStr: string = numGames.toString();
   let numGamesToEnter =
     numGames - divisionBracket.games.slice(numGames - 1).length;
   let divBracketGames = divisionBracket.games;
-  const positionsToEnter = {
-    "32": [0, 1, 2, 3, 4, 5, 6, 7],
-    "16": [0, 1, 2, 3, 4, 5, 6, 7],
-    "8": [7, 11, 13, 9, 10, 14, 12, 8],
-    "4": [3, 5, 5],
-    "2": [1],
+  const positionsToEnter: positionsToEnterMap = {
+    32: [0, 1, 2, 3, 4, 5, 6, 7],
+    16: [0, 1, 2, 3, 4, 5, 6, 7],
+    8: [7, 11, 13, 9, 10, 14, 12, 8],
+    4: [3, 5, 5],
+    2: [1],
   };
   if (numGames) {
-    const positionsArray = positionsToEnter[numGames.toString()];
+    const positionsArray =
+      positionsToEnter[numGames as keyof positionsToEnterMap];
     for (let i = 0; i < positionsArray.length; i++) {
       if (numGamesToEnter > 0) {
         divBracketGames.splice(positionsArray[i], 0, null);
