@@ -8,7 +8,7 @@ export const ComingSoon = () => {
   const addEmailToSubscribers = trpc.comingSoon.subscribeToUpdates.useMutation()
   const [email, setEmail] = useState("")
   return (
-    <main className="flex flex-col h-screen w-screen bg-black">
+    <main className="flex flex-col h-screen w-screen bg-black overflow-clip">
       <div className="w-full p-4 ml-6 flex flex-row">
       <Image src={'/images/WhiteLogo.png'} alt="Tournamate Logo" width={56} height={56}/>
       <p className="text-white tracking-widest justify-center items-center h-full flex ml-2 text-2xl">TournaMate</p>

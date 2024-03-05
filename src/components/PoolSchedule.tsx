@@ -23,26 +23,25 @@ export const PoolSchedule = ({
   const utils = trpc.useContext();
   const addPointMock = trpc.tournament.addPointToGameMock.useMutation();
   const finishGameMock = trpc.tournament.finishGameMock.useMutation();
-  const addPoint = trpc.tournament.addPointToGame.useMutation();
 
   return (
     <div>
       <div>
         {poolSchedule &&
-          poolSchedule[0].games.map((game, i, arr) => {
-            let teamOneId = game.teams[0].teamId;
-            let teamTwoId = game.teams[1].teamId;
-            let player1: string | undefined =
+          poolSchedule[0].games.map((game, i: number, arr) => {
+            const teamOneId = game.teams[0].teamId;
+            const teamTwoId = game.teams[1].teamId;
+            const player1: string | undefined =
               game.teams[0].Team.players[0].user.fullName;
-            let player2: string | undefined =
+            const player2: string | undefined =
               game.teams[0].Team.players[1].user.fullName;
-            let player3: string | undefined =
+            const player3: string | undefined =
               game.teams[1].Team.players[0].user.fullName;
-            let player4: string | undefined =
+            const player4: string | undefined =
               game.teams[1].Team.players[1]?.user.fullName;
-            let ref1: string | undefined =
+            const ref1: string | undefined =
               game.referees.players[0]?.user.fullName;
-            let ref2: string | undefined =
+            const ref2: string | undefined =
               game.referees.players[1]?.user.fullName;
             const isLastGame = isCurrentGame(arr) === arr.length - 1;
             console.log(isLastGame);
@@ -200,6 +199,8 @@ export const PoolSchedule = ({
                               teamTwoId: teamTwoId,
                               isLastGame: isLastGame,
                               poolId: game.poolId,
+                              teamOneRating: game.teams[0].teamRating,
+                              teamTwoRating: game.teams[1].teamRating,
                             },
                             {
                               onSuccess: () => {

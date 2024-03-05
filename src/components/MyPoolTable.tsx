@@ -1,6 +1,6 @@
+import { Pool, Team, User, UsersInTeam } from "@prisma/client";
 import { amIInTeam } from "utils/lib/am-i-in-utils";
 import { getMyPoolReturnType } from "./Admin/DivisionAccordian";
-import { Pool, Team, User, UsersInTeam } from "@prisma/client";
 
 type MyPoolT = Pool & {
   teams: Pick<Team, "poolWins" | "poolLosses" | "teamRating"> &
@@ -13,8 +13,10 @@ type MyPoolT = Pool & {
     }[];
 };
 
+
+
 type OtherPoolTableProps = {
-  pool: MyPoolT;
+  pool: getMyPoolReturnType;
   poolNumber: number;
   isMyPool: boolean;
   currentUserName: string;
@@ -30,6 +32,7 @@ export const MyPoolTable = ({
   numBreaking,
   hasWildcards,
 }: OtherPoolTableProps) => {
+  const myPool = pool ? pool.myPool[0] : null
   return (
     <>
       <table className="border-seperate border-none">
@@ -60,7 +63,6 @@ export const MyPoolTable = ({
         </tr>
         {pool &&
           pool[0]?.teams.sort(compareFunction).map((team, i) => {
-            console.log(team);
             return (
               <tr
                 key={i}
