@@ -1,15 +1,25 @@
-import { FakeEntriesTeam, FakeEntriesTeamArr } from "../utils/types/team";
-import { Dispatch, SetStateAction, useState } from "react";
 import { amIInTeam } from "utils/lib/am-i-in-utils";
-import { trpc } from "utils/trpc";
+import { getMyPoolReturnType } from "./Admin/DivisionAccordian";
+import { Pool, Team, User, UsersInTeam } from "@prisma/client";
+
+type MyPoolT = Pool & {
+  teams: Pick<Team, "poolWins" | "poolLosses" | "teamRating"> &
+    {
+      players: UsersInTeam &
+        {
+          user: User;
+        }[];
+      seed: number;
+    }[];
+};
 
 type OtherPoolTableProps = {
-  pool: any;
+  pool: MyPoolT;
   poolNumber: number;
   isMyPool: boolean;
   currentUserName: string;
   numBreaking: number;
-  hasWildcards: boolean
+  hasWildcards: boolean;
 };
 
 export const MyPoolTable = ({
@@ -18,9 +28,8 @@ export const MyPoolTable = ({
   isMyPool,
   currentUserName,
   numBreaking,
-  hasWildcards
+  hasWildcards,
 }: OtherPoolTableProps) => {
-
   return (
     <>
       <table className="border-seperate border-none">
@@ -101,6 +110,6 @@ export const MyPoolTable = ({
   );
 };
 
-function compareFunction(a: any, b:any) {
-  return b.poolWins - a.poolWins 
+function compareFunction(a: any, b: any) {
+  return b.poolWins - a.poolWins;
 }

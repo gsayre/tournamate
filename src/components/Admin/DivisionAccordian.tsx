@@ -465,12 +465,13 @@ export type getMyPoolReturnType =
     }
   | undefined;
 
+
 const MyPoolSection = ({
   divisionId,
   numBreaking,
   hasWildcards,
 }: MyPoolSectionProps) => {
-  const myPool: getMyPoolReturnType = trpc.tournament.getMyPool.useQuery(
+  const myPool = trpc.tournament.getMyPool.useQuery(
     {},
   ).data;
   const poolWithSeeds = myPool?.myPool;
@@ -486,8 +487,8 @@ const MyPoolSection = ({
       <p className=" text-lg">
         isFinished: {myPool?.myPool[0].isFinished ? "True" : "False"}
       </p>
-      {myPool && myPool.myPool && myPool.firstName && myPool.lastName ? (
-        <>
+      {myPool && myPool.myPool && myPool.firstName && myPool.lastName && poolWithSeeds ? (
+        <div>
           <MyPoolTable
             pool={poolWithSeeds}
             poolNumber={1}
@@ -496,7 +497,7 @@ const MyPoolSection = ({
             numBreaking={numBreaking}
             hasWildcards={hasWildcards}
           />
-        </>
+        </div>
       ) : (
         <div>Loading</div>
       )}
