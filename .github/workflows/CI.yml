@@ -56,7 +56,7 @@ jobs:
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
       - run: echo "📦 Dependencies have been installed."
       - name: Build with Next.js
-        run: ${{ steps.detect-package-manager.outputs.runner }} next build
+        run: ${{ steps.detect-package-manager.outputs.manager}} run build
       - run: echo "🏗️ Next.js has built the project."
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
