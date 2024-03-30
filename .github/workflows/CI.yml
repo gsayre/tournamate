@@ -12,10 +12,8 @@ jobs:
   CI:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - name: Checkout
         uses: actions/checkout@v4
-      - run: echo "🔧 The repository has been cloned to the runner."
       - name: Detect package manager
         id: detect-package-manager
         run: |
@@ -33,13 +31,11 @@ jobs:
             echo "Unable to determine package manager"
             exit 1
           fi
-      - run: echo "Package mangaer is ${{ steps.detect-package-manager.outputs.manager }}"
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: ${{ steps.detect-package-manager.outputs.manager }}
-      - run: echo "🚀 Node.js has been set up."
       - name: Restore cache
         uses: actions/cache@v4
         with:
@@ -51,19 +47,15 @@ jobs:
             # If source files changed but packages didn't, rebuild from a prior cache.
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
-      - run: echo "Cache has been restored "
       - name: Install dependencies
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
-      - run: echo "📦 Dependencies have been installed."
       - name: Build with Next.js
         run: ${{ steps.detect-package-manager.outputs.manager}} run build
         env:
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      - run: echo "🏗️ Next.js has built the project."
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./out
-      - run: echo "🚚 The artifact has been uploaded."
