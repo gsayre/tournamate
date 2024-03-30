@@ -1,10 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
 import { useAuth } from "@clerk/nextjs";
-import type { NextPage } from "next";
+import type { GetServerSidePropsContext, NextPage } from "next";
 import TopBar from "../../components/TopBar";
 
-export async function getServerSideProps(context: any) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { userId } = getAuth(context.req);
 
   if (!userId) {

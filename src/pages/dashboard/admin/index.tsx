@@ -6,8 +6,9 @@ import { Format, Tournament, Type } from "@prisma/client";
 import Link from "next/link";
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
 import { useAuth } from "@clerk/nextjs";
+import type { GetServerSidePropsContext } from "next";
 
-export async function getServerSideProps(context: any) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { userId } = getAuth(context.req);
 
   if (!userId) {
@@ -190,7 +191,6 @@ function isNotPastCurrentDate(tournament: Tournament) {
 
 const TournamentDirectorApplication = () => {
   const [formContent, setFormContent] = useState<string>("");
-  const userData = trpc.user.getUserRoles.useQuery();
   const submitTDRequest =
     trpc.user.createTournamentDirectorRequest.useMutation();
   const { userId } = useAuth();
