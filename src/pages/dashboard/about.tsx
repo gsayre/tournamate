@@ -1,7 +1,8 @@
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
 import TopBar from "../../components/TopBar";
+import { GetServerSidePropsContext} from "next";
 
-export async function getServerSideProps(context: any) {
+export async function getServerSideProps(context: GetServerSidePropsContext ) {
   const { userId } = getAuth(context.req);
 
   if (!userId) {

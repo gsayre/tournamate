@@ -20,7 +20,7 @@ export const PoolSchedule = ({
 }: PoolScheduleProps) => {
   const { user } = useUser();
 
-  const utils = trpc.useContext();
+  const utils = trpc.useUtils();
   const addPointMock = trpc.tournament.addPointToGameMock.useMutation();
   const finishGameMock = trpc.tournament.finishGameMock.useMutation();
 

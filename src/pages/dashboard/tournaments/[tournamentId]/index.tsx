@@ -1,20 +1,20 @@
 /* eslint-disable @next/next/no-img-element */
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
+import { InvitationCard } from "@components/InvitationCard";
 import { SignupModal } from "@components/SignupModal";
 import {
   Division,
   Team,
-  TeamInvitation,
   User,
-  UsersInTeam,
+  UsersInTeam
 } from "@prisma/client";
+import { GetServerSidePropsContext } from "next";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import TopBar from "../../../../components/TopBar";
 import { trpc } from "../../../../utils/trpc";
-import { InvitationCard } from "@components/InvitationCard";
 
-export async function getServerSideProps(context: any) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { userId } = getAuth(context.req);
 
   if (!userId) {

@@ -6,8 +6,9 @@ import { Format, Tournament, Type } from "@prisma/client";
 import Link from "next/link";
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
 import { useAuth } from "@clerk/nextjs";
+import { GetServerSidePropsContext } from "next";
 
-export async function getServerSideProps(context: any) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { userId } = getAuth(context.req);
 
   if (!userId) {

@@ -105,28 +105,20 @@ export default function RefView() {
         gameAndScore?.teams[1].Team.players ? (
           <>
             <ScoreCard
-              gameId={gameAndScore.gameId}
               score={teamOneScore}
               teamOne={[teamOnePlayerOne, teamOnePlayerTwo]}
-              teamOneId={gameAndScore.teams[0].teamId}
               teamTwo={[teamTwoPlayerOne, teamTwoPlayerTwo]}
-              teamTwoId={gameAndScore.teams[1].teamId}
               teamNum={1}
-              currentSet={gameAndScore.currentSet}
               explanationStep={explanationStep}
               setExplanationStep={setExplanationStep}
               pointData={pointData}
               setPointData={setPointData}
             />
             <ScoreCard
-              gameId={gameAndScore.gameId}
               score={teamTwoScore}
               teamOne={[teamOnePlayerOne, teamOnePlayerTwo]}
-              teamOneId={gameAndScore.teams[0].teamId}
               teamTwo={[teamTwoPlayerOne, teamTwoPlayerTwo]}
-              teamTwoId={gameAndScore.teams[1].teamId}
               teamNum={2}
-              currentSet={gameAndScore.currentSet}
               explanationStep={explanationStep}
               setExplanationStep={setExplanationStep}
               pointData={pointData}
@@ -159,12 +151,10 @@ export default function RefView() {
                     scoreCap={scoreCap}
             pointData={pointData}
             setPointData={setPointData}
-            teamOneId={gameAndScore.teams[0].teamId}
             teamOne={[
               { name: teamOnePlayerOne, id: teamOnePlayerOneId },
               { name: teamOnePlayerTwo, id: teamOnePlayerTwoId },
             ]}
-            teamTwoId={gameAndScore.teams[1].teamId}
             teamTwo={[
               { name: teamTwoPlayerOne, id: teamTwoPlayerOneId },
               { name: teamTwoPlayerTwo, id: teamTwoPlayerTwoId },
@@ -177,14 +167,10 @@ export default function RefView() {
 }
 
 type ScoreCardProps = {
-  gameId: number;
   score: number | null;
-  teamOneId: number;
   teamOne: string[];
-  teamTwoId: number;
   teamTwo: string[];
   teamNum: number;
-  currentSet: number;
   explanationStep: number;
   setExplanationStep: React.Dispatch<React.SetStateAction<number>>;
   pointData: PointData;
@@ -192,21 +178,15 @@ type ScoreCardProps = {
 };
 
 function ScoreCard({
-  gameId,
   score,
-  currentSet,
   teamNum,
   teamOne,
-  teamOneId,
   teamTwo,
-  teamTwoId,
   explanationStep,
   setExplanationStep,
   pointData,
   setPointData,
 }: ScoreCardProps) {
-  const addPointToGame = trpc.tournament.addPointToGame.useMutation();
-  const teamToPass: number = teamNum === 1 ? teamOneId : teamTwoId;
   return (
     <div
       className={`${
@@ -374,9 +354,7 @@ type PointExplanationThreeProps = {
   teamTwoScore: number
   scoreCap: number
   currentSet: number;
-  teamOneId: number;
   teamOne: Array<{ name: string; id: string }>;
-  teamTwoId: number;
   teamTwo: Array<{ name: string; id: string }>;
   setExplanationStep: React.Dispatch<React.SetStateAction<number>>;
   pointData: PointData;
@@ -389,9 +367,7 @@ function PointExplanationThree({
   teamTwoScore,
   scoreCap,
   currentSet,
-  teamOneId,
   teamOne,
-  teamTwoId,
   teamTwo,
   setExplanationStep,
   pointData,
