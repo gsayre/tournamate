@@ -39,7 +39,6 @@ export default function TournamentView() {
     tournamentId: tId,
   }).data;
   const inviteData = trpc.tournament.getTeamInvitations.useQuery().data;
-  const [modalOpen, setModalOpen] = useState(false);
   let firstDayDivisions;
   let secondDayDivisions;
   if (
@@ -257,7 +256,7 @@ const DivisionAccordian = ({ division }: divAccordianProps) => {
   );
 };
 
-const PoolTable = (props: any) => {
+const PoolTable = () => {
   return (
     <div className="flex h-full w-full flex-col rounded-xl bg-slate-200">
       <div className="w-full rounded-t-xl bg-green-500 text-center">Header</div>

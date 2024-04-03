@@ -1,4 +1,4 @@
-import { router, protectedProcedure, publicProcedure } from "../trpc";
+import { router, protectedProcedure } from "../trpc";
 import { z } from "zod";
 
 export const userRouter = router({
@@ -52,6 +52,7 @@ export const userRouter = router({
       await ctx.prisma.tournamentDirectorRequest.delete({
         where: { profileId: input.userId },
       });
+      return {tdRequest}
     }),
   denyTournamentDirectorRequest: protectedProcedure
     .input(z.object({ userId: z.string() }))
@@ -63,6 +64,7 @@ export const userRouter = router({
       await ctx.prisma.tournamentDirectorRequest.delete({
         where: { profileId: input.userId },
       });
+      return {tdRequest}
     }),
   createTournamentDirectorRequest: protectedProcedure
     .input(z.object({ userId: z.string(), content: z.string() }))
