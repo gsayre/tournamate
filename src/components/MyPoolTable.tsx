@@ -1,22 +1,13 @@
-import { Pool, Team, User, UsersInTeam } from "@prisma/client";
 import { amIInTeam } from "utils/lib/am-i-in-utils";
 import { getMyPoolReturnType } from "./Admin/DivisionAccordian";
+import { AppRouter } from "server/trpc/router/_app";
+import { inferRouterOutputs } from "@trpc/server";
 
-type MyPoolT = Pool & {
-  teams: Pick<Team, "poolWins" | "poolLosses" | "teamRating"> &
-    {
-      players: UsersInTeam &
-        {
-          user: User;
-        }[];
-      seed: number;
-    }[];
-};
-
-
+type RouterOutputs = inferRouterOutputs<AppRouter>;
+type InferredGetMyPoolType = RouterOutputs["tournament"]["getMyPool"];
 
 type OtherPoolTableProps = {
-  pool: getMyPoolReturnType;
+  pool: InferredGetMyPoolType;
   poolNumber: number;
   isMyPool: boolean;
   currentUserName: string;
@@ -32,7 +23,7 @@ export const MyPoolTable = ({
   numBreaking,
   hasWildcards,
 }: OtherPoolTableProps) => {
-  const myPool = pool ? pool.myPool[0] : null
+  const myPool = pool?.myPool ? pool.myPool[0] : null;
   return (
     <>
       <table className="border-seperate border-none">
@@ -62,7 +53,7 @@ export const MyPoolTable = ({
           </td>
         </tr>
         {pool &&
-          pool[0]?.teams.sort(compareFunction).map((team, i) => {
+          myPool?.teams.sort(compareFunction).map((team, i) => {
             return (
               <tr
                 key={i}
@@ -89,11 +80,11 @@ export const MyPoolTable = ({
                     return (
                       <>
                         {j == arr.length - 1 ? (
-                          <span key={player.userId}>
+                          <span key={player.user.id}>
                             {player.user.fullName}
                           </span>
                         ) : (
-                          <span key={player.userId}>
+                          <span key={player.user.id}>
                             {player.user.fullName} {" - "}
                           </span>
                         )}

@@ -4,10 +4,10 @@ import { DivisionPannel } from "@components/DivisionPannel";
 import { MyPoolTable } from "@components/MyPoolTable";
 import { PoolSchedule } from "@components/PoolSchedule";
 import { useRouter } from "next/router";
-import { useState } from "react";
-import TopBar from "../../../../components/TopBar";
-import { trpc } from "../../../../utils/trpc";
-import { FakeEntriesTeamArr } from "../../../../utils/types/team";
+import { useEffect, useState } from "react";
+import TopBar from "@components/TopBar";
+import { trpc } from "@utils/trpc";
+import { FakeEntriesTeamArr } from "@utils/types/team";
 
 export async function getServerSideProps(context: any) {
   const { userId } = getAuth(context.req);
@@ -38,11 +38,9 @@ export default function AdminTournamentView() {
   const tournamentData = trpc.tournament.getTournament.useQuery({
     id: tId,
   }).data;
+  const getMyPoolOutput = trpc.tournament.getMyPool.useQuery({ }).data
   const startTournamentForDay =
     trpc.tournament.startTournamentDay.useMutation();
-  const [fakeEntriesToUse, setFakeEntriesToUse] = useState<FakeEntriesTeamArr>(
-    [],
-  );
   const [pools, setPools] = useState<Array<FakeEntriesTeamArr>>([]);
 
   return (
@@ -75,29 +73,29 @@ export default function AdminTournamentView() {
                 >
                   Start Tournament Day
                 </button>
-                {tournamentData?.tournament.dayOneStarted ? (
+                {tournamentData?.tournament.dayOneStarted && getMyPoolOutput?.myPool ? (
                   <div className="flex w-full flex-col">
                     <div className="flex w-full flex-row space-x-4 pb-8 pt-4">
                       <div className="flex w-1/2 flex-col">
                         <p className="text-3xl">My Pool:</p>
                         <div className="flex justify-center py-2">
-                          <MyPoolTable
+                          {/* <MyPoolTable
                             poolNumber={1}
-                            pools={pools}
-                            setPools={setPools}
+                            pool={getMyPoolOutput}
                             isMyPool={true}
                             currentUserName={currentUserName as string}
-                          />
+                            hasWildcards={getMyPoolOutput.myPool.}
+                          /> */}
                         </div>
                       </div>
                       <div className="flex w-1/2 flex-col">
                         <p className="text-3xl">Pool Schedule:</p>
                         <div>
-                          <PoolSchedule
-                            pool={myPool}
+                          {/* <PoolSchedule
+                            pool={getMyPoolOutput}
                             currentUserName={currentUserName as string}
                             tournamentId={tId}
-                          />
+                          /> */}
                         </div>
                       </div>
                     </div>
@@ -108,14 +106,14 @@ export default function AdminTournamentView() {
                           return (
                             <div className="flex w-80 flex-col" key={index}>
                               <p className="pb-2 text-xl">Pool {index + 1}</p>
-                              <MyPoolTable
+                              {/* <MyPoolTable
                                 pool={pool}
                                 poolNumber={index + 1}
                                 pools={arr}
                                 setPools={setPools}
                                 isMyPool={false}
                                 currentUserName={currentUserName as string}
-                              />
+                              /> */}
                             </div>
                           );
                         })}
@@ -148,7 +146,7 @@ export default function AdminTournamentView() {
                   {tournamentData.tournament.dayTwoStarted ? (
                     <div className="flex flex-col">
                       <div className="flex flex-row gap-4">
-                        {myPool !== undefined && (
+                        {/* {myPool !== undefined && (
                           <div>
                             <div className="flex flex-col">
                               <p>My Pool</p>
@@ -172,7 +170,7 @@ export default function AdminTournamentView() {
                               </div>
                             </div>
                           </div>
-                        )}
+                        )} */}
                       </div>
                       <div>
                         <p>Other Pools</p>

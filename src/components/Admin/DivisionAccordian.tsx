@@ -6,13 +6,13 @@ import {
   Format,
   Game,
   Pool,
-  Prisma,
   Team,
   User,
   UsersInTeam,
 } from "@prisma/client";
 import { inferRouterOutputs } from "@trpc/server";
 import { useState } from "react";
+import { InferredGetMyPoolType } from "server/trpc/exportedTypes";
 import { AppRouter } from "server/trpc/router/_app";
 import { trpc } from "utils/trpc";
 
@@ -293,6 +293,7 @@ type gamePickType = Pick<
   | "teams"
   | "referees"
 >;
+
 type PoolSectionProps = {
   poolsForDivision: Pool &
     {
@@ -397,9 +398,11 @@ const PoolSection = ({
                                 currentGame.gameThreeTeamTwoScore,
                               scoreCapGame3: currentGame.gameThreeScoreCap,
                               teamOneId: currentGame.teams[0].teamId,
-                              teamOneRating: currentGame.teams[0].Team.teamRating,
+                              teamOneRating:
+                                currentGame.teams[0].Team.teamRating,
                               teamTwoId: currentGame.teams[1].teamId,
-                              teamTwoRating: currentGame.teams[1].Team.teamRating,
+                              teamTwoRating:
+                                currentGame.teams[1].Team.teamRating,
                               isLastGame: isLastGame,
                               poolId: currentGame.poolId,
                             },
@@ -410,8 +413,7 @@ const PoolSection = ({
                             },
                           );
                         }
-                        }
-                        }
+                      }}
                       className="text-md rounded-lg border bg-orange-500 p-2"
                     >
                       Finish Next Game
@@ -465,15 +467,12 @@ export type getMyPoolReturnType =
     }
   | undefined;
 
-
 const MyPoolSection = ({
   divisionId,
   numBreaking,
   hasWildcards,
 }: MyPoolSectionProps) => {
-  const myPool = trpc.tournament.getMyPool.useQuery(
-    {},
-  ).data;
+  const myPool = trpc.tournament.getMyPool.useQuery({}).data;
   const poolWithSeeds = myPool?.myPool;
   if (poolWithSeeds) {
     poolWithSeeds[0].teams = poolWithSeeds[0].teams.map((team, i) => ({
@@ -487,7 +486,11 @@ const MyPoolSection = ({
       <p className=" text-lg">
         isFinished: {myPool?.myPool[0].isFinished ? "True" : "False"}
       </p>
-      {myPool && myPool.myPool && myPool.firstName && myPool.lastName && poolWithSeeds ? (
+      {myPool &&
+      myPool.myPool &&
+      myPool.firstName &&
+      myPool.lastName &&
+      poolWithSeeds ? (
         <div>
           <MyPoolTable
             pool={poolWithSeeds}
@@ -514,11 +517,9 @@ const MyScheduleSection = ({ tournamentId }: MyScheduleSectionProps) => {
   return (
     <div>
       <p className="pb-2 text-2xl">My Schedule</p>
-      <PoolSchedule
-        poolSchedule={mySchedule?.mySchedule}
-        currentUserName={mySchedule?.firstName + " " + mySchedule?.lastName}
-        tournamentId={tournamentId}
-      />
+      {mySchedule && (
+        <PoolSchedule poolSchedule={mySchedule} tournamentId={tournamentId} />
+      )}
     </div>
   );
 };

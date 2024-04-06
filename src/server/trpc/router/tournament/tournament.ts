@@ -137,7 +137,7 @@ export const tournamentRouter = router({
       },
     });
     return {
-      myPool: myPool,
+      myPool: myPool[0],
       firstName: ctx.user.firstName,
       lastName: ctx.user.lastName,
       isFinished: myPool[0].isFinished,
