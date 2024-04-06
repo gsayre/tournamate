@@ -240,7 +240,9 @@ export const PoolSchedule = ({
   );
 };
 
-export function isCurrentGame(gameArray: any): number | undefined {
+type gameArrayType = InferredGetMyScheduleType["mySchedule"][0]["games"];
+
+export function isCurrentGame(gameArray: gameArrayType): number | undefined {
   for (let i = 0; i < gameArray.length; i++) {
     if (!gameArray[i].gameFinished) {
       return i;
