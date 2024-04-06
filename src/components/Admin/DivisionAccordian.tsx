@@ -11,19 +11,13 @@ import {
   UsersInTeam,
 } from "@prisma/client";
 import { inferRouterOutputs } from "@trpc/server";
+import Image from "next/image";
 import { useState } from "react";
-import { InferredGetMyPoolType } from "server/trpc/exportedTypes";
 import { AppRouter } from "server/trpc/router/_app";
 import { trpc } from "utils/trpc";
 
 export type divAccordianProps = {
-  division: Division & {
-    entries: (Team & {
-      players: (UsersInTeam & {
-        user: User;
-      })[];
-    })[];
-  };
+  division: InferredDivisionSingle;
   tournamentId: number;
   divisionType: Format;
   divisionSex?: Gender; //yes please
@@ -31,13 +25,25 @@ export type divAccordianProps = {
 
 type Gender = "MENS" | "WOMENS" | undefined;
 
+type RouterOutputs = inferRouterOutputs<AppRouter>;
+type InferredPoolsForDivisionType =
+  RouterOutputs["tournament"]["getPoolsByDivision"];
+type gamesPickType = Pick<
+  InferredPoolsForDivisionType["poolsForDivision"][number],
+  "games"
+  >;
+type InferredDivisionByType = RouterOutputs["tournament"]["getDivisionsByType"];
+type ArrayElement<ArrayType extends readonly unknown[]> =
+  ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
+type InferredDivisionSingle = ArrayElement<InferredDivisionByType>;
+
 export const DivisionAccordian = ({
   division,
   tournamentId,
   divisionType,
   divisionSex,
 }: divAccordianProps) => {
-  const utils = trpc.useContext();
+  const utils = trpc.useUtils();
   const addUserToDivision = trpc.tournament.mockTournamentEntries.useMutation();
   const updatePools = trpc.tournament.updatePool.useMutation();
   const createPoolSchedule = trpc.tournament.createPoolSchedule.useMutation();
@@ -52,7 +58,7 @@ export const DivisionAccordian = ({
     <div className="flex h-fit w-5/6 flex-col text-white odd:bg-[#5BA6A1] even:bg-[#374C64]">
       <div className="flex h-fit flex-row items-center space-x-4 p-2">
         {isOpen ? (
-          <img
+          <Image
             src="/icons/icons8-triangle-arrow-24.png"
             alt="arrow"
             className="h-4 w-4 fill-white"
@@ -61,7 +67,7 @@ export const DivisionAccordian = ({
             }}
           />
         ) : (
-          <img
+          <Image
             src="/icons/icons8-triangle-arrow-24.png"
             alt="arrow"
             className="h-4 w-4 -rotate-90"
@@ -209,11 +215,13 @@ export const DivisionAccordian = ({
                     />
                   )}
                 </div>
-                <div>
-                  {isDivisionFinished(poolsForDivision?.poolsForDivision) ? (
-                    <BracketSection divisionId={division.divisionId} />
-                  ) : null}
-                </div>
+                {poolsForDivision && (
+                  <div>
+                    {isDivisionFinished(poolsForDivision) ? (
+                      <BracketSection divisionId={division.divisionId} />
+                    ) : null}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -269,13 +277,7 @@ const EntrySection = ({ division }: EntrySectionProps) => {
   );
 };
 
-type RouterOutputs = inferRouterOutputs<AppRouter>;
-type InferredPoolsForDivisionType =
-  RouterOutputs["tournament"]["getPoolsByDivision"];
-type gamesPickType = Pick<
-  InferredPoolsForDivisionType["poolsForDivision"][number],
-  "games"
->;
+
 type gamePickType = Pick<
   gamesPickType["games"][number],
   | "gameId"
@@ -293,44 +295,6 @@ type gamePickType = Pick<
   | "teams"
   | "referees"
 >;
-
-type PoolSectionProps = {
-  poolsForDivision: Pool &
-    {
-      teams: (Team & {
-        players: (UsersInTeam & {
-          user: User;
-        })[];
-      })[];
-      games: Game &
-        {
-          teams: (Team & {
-            players: (UsersInTeam & {
-              user: User;
-            })[];
-          })[];
-          referees: Team & {
-            players: (UsersInTeam & {
-              user: User;
-            })[];
-          };
-        }[];
-    }[];
-  fullName: string | undefined;
-};
-
-type CurrentGameT = Game & {
-  teams: (Team & {
-    players: (UsersInTeam & {
-      user: User;
-    })[];
-  })[];
-  referees: Team & {
-    players: (UsersInTeam & {
-      user: User;
-    })[];
-  };
-};
 
 const PoolSection = ({
   poolsForDivision,
@@ -436,7 +400,6 @@ const PoolSection = ({
 };
 
 type MyPoolSectionProps = {
-  divisionId: number;
   numBreaking: number;
   hasWildcards: boolean;
 };
@@ -468,7 +431,6 @@ export type getMyPoolReturnType =
   | undefined;
 
 const MyPoolSection = ({
-  divisionId,
   numBreaking,
   hasWildcards,
 }: MyPoolSectionProps) => {
@@ -541,7 +503,7 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
   const numCols =
     divisionBraket && Math.ceil(Math.log2(divisionBraket.games.length));
   const numRows = numCols && Math.pow(2, numCols);
-  let divBracketWithBlanks: InferredDivisionBracketType | null =
+  const divBracketWithBlanks: InferredDivisionBracketType | undefined =
     divisionBraket?.games.length === numRows ? divisionBraket : null;
   if (numRows) {
     console.log(AddBlankGamesToBracket(divisionBraket, numRows));
@@ -563,7 +525,7 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
         {numCols &&
           [...Array(numCols)].map((x, i) => {
             return (
-              <div className="flex flex-col items-center justify-around gap-4 ">
+              <div className="flex flex-col items-center justify-around gap-4 " key={i}>
                 {divisionBraket &&
                   divisionBraket.games.map((game, j) => {
                     console.log("game", game);
@@ -573,7 +535,7 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
                     return (
                       <div key={game.gameId.toString() + colToBeIn.toString()}>
                         {colToBeIn === i && game ? (
-                          <div className="flex w-72 flex-col border border-gray-300">
+                          <div className="flex w-72 flex-col border border-gray-300" key={game.gameId + "-" + j }>
                             <div className="flex justify-between border-b border-gray-300 bg-slate-300 px-2 py-1 font-semibold">
                               <div className="flex">Game {game.gameId}</div>
                               <div className="mr-2 flex gap-2">
@@ -627,7 +589,7 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
                             <div className="flex h-36 w-full flex-col p-2">
                               {game.teams.map((team, k) => {
                                 return (
-                                  <div className="flex h-full flex-col ">
+                                  <div className="flex h-full flex-col " key={ team.teamId + "-" + k }>
                                     {k === game.teams.length - 1 &&
                                     game.teams.length !== 1 ? (
                                       <div className="flex w-full justify-center">
@@ -640,7 +602,7 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
                                       <div className="flex flex-col ">
                                         {team.Team.players.map((player) => {
                                           return (
-                                            <div className="tracking-wider">
+                                            <div className="tracking-wider" key={player.userId}>
                                               {player.user.fullName}
                                             </div>
                                           );
@@ -892,14 +854,16 @@ type positionsToEnterMap = {
   2: number[];
 };
 
-function AddBlankGamesToBracket(divisionBracket: any, numRows: number) {
-  let positionToEnter: number = 0;
-  let positionToEnterXtra = "High";
-  let numGames: number = numRows / 2;
-  let numGamesAsStr: string = numGames.toString();
-  let numGamesToEnter =
-    numGames - divisionBracket.games.slice(numGames - 1).length;
-  let divBracketGames = divisionBracket.games;
+function AddBlankGamesToBracket(
+  divisionBracket: InferredDivisionBracketType,
+  numRows: number,
+) {
+  // let positionToEnter: number = 0;
+  // let positionToEnterXtra = "High";
+  const numGames: number = numRows / 2;
+  // let numGamesAsStr: string = numGames.toString();
+  let numGamesToEnter = divisionBracket ? numGames - divisionBracket.games.slice(numGames - 1).length : null;
+  const divBracketGames = divisionBracket ? divisionBracket.games : null;
   const positionsToEnter: positionsToEnterMap = {
     32: [0, 1, 2, 3, 4, 5, 6, 7],
     16: [0, 1, 2, 3, 4, 5, 6, 7],
@@ -930,7 +894,7 @@ const DivisionControls = ({
   divisionId,
   numBreaking,
 }: DivisionControlProps) => {
-  const utils = trpc.useContext();
+  const utils = trpc.useUtils();
   const updateNumBreakingPool =
     trpc.division.updateNumBreakingPool.useMutation();
   const allowWildcards = trpc.division.allowWildCards.useMutation();
@@ -996,16 +960,19 @@ const DivisionControls = ({
   );
 };
 
-const isDivisionFinished = (pools: any) => {
-  for (let i = 0; i < pools.length; i++) {
-    if (!pools[i].isFinished) {
+const isDivisionFinished = (pools: InferredPoolsForDivisionType) => {
+  for (let i = 0; i < pools.poolsForDivision.length; i++) {
+    if (!pools.poolsForDivision[i].isFinished) {
       return false;
     }
   }
   return true;
 };
 
-const amIInDivision = (division: any, fullName: string | undefined) => {
+const amIInDivision = (
+  division: InferredDivisionSingle,
+  fullName: string | undefined,
+) => {
   for (const entry of division.entries) {
     for (const player of entry.players) {
       if (player.user.fullName === fullName) {
