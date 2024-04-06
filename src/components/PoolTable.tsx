@@ -1,17 +1,17 @@
-import { Game, Pool, Team, User } from "@prisma/client";
-import { FakeEntriesTeamArr } from "../utils/types/team";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { trpc } from "utils/trpc";
+import { useEffect, useState } from "react";
+import { InferredPoolsForDivisionSingleType, InferredPoolsForDivisionType } from "./Admin/DivisionAccordian";
+
+
 
 type PoolTableProps = {
-  pool: any;
+  pool: InferredPoolsForDivisionSingleType;
   poolNumber: number;
-  pools: any;
+  pools: InferredPoolsForDivisionType["poolsForDivision"];
   numBreaking: number;
   hasWildcards: boolean;
 };
 
-export const PoolTable = ({ pool, poolNumber, pools, numBreaking, hasWildcards }: PoolTableProps) => {
+export const PoolTable = ({ pool, poolNumber, numBreaking, hasWildcards }: PoolTableProps) => {
   // const updateSwap = (index: number) => {
   //   const newArr = [...isSwapping];
   //   newArr[index] = !newArr[index];

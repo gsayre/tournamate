@@ -1,15 +1,7 @@
 import { MyPoolTable } from "@components/MyPoolTable";
 import { PoolSchedule, isCurrentGame } from "@components/PoolSchedule";
 import { PoolTable } from "@components/PoolTable";
-import {
-  Division,
-  Format,
-  Game,
-  Pool,
-  Team,
-  User,
-  UsersInTeam,
-} from "@prisma/client";
+import { Format } from "@prisma/client";
 import { inferRouterOutputs } from "@trpc/server";
 import Image from "next/image";
 import { useState } from "react";
@@ -26,16 +18,22 @@ export type divAccordianProps = {
 type Gender = "MENS" | "WOMENS" | undefined;
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
-type InferredPoolsForDivisionType =
+export type InferredPoolsForDivisionType =
   RouterOutputs["tournament"]["getPoolsByDivision"];
+export type InferredPoolsForDivisionSingleType = ArrayElement<
+  InferredPoolsForDivisionType["poolsForDivision"]
+>;
 type gamesPickType = Pick<
   InferredPoolsForDivisionType["poolsForDivision"][number],
   "games"
-  >;
+>;
 type InferredDivisionByType = RouterOutputs["tournament"]["getDivisionsByType"];
 type ArrayElement<ArrayType extends readonly unknown[]> =
   ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
 type InferredDivisionSingle = ArrayElement<InferredDivisionByType>;
+type InferredGameSingleType = ArrayElement<gamesPickType["games"]>;
+type InferredGetBracketByDivisionType =
+  RouterOutputs["bracket"]["getBracketByDivision"];
 
 export const DivisionAccordian = ({
   division,
@@ -200,7 +198,6 @@ export const DivisionAccordian = ({
                   <div className="flex flex-row space-x-12">
                     <EntrySection division={division} />
                     <MyPoolSection
-                      divisionId={division.divisionId}
                       numBreaking={division.numBreakingPool}
                       hasWildcards={division.hasWildcards}
                     />
@@ -208,10 +205,10 @@ export const DivisionAccordian = ({
                   </div>
                 ) : null}
                 <div className="flex flex-row">
-                  {poolsForDivision?.poolsForDivision && (
+                  {poolsForDivision && (
                     <PoolSection
-                      poolsForDivision={poolsForDivision?.poolsForDivision}
-                      fullName={poolsForDivision?.fullName}
+                      poolsForDivision={poolsForDivision}
+                      division={division}
                     />
                   )}
                 </div>
@@ -232,13 +229,7 @@ export const DivisionAccordian = ({
 };
 
 type EntrySectionProps = {
-  division: Division & {
-    entries: (Team & {
-      players: (UsersInTeam & {
-        user: User;
-      })[];
-    })[];
-  };
+  division: InferredDivisionSingle;
 };
 
 const EntrySection = ({ division }: EntrySectionProps) => {
@@ -277,33 +268,16 @@ const EntrySection = ({ division }: EntrySectionProps) => {
   );
 };
 
+type PoolSectionProps = {
+  poolsForDivision: InferredPoolsForDivisionType;
+  division: InferredDivisionSingle;
+};
 
-type gamePickType = Pick<
-  gamesPickType["games"][number],
-  | "gameId"
-  | "numSets"
-  | "gameOneTeamOneScore"
-  | "gameOneTeamTwoScore"
-  | "gameOneScoreCap"
-  | "gameTwoTeamOneScore"
-  | "gameTwoTeamTwoScore"
-  | "gameTwoScoreCap"
-  | "gameThreeTeamOneScore"
-  | "gameThreeTeamTwoScore"
-  | "gameThreeScoreCap"
-  | "poolId"
-  | "teams"
-  | "referees"
->;
-
-const PoolSection = ({
-  poolsForDivision,
-  fullName,
-}: InferredPoolsForDivisionType) => {
+const PoolSection = ({ poolsForDivision, division }: PoolSectionProps) => {
   const finishGameMock = trpc.tournament.finishGameMock.useMutation();
-  const utils = trpc.useContext();
+  const utils = trpc.useUtils();
 
-  const poolsWithSeeds = poolsForDivision;
+  const poolsWithSeeds = poolsForDivision.poolsForDivision;
   if (poolsWithSeeds) {
     for (let i = 0; i < poolsWithSeeds.length; i++) {
       poolsWithSeeds[i].teams = poolsWithSeeds[i].teams.map((team, i) => ({
@@ -317,16 +291,15 @@ const PoolSection = ({
       <p className="pb-2 text-2xl">Pools</p>
       <div className="flex grow flex-row flex-wrap gap-4">
         {poolsWithSeeds &&
-          fullName &&
+          poolsForDivision.fullName &&
           poolsWithSeeds.map((pool, i, arr) => {
-            let currentGame: gamePickType;
-            let currGameIdx: number | undefined = isCurrentGame(pool.games);
+            let currentGame: InferredGameSingleType;
+            const currGameIdx: number | undefined = isCurrentGame(pool.games);
             if (pool.games && currGameIdx) {
               currentGame = pool.games[currGameIdx];
             }
             const isLastGame =
               isCurrentGame(pool.games) === pool.games.length - 1;
-            console.log(isCurrentGame(pool.games), pool.games.length - 1);
             return (
               <div key={i}>
                 <div className="flex flex-row items-center gap-4">
@@ -388,8 +361,8 @@ const PoolSection = ({
                   pool={pool}
                   poolNumber={i + 1}
                   pools={arr}
-                  numBreaking={pool.numBreaking}
-                  hasWildcards={pool.hasWildcards}
+                  numBreaking={division.numBreakingPool}
+                  hasWildcards={division.hasWildcards}
                 />
               </div>
             );
@@ -404,61 +377,34 @@ type MyPoolSectionProps = {
   hasWildcards: boolean;
 };
 
-export type getMyPoolReturnType =
-  | {
-      myPool: ({
-        teams: {
-          players: {
-            user: {
-              id: string;
-              fullName: string;
-              isAdmin: boolean;
-              isTournamentDirector: boolean;
-              playerRating: number;
-            };
-          }[];
-          poolWins: number;
-          poolLosses: number;
-        }[];
-      } & {
-        poolId: string;
-        isFinished: boolean;
-        divisionId: number;
-      })[];
-      firstName: string | null;
-      lastName: string | null;
-    }
-  | undefined;
-
-const MyPoolSection = ({
-  numBreaking,
-  hasWildcards,
-}: MyPoolSectionProps) => {
-  const myPool = trpc.tournament.getMyPool.useQuery({}).data;
-  const poolWithSeeds = myPool?.myPool;
-  if (poolWithSeeds) {
-    poolWithSeeds[0].teams = poolWithSeeds[0].teams.map((team, i) => ({
+const MyPoolSection = ({ numBreaking, hasWildcards }: MyPoolSectionProps) => {
+  const poolWithSeeds = trpc.tournament.getMyPool.useQuery({}).data;
+  if (poolWithSeeds && poolWithSeeds.myPool) {
+    poolWithSeeds.myPool.teams = poolWithSeeds.myPool.teams.map((team, i) => ({
       ...team,
       seed: i + 1,
     }));
   }
+
   return (
     <div>
       <p className="pb-2 text-2xl">My Pool</p>
       <p className=" text-lg">
         isFinished: {myPool?.myPool[0].isFinished ? "True" : "False"}
       </p>
-      {myPool &&
-      myPool.myPool &&
-      myPool.firstName &&
-      myPool.lastName &&
+      {poolWithSeeds &&
+      poolWithSeeds.myPool &&
+      poolWithSeeds.firstName &&
+      poolWithSeeds.lastName &&
       poolWithSeeds ? (
         <div>
           <MyPoolTable
             pool={poolWithSeeds}
             poolNumber={1}
             isMyPool={true}
-            currentUserName={myPool?.firstName + " " + myPool?.lastName}
+            currentUserName={
+              poolWithSeeds?.firstName + " " + poolWithSeeds?.lastName
+            }
             numBreaking={numBreaking}
             hasWildcards={hasWildcards}
           />
@@ -489,24 +435,22 @@ const MyScheduleSection = ({ tournamentId }: MyScheduleSectionProps) => {
 type BracketSectionProps = {
   divisionId: number;
 };
-type InferredDivisionBracketType =
-  RouterOutputs["bracket"]["getBracketByDivision"];
 
 const BracketSection = ({ divisionId }: BracketSectionProps) => {
   const createBracket = trpc.bracket.createBracketSchedule.useMutation();
   const finishBracketGameMock =
     trpc.bracket.finishBracketGameMock.useMutation();
-  const utils = trpc.useContext();
-  const divisionBraket = trpc.bracket.getBracketByDivision.useQuery({
+  const utils = trpc.useUtils();
+  const divisionBracket = trpc.bracket.getBracketByDivision.useQuery({
     divisionId: divisionId,
   }).data;
   const numCols =
-    divisionBraket && Math.ceil(Math.log2(divisionBraket.games.length));
+    divisionBracket && Math.ceil(Math.log2(divisionBracket.games.length));
   const numRows = numCols && Math.pow(2, numCols);
-  const divBracketWithBlanks: InferredDivisionBracketType | undefined =
-    divisionBraket?.games.length === numRows ? divisionBraket : null;
+  const divBracketWithBlanks: InferredGetBracketByDivisionType | undefined =
+    divisionBracket?.games.length === numRows ? divisionBracket : null;
   if (numRows) {
-    console.log(AddBlankGamesToBracket(divisionBraket, numRows));
+    console.log(AddBlankGamesToBracket(divisionBracket, numRows));
   }
 
   console.log("Div with blanks", divBracketWithBlanks);
@@ -525,9 +469,12 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
         {numCols &&
           [...Array(numCols)].map((x, i) => {
             return (
-              <div className="flex flex-col items-center justify-around gap-4 " key={i}>
-                {divisionBraket &&
-                  divisionBraket.games.map((game, j) => {
+              <div
+                className="flex flex-col items-center justify-around gap-4 "
+                key={i}
+              >
+                {divisionBracket &&
+                  divisionBracket.games.map((game, j) => {
                     console.log("game", game);
                     const colToBeIn = Math.floor(Math.log2(j + 1));
                     // const rowHeight = Math.pow(2, numCols - colToBeIn);
@@ -535,7 +482,10 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
                     return (
                       <div key={game.gameId.toString() + colToBeIn.toString()}>
                         {colToBeIn === i && game ? (
-                          <div className="flex w-72 flex-col border border-gray-300" key={game.gameId + "-" + j }>
+                          <div
+                            className="flex w-72 flex-col border border-gray-300"
+                            key={game.gameId + "-" + j}
+                          >
                             <div className="flex justify-between border-b border-gray-300 bg-slate-300 px-2 py-1 font-semibold">
                               <div className="flex">Game {game.gameId}</div>
                               <div className="mr-2 flex gap-2">
@@ -589,7 +539,10 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
                             <div className="flex h-36 w-full flex-col p-2">
                               {game.teams.map((team, k) => {
                                 return (
-                                  <div className="flex h-full flex-col " key={ team.teamId + "-" + k }>
+                                  <div
+                                    className="flex h-full flex-col "
+                                    key={team.teamId + "-" + k}
+                                  >
                                     {k === game.teams.length - 1 &&
                                     game.teams.length !== 1 ? (
                                       <div className="flex w-full justify-center">
@@ -602,7 +555,10 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
                                       <div className="flex flex-col ">
                                         {team.Team.players.map((player) => {
                                           return (
-                                            <div className="tracking-wider" key={player.userId}>
+                                            <div
+                                              className="tracking-wider"
+                                              key={player.userId}
+                                            >
                                               {player.user.fullName}
                                             </div>
                                           );
@@ -669,7 +625,7 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
             );
           })}
       </div>
-      {divisionBraket?.isFinished ? (
+      {divisionBracket?.isFinished ? (
         <StandingsSection divisionId={divisionId} />
       ) : null}
     </div>
@@ -766,11 +722,19 @@ const SmallPodium = ({ teamOne, teamTwo }: SmallPodiumProps) => {
     <div className="flex flex-col">
       <div className="flex flex-col items-center justify-center">
         {teamOne.players.map((player) => {
-          return <div className="tracking-wider">{player.user.fullName}</div>;
+          return (
+            <div className="tracking-wider" key={player.userId}>
+              {player.user.fullName}
+            </div>
+          );
         })}
         <div>&</div>
         {teamTwo.players.map((player) => {
-          return <div className="tracking-wider">{player.user.fullName}</div>;
+          return (
+            <div className="tracking-wider" key={player.userId}>
+              {player.user.fullName}
+            </div>
+          );
         })}
       </div>
       <div className="flex h-24 w-40 items-center justify-center bg-amber-800 text-4xl font-bold text-white">
@@ -803,7 +767,11 @@ const MediumPodium = ({ team }: MediumPodiumProps) => {
     <div className="flex flex-col">
       <div className="flex flex-col items-center justify-center">
         {team.players.map((player) => {
-          return <div className="tracking-wider">{player.user.fullName}</div>;
+          return (
+            <div className="tracking-wider" key={player.userId}>
+              {player.user.fullName}
+            </div>
+          );
         })}
       </div>
       <div className="flex h-40 w-40 items-center justify-center bg-zinc-400 text-4xl font-bold text-white">
@@ -836,7 +804,11 @@ const LargePodium = ({ team }: LargePodiumProps) => {
     <div className="flex flex-col">
       <div className="flex flex-col items-center justify-center">
         {team.players.map((player) => {
-          return <div className="tracking-wider">{player.user.fullName}</div>;
+          return (
+            <div className="tracking-wider" key={player.userId}>
+              {player.user.fullName}
+            </div>
+          );
         })}
       </div>
       <div className="flex h-56 w-40 items-center justify-center bg-yellow-500 text-4xl font-bold text-white">
@@ -854,16 +826,31 @@ type positionsToEnterMap = {
   2: number[];
 };
 
+type Modify<T, R> = Omit<T, keyof R> & R;
+type bracketGames = Pick<
+  NonNullable<InferredGetBracketByDivisionType>,
+  "games"
+>;
+type singleBracketGame = ArrayElement<bracketGames["games"]>;
+type nullableBracketGames = Modify<
+  bracketGames,
+  {
+    games: Array<singleBracketGame | null>;
+  }
+>;
+
 function AddBlankGamesToBracket(
-  divisionBracket: InferredDivisionBracketType,
+  divisionBracket: InferredGetBracketByDivisionType,
   numRows: number,
 ) {
   // let positionToEnter: number = 0;
   // let positionToEnterXtra = "High";
   const numGames: number = numRows / 2;
   // let numGamesAsStr: string = numGames.toString();
-  let numGamesToEnter = divisionBracket ? numGames - divisionBracket.games.slice(numGames - 1).length : null;
-  const divBracketGames = divisionBracket ? divisionBracket.games : null;
+  let numGamesToEnter = divisionBracket
+    ? numGames - divisionBracket.games.slice(numGames - 1).length
+    : null;
+  const divBracketGames: nullableBracketGames = divisionBracket?.games;
   const positionsToEnter: positionsToEnterMap = {
     32: [0, 1, 2, 3, 4, 5, 6, 7],
     16: [0, 1, 2, 3, 4, 5, 6, 7],
@@ -874,10 +861,12 @@ function AddBlankGamesToBracket(
   if (numGames) {
     const positionsArray =
       positionsToEnter[numGames as keyof positionsToEnterMap];
-    for (let i = 0; i < positionsArray.length; i++) {
-      if (numGamesToEnter > 0) {
-        divBracketGames.splice(positionsArray[i], 0, null);
-        numGamesToEnter--;
+    if (numGamesToEnter && divBracketGames) {
+      for (let i = 0; i < positionsArray.length; i++) {
+        if (numGamesToEnter > 0) {
+          divBracketGames.splice(positionsArray[i], 0, null);
+          numGamesToEnter--;
+        }
       }
     }
   }

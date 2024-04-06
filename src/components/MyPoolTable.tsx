@@ -1,7 +1,6 @@
-import { amIInTeam } from "utils/lib/am-i-in-utils";
-import { getMyPoolReturnType } from "./Admin/DivisionAccordian";
-import { AppRouter } from "server/trpc/router/_app";
 import { inferRouterOutputs } from "@trpc/server";
+import { AppRouter } from "server/trpc/router/_app";
+import { amIInTeam } from "utils/lib/am-i-in-utils";
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 type InferredGetMyPoolType = RouterOutputs["tournament"]["getMyPool"];
