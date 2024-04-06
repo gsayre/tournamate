@@ -1,7 +1,6 @@
 import { withClerkMiddleware } from "@clerk/nextjs";
-import { authMiddleware } from "@clerk/nextjs/server";
+
 import { NextResponse } from "next/server";
-import { NextRequest } from "next/server";
 
 // New middleware don't know why it doesn't work
 // export default authMiddleware({
@@ -9,7 +8,7 @@ import { NextRequest } from "next/server";
 //   ignoredRoutes: ["/", "/api/trpc/comingSoon.subscribeToUpdates"],
 // });
 
-export default withClerkMiddleware((_req: NextRequest) => {
+export default withClerkMiddleware(() => {
   return NextResponse.next()
 })
 

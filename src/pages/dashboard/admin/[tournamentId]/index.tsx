@@ -3,13 +3,14 @@ import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
 import { DivisionPannel } from "@components/DivisionPannel";
 import { MyPoolTable } from "@components/MyPoolTable";
 import { PoolSchedule } from "@components/PoolSchedule";
+import { GetServerSidePropsContext } from "next";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import TopBar from "@components/TopBar";
 import { trpc } from "@utils/trpc";
 import { FakeEntriesTeamArr } from "@utils/types/team";
 
-export async function getServerSideProps(context: any) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { userId } = getAuth(context.req);
 
   if (!userId) {

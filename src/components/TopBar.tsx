@@ -3,10 +3,10 @@ import { useAuth, UserButton, useUser } from "@clerk/nextjs";
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
 import { trpc } from "../utils/trpc";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
 import { useRouter } from "next/router";
+import { GetServerSidePropsContext } from "next";
 
-export async function getServerSideProps(context: any) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { userId } = getAuth(context.req);
 
   if (!userId) {

@@ -2,10 +2,9 @@ import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
 import { Tournament } from "@prisma/client";
 import moment from "moment";
 import Link from "next/link";
-import type { NextPage } from "next/types";
+import type { GetServerSidePropsContext, NextPage } from "next/types";
 import TopBar from "../../../components/TopBar";
 import { trpc } from "../../../utils/trpc";
-import { GetServerSidePropsContext } from "next/types";
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { userId } = getAuth(context.req);
