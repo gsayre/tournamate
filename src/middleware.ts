@@ -1,7 +1,6 @@
 import { withClerkMiddleware } from "@clerk/nextjs";
 
 import { NextResponse } from "next/server";
-import { NextRequest } from "next/server";
 
 // New middleware don't know why it doesn't work
 // export default authMiddleware({

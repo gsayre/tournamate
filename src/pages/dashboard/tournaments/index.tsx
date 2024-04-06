@@ -5,7 +5,6 @@ import Link from "next/link";
 import type { GetServerSidePropsContext, NextPage } from "next/types";
 import TopBar from "../../../components/TopBar";
 import { trpc } from "../../../utils/trpc";
-import { GetServerSidePropsContext } from "next/types";
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { userId } = getAuth(context.req);

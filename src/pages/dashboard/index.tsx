@@ -1,7 +1,7 @@
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
 import TopBar from "@components/TopBar";
 import type { GetServerSidePropsContext } from "next";
-import { PropsWithChildren, useEffect } from "react";
+import { useEffect } from "react";
 import { trpc } from "../../utils/trpc";
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
