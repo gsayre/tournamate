@@ -657,17 +657,17 @@ const StandingsSection = ({ divisionId }: { divisionId: number }) => {
         <div className="mt-2 flex flex-col">
           {finalStandings &&
             finalStandings.finalStandings?.map((team, i) => {
-              let standing = i < 7 ? 5 : null;
+              const standing = i < 7 ? 5 : null;
               if (i <= 3) {
                 return null;
               } else {
                 return (
-                  <div className="flex flex-row items-center gap-4">
+                  <div className="flex flex-row items-center gap-4" key={team.teamId + "-" + i}>
                     <div>{standing}</div>
                     <div className="flex flex-row gap-2">
                       {team.players.map((player, i) => {
                         return (
-                          <div className="tracking-wider">
+                          <div className="tracking-wider" key={player.userId + "-" + i}>
                             {player.user.fullName}
                             {i === 0 ? " & " : null}
                           </div>

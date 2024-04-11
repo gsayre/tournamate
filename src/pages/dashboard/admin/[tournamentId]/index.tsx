@@ -1,14 +1,9 @@
-import { useAuth } from "@clerk/nextjs";
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
 import { DivisionPannel } from "@components/DivisionPannel";
-import { MyPoolTable } from "@components/MyPoolTable";
-import { PoolSchedule } from "@components/PoolSchedule";
-import { GetServerSidePropsContext } from "next";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
 import TopBar from "@components/TopBar";
 import { trpc } from "@utils/trpc";
-import { FakeEntriesTeamArr } from "@utils/types/team";
+import { GetServerSidePropsContext } from "next";
+import { useRouter } from "next/router";
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { userId } = getAuth(context.req);
@@ -28,10 +23,6 @@ export default function AdminTournamentView() {
   const router = useRouter();
   const { tournamentId } = router.query;
   const tId: number = parseInt(tournamentId as string);
-  const { isSignedIn, userId } = useAuth();
-  const currentUserName = trpc.user.findUsername.useQuery({
-    id: userId as string,
-  }).data;
   // const poolsForDivision = trpc.tournament.getPoolsByDivision.useQuery({
   //   divisionId: division.divisionId,
   // }).data;
@@ -42,7 +33,7 @@ export default function AdminTournamentView() {
   const getMyPoolOutput = trpc.tournament.getMyPool.useQuery({ }).data
   const startTournamentForDay =
     trpc.tournament.startTournamentDay.useMutation();
-  const [pools, setPools] = useState<Array<FakeEntriesTeamArr>>([]);
+  // const [pools] = useState<Array<InferredGetMyPoolType>>([]);
 
   return (
     <div className="flex h-screen w-screen">
@@ -103,21 +94,21 @@ export default function AdminTournamentView() {
                     <div>
                       <p className="pb-4 text-3xl">Other Pools:</p>
                       <div className="flex flex-row space-x-6">
-                        {pools.map((pool, index, arr) => {
+                        {/* {pools.map((pool, index, arr) => {
                           return (
                             <div className="flex w-80 flex-col" key={index}>
                               <p className="pb-2 text-xl">Pool {index + 1}</p>
-                              {/* <MyPoolTable
+                              <MyPoolTable
                                 pool={pool}
                                 poolNumber={index + 1}
                                 pools={arr}
                                 setPools={setPools}
                                 isMyPool={false}
                                 currentUserName={currentUserName as string}
-                              /> */}
+                              />
                             </div>
                           );
-                        })}
+                        })} */}
                       </div>
                     </div>
                   </div>
@@ -192,7 +183,3 @@ export default function AdminTournamentView() {
     </div>
   );
 }
-
-type gameScheduleOptions = {
-  numNets: number;
-};

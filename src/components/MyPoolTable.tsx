@@ -22,7 +22,7 @@ export const MyPoolTable = ({
   numBreaking,
   hasWildcards,
 }: OtherPoolTableProps) => {
-  const myPool = pool?.myPool ? pool.myPool[0] : null;
+  const myPool = pool?.myPool;
   return (
     <>
       <table className="border-seperate border-none">
