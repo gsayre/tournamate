@@ -9,6 +9,8 @@ import {
   UsersInTeam,
 } from "@prisma/client";
 import { DefaultArgs } from "@prisma/client/runtime/library";
+import { inferRouterOutputs } from "@trpc/server";
+import { AppRouter } from "../_app";
 
 export const bracketRouter = router({
   createBracketSchedule: protectedProcedure
@@ -34,8 +36,8 @@ export const bracketRouter = router({
           },
         },
       });
-      let teamsThatBrokePool = [];
-      let potentialWildcardArray = [];
+      const teamsThatBrokePool = [];
+      const potentialWildcardArray = [];
       let wildcardArray: TeamsForBracketT = [];
       const DivisionTypeToMock = divisionToAddBracket;
       if (DivisionTypeToMock && DivisionTypeToMock.pools) {
@@ -65,7 +67,7 @@ export const bracketRouter = router({
           }
           teamsThatBrokePool.push(teamsThatBroke);
         }
-        let flattentedWildcardArray = potentialWildcardArray.flat();
+        const flattentedWildcardArray = potentialWildcardArray.flat();
         const orderedWildcardCandidates = flattentedWildcardArray.sort(
           (a: FakeTeamInFakeDivision, b: FakeTeamInFakeDivision) => {
             return (
@@ -170,17 +172,17 @@ export const bracketRouter = router({
               gameOneteamTwoScore++;
             }
           }
-          let WinningTeam =
+          const WinningTeam =
             gameOneteamOneScore > gameOneteamTwoScore
               ? input.teamOneId
               : input.teamTwoId;
-          let LosingTeam =
+          const LosingTeam =
             WinningTeam === input.teamOneId ? input.teamTwoId : input.teamOneId;
-          let WinningTeamPointDifferential =
+          const WinningTeamPointDifferential =
             gameOneteamOneScore > gameOneteamTwoScore
               ? gameOneteamOneScore - gameOneteamTwoScore
               : gameOneteamTwoScore - gameOneteamOneScore;
-          let LosingTeamPointDifferential = WinningTeamPointDifferential * -1;
+          const LosingTeamPointDifferential = WinningTeamPointDifferential * -1;
 
           updatedGame = await ctx.prisma.game.update({
             where: {
@@ -192,7 +194,7 @@ export const bracketRouter = router({
               gameFinished: true,
             },
           });
-          const updateWinningTeam = await ctx.prisma.team.update({
+          await ctx.prisma.team.update({
             where: {
               teamId: WinningTeam,
             },
@@ -205,7 +207,7 @@ export const bracketRouter = router({
               },
             },
           });
-          const updateLosingTeam = await ctx.prisma.team.update({
+          await ctx.prisma.team.update({
             where: {
               teamId: LosingTeam,
             },
@@ -545,7 +547,7 @@ export const bracketRouter = router({
         }
       }
       return {
-        updatedGame,
+        updatedGame
       };
     }),
   getBracketWinnerByDivision: protectedProcedure
@@ -576,7 +578,7 @@ export const bracketRouter = router({
           },
         },
       });
-      let bracketTeamStandingsFinal = []
+      const bracketTeamStandingsFinal = []
       if (divisionBracket) {
         for (let i = 0; i < divisionBracket.games.length; i++) {
           const game = divisionBracket.games[i];
@@ -585,9 +587,9 @@ export const bracketRouter = router({
           let losingTeam: number;
           let losingPlayers
           let teamOneWins = 0;
-          let teamOneId = game.teams[0].Team.teamId;
+          const teamOneId = game.teams[0].Team.teamId;
           let teamTwoWins = 0;
-          let teamTwoId = game.teams[1].Team.teamId;
+          const teamTwoId = game.teams[1].Team.teamId;
           if (
             game.gameOneTeamOneScore &&
             game.gameOneTeamTwoScore &&
@@ -691,7 +693,6 @@ const BracketMakerHelper = async ({
   divisionId,
 }: BracketMakerHelperProps): Promise<void> => {
   let fullBracketTeams;
-  let numByes;
   if (teamsThatGotWildCard) {
     fullBracketTeams = teamsThatCleanBroke.concat(teamsThatGotWildCard);
   } else {
@@ -706,7 +707,7 @@ const BracketMakerHelper = async ({
     Math.ceil(Math.log2(fullBracketTeams.length)),
   );
 
-  numByes = Math.min(
+  const numByes = Math.min(
     Math.abs(fullBracketTeams.length - lowerPower),
     Math.abs(fullBracketTeams.length - higherPower),
   );
@@ -815,8 +816,13 @@ const pullOutByes = (
   return [];
 };
 
-const createGameArray = (wholeBracket: TeamsForBracketT): any[] => {
-  const games: Game[] = [];
+type RouterOutputs = inferRouterOutputs<AppRouter>;
+export type InferredPoolsForDivisionType =
+  RouterOutputs["tournament"]["getPoolsByDivision"];
+
+const createGameArray = (
+  wholeBracket: TeamsForBracketT,
+): Array<TeamsForBracketT | TeamInBracketT> => {
   // if there are byes and wildcards
   const twoSidesOfBracket: Array<TeamsForBracketT | TeamInBracketT> = [[], []];
   let sideOfBracket: number = 0;
