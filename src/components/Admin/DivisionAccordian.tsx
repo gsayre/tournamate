@@ -30,7 +30,7 @@ type gamesPickType = Pick<
 type InferredDivisionByType = RouterOutputs["tournament"]["getDivisionsByType"];
 type ArrayElement<ArrayType extends readonly unknown[]> =
   ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
-type InferredDivisionSingle = ArrayElement<InferredDivisionByType>;
+export type InferredDivisionSingle = ArrayElement<InferredDivisionByType>;
 type InferredGameSingleType = ArrayElement<gamesPickType["games"]>;
 type InferredGetBracketByDivisionType =
   RouterOutputs["bracket"]["getBracketByDivision"];

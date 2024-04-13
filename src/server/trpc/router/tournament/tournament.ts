@@ -1,18 +1,17 @@
-import { router, protectedProcedure } from "../../trpc";
-import { z } from "zod";
+import { InferredDivisionSingle } from "@components/Admin/DivisionAccordian";
 import {
-  Type,
+  Division,
   Format,
   Game,
-  Division,
-  User,
-  Tournament,
-  TeamInvitation,
   Team,
-  UsersInTeam,
-  TeamInGame,
+  Tournament,
+  Type,
+  User,
+  UsersInTeam
 } from "@prisma/client";
 import { PointReason } from "pages/dashboard/admin/[tournamentId]/[gameId]";
+import { z } from "zod";
+import { protectedProcedure, router } from "../../trpc";
 
 export const tournamentRouter = router({
   //Tournament Queries/Mutations
@@ -146,7 +145,7 @@ export const tournamentRouter = router({
 
   getMyScheudule: protectedProcedure
     .input(z.object({}))
-    .query(async ({ ctx, input }) => {
+    .query(async ({ ctx }) => {
       const mySchedule = await ctx.prisma.pool.findMany({
         where: {
           teams: {
@@ -223,7 +222,7 @@ export const tournamentRouter = router({
       });
       let deletedSchedule;
 
-      let schedulesCreated = [];
+      const schedulesCreated = [];
       if (divisionToAddSchedule && divisionToAddSchedule.pools) {
         deletedSchedule = await ctx.prisma.game.deleteMany({
           where: {
@@ -232,7 +231,7 @@ export const tournamentRouter = router({
             },
           },
         });
-        const resetUserWinLoss = await ctx.prisma.team.updateMany({
+        await ctx.prisma.team.updateMany({
           where: {
             divisionId: input.divisionId,
           },
@@ -244,7 +243,8 @@ export const tournamentRouter = router({
         });
         for (let i = 0; i < divisionToAddSchedule?.pools.length; i++) {
           const gamesCreated = [];
-          let team1, team2, team3, team4, team5, team6, team7, team8;
+          let team1, team2, team3, team4, team5
+          // let team6, team7, team8;
           let game1,
             game2,
             game3,
@@ -253,8 +253,8 @@ export const tournamentRouter = router({
             game6,
             game7,
             game8,
-            game9,
-            game10;
+            game9
+          //let game10;
           switch (divisionToAddSchedule.pools[i].teams.length) {
             case 3:
               [team1, team2, team3] = divisionToAddSchedule.pools[i].teams;
@@ -521,7 +521,7 @@ export const tournamentRouter = router({
                     k < gamesCreated[i].teams[j].Team.players.length;
                     k++
                   ) {
-                    const gameStats = await prisma?.gameStatistics.upsert({
+                    await prisma?.gameStatistics.upsert({
                       where: {
                         userId_gameId: {
                           gameId: gamesCreated[i].gameId,
@@ -810,7 +810,7 @@ export const tournamentRouter = router({
                     k < gamesCreated[i].teams[j].Team.players.length;
                     k++
                   ) {
-                    const gameStats = await prisma?.gameStatistics.upsert({
+                    await prisma?.gameStatistics.upsert({
                       where: {
                         userId_gameId: {
                           gameId: gamesCreated[i].gameId,
@@ -1237,7 +1237,7 @@ export const tournamentRouter = router({
                     k < gamesCreated[i].teams[j].Team.players.length;
                     k++
                   ) {
-                    const gameStats = await prisma?.gameStatistics.upsert({
+                    await prisma?.gameStatistics.upsert({
                       where: {
                         userId_gameId: {
                           gameId: gamesCreated[i].gameId,
@@ -1276,7 +1276,7 @@ export const tournamentRouter = router({
   addPointToGameMock: protectedProcedure
     .input(z.object({ gameId: z.number(), gameNumber: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      let pointAdded;
+      let pointAdded: Game;
       switch (input.gameNumber) {
         case 1: {
           if (Math.random() < 0.5) {
@@ -1403,10 +1403,9 @@ export const tournamentRouter = router({
           });
         }
       }
-      let finishGame;
       if (finishSet) {
         if (finishSet.currentSet === finishSet.numSets) {
-          finishGame = await ctx.prisma.game.update({
+          await ctx.prisma.game.update({
             where: {
               gameId: input.gameId,
             },
@@ -2132,7 +2131,7 @@ export const tournamentRouter = router({
       if (!team) {
         throw new Error("Team not found");
       }
-      const updateWithInviter = await ctx.prisma.team.update({
+      await ctx.prisma.team.update({
         where: { teamId: team.teamId },
         data: {
           players: {
@@ -2162,6 +2161,7 @@ export const tournamentRouter = router({
           },
         });
       });
+      console.log("Updated with other invitees", updateWithOtherInvitees);
       const divUpdated = await ctx.prisma.division.update({
         where: {
           divisionId: teamInvitation.divisionId,
@@ -2363,35 +2363,7 @@ export const tournamentRouter = router({
         poolId: z.string().nullable(),
         divisionId: z.number(),
         isDayOf: z.boolean().nullable(),
-        division: z.object({
-          divisionId: z.number(),
-          name: z.string(),
-          type: z.string(),
-          isDayOf: z.boolean(),
-          tournamentId: z.number(),
-          entries: z.array(
-            z.object({
-              teamId: z.number(),
-              teamRating: z.number(),
-              divisionId: z.number(),
-              tournamentId: z.number(),
-              poolId: z.string().nullable(),
-              players: z.array(
-                z.object({
-                  userId: z.string(),
-                  teamId: z.number(),
-                  user: z.object({
-                    id: z.string(),
-                    fullName: z.string(),
-                    isAdmin: z.boolean(),
-                    isTournamentDirector: z.boolean(),
-                    playerRating: z.number(),
-                  }),
-                }),
-              ),
-            }),
-          ),
-        }),
+        division: z.custom<InferredDivisionSingle>()
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -2413,23 +2385,25 @@ export const tournamentRouter = router({
         };
       });
       console.log(newPoolsWithEntries);
-      const deletedPools = await ctx.prisma.pool.deleteMany({
+      await ctx.prisma.pool.deleteMany({
         where: {
           divisionId: input.divisionId,
         },
       });
 
       for (let i = 0; i < newPoolsWithoutEntries.length; i++) {
-        const newPool = await ctx.prisma.pool.create({
+        if (newPoolsWithoutEntries[i].poolId !== undefined && newPoolsWithoutEntries[i].divisionId !== undefined) {
+        await ctx.prisma.pool.create({
           data: {
             poolId: newPoolsWithoutEntries[i].poolId,
-            divisionId: newPoolsWithoutEntries[i].divisionId,
+            divisionId: newPoolsWithoutEntries[i].divisionId as number,
           },
         });
+        }
       }
 
       for (let i = 0; i < newPoolsWithEntries.length; i++) {
-        const poolsWithTeams = await ctx.prisma.pool.update({
+        await ctx.prisma.pool.update({
           where: {
             poolId: newPoolsWithEntries[i].poolId,
           },

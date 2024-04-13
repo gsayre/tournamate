@@ -4,6 +4,7 @@ import { amIInTeam } from "utils/lib/am-i-in-utils";
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 type InferredGetMyPoolType = RouterOutputs["tournament"]["getMyPool"];
+type InferredSingleTeamType = InferredGetMyPoolType["myPool"]["teams"][0];
 
 type OtherPoolTableProps = {
   pool: InferredGetMyPoolType;
@@ -102,6 +103,6 @@ export const MyPoolTable = ({
   );
 };
 
-function compareFunction(a: any, b: any) {
+function compareFunction(a: InferredSingleTeamType, b: InferredSingleTeamType) {
   return b.poolWins - a.poolWins;
 }

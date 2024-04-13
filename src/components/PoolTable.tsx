@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { InferredPoolsForDivisionSingleType, InferredPoolsForDivisionType } from "./Admin/DivisionAccordian";
 
-
+type InferredSingleTeamFromPoolsType = InferredPoolsForDivisionSingleType["teams"][0];
+type InferredTeamsArrayFromPoolsType = InferredPoolsForDivisionSingleType["teams"];
 
 type PoolTableProps = {
   pool: InferredPoolsForDivisionSingleType;
@@ -27,11 +28,14 @@ export const PoolTable = ({ pool, poolNumber, numBreaking, hasWildcards }: PoolT
   //     return b.teamRating - a.teamRating;
   //   });
   // }
-  const compareFunction = (a: any, b: any) => {
+  const compareFunction = (
+    a: InferredSingleTeamFromPoolsType,
+    b: InferredSingleTeamFromPoolsType,
+  ) => {
     return b.teamRating - a.teamRating;
   };
   const [poolRating, setPoolRating] = useState(0);
-  const [sortedPools, setSortedPools] = useState([]);
+  const [, setSortedPools] = useState<Array<InferredTeamsArrayFromPoolsType>>([]);
   useEffect(() => {
     let accumualtedRating = 0;
     for (let i = 0; i < pool.teams.length; i++) {
@@ -41,7 +45,7 @@ export const PoolTable = ({ pool, poolNumber, numBreaking, hasWildcards }: PoolT
     setPoolRating(accumualtedRating);
     // sortedPools = pool.teams.sort((a,b) => a.teamRating > b.teamRating ? -1 : a.teamRating > b.teamRating ? 1 : 0 )
     setSortedPools(pool.teams.sort(compareFunction));
-  }, []);
+  }, [pool.teams]);
 
   return (
     <>
@@ -120,6 +124,11 @@ export const PoolTable = ({ pool, poolNumber, numBreaking, hasWildcards }: PoolT
   );
 };
 
-function compareFunctionPool(a: any, b: any) {
-  return b.poolWins - a.poolWins || b.poolPointDifferential - a.poolPointDifferential;
+function compareFunctionPool(
+  a: InferredSingleTeamFromPoolsType,
+  b: InferredSingleTeamFromPoolsType,
+) {
+  return (
+    b.poolWins - a.poolWins || b.poolPointDifferential - a.poolPointDifferential
+  );
 }
