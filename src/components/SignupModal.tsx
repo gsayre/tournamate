@@ -8,11 +8,9 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { trpc } from "utils/trpc";
 import { PartnerCard } from "./PartnerCard";
-import { AppRouter } from "server/trpc/router/_app";
-import { inferRouterOutputs } from "@trpc/server";
+import type { InferredTournamentDataType } from "server/trpc/exportedTypes";
 
-type RouterOutputs = inferRouterOutputs<AppRouter>;
-type InferredTournamentDataType = RouterOutputs["tournament"]["getTournament"];
+
 
 type SignupModalProps = {
   divisionsPerDay: Array<Division[]>;

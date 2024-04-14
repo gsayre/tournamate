@@ -1,12 +1,9 @@
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { trpc } from "utils/trpc";
-import { AppRouter } from "server/trpc/router/_app";
-import { inferRouterOutputs } from "@trpc/server";
-import { InferredPoolsForDivisionType } from "./Admin/DivisionAccordian";
+import type { InferredGetMyScheduleType, gameArrayOtherType, gameArrayType } from "server/trpc/exportedTypes";
 
-type RouterOutputs = inferRouterOutputs<AppRouter>;
-type InferredGetMyScheduleType = RouterOutputs["tournament"]["getMyScheudule"];
+
 
 type PoolScheduleProps = {
   poolSchedule: InferredGetMyScheduleType;
@@ -241,8 +238,7 @@ export const PoolSchedule = ({
   );
 };
 
-type gameArrayType = InferredGetMyScheduleType["mySchedule"][0]["games"];
-type gameArrayOtherType = InferredPoolsForDivisionType["poolsForDivision"][0]["games"];
+
 
 
 export function isCurrentGame(gameArray: gameArrayType | gameArrayOtherType): number | undefined {

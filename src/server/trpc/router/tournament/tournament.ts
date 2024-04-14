@@ -1,4 +1,3 @@
-import { InferredDivisionSingle } from "@components/Admin/DivisionAccordian";
 import {
   Division,
   Format,
@@ -12,6 +11,7 @@ import {
 import { PointReason } from "pages/dashboard/admin/[tournamentId]/[gameId]";
 import { z } from "zod";
 import { protectedProcedure, router } from "../../trpc";
+import type { InferredDivisionSingle } from "server/trpc/exportedTypes";
 
 export const tournamentRouter = router({
   //Tournament Queries/Mutations

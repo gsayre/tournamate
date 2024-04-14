@@ -2,8 +2,7 @@ import { z } from "zod";
 import { protectedProcedure, router } from "../../trpc";
 import { Prisma, PrismaClient, Team, User, UsersInTeam } from "@prisma/client";
 import { DefaultArgs } from "@prisma/client/runtime/library";
-import { inferRouterOutputs } from "@trpc/server";
-import { AppRouter } from "../_app";
+import { RouterOutputs } from "server/trpc/exportedTypes";
 
 export const bracketRouter = router({
   createBracketSchedule: protectedProcedure
@@ -816,10 +815,6 @@ const pullOutByes = (
   }
   return [];
 };
-
-type RouterOutputs = inferRouterOutputs<AppRouter>;
-export type InferredPoolsForDivisionType =
-  RouterOutputs["tournament"]["getPoolsByDivision"];
 
 const createGameArray = (
   wholeBracket: TeamsForBracketT,

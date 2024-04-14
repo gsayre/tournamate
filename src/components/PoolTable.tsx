@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { InferredPoolsForDivisionSingleType, InferredPoolsForDivisionType } from "./Admin/DivisionAccordian";
+import type { InferredPoolsForDivisionSingleType, InferredPoolsForDivisionType, InferredSingleTeamFromPoolsType, InferredTeamsArrayFromPoolsType } from "server/trpc/exportedTypes";
 
-type InferredSingleTeamFromPoolsType = InferredPoolsForDivisionSingleType["teams"][0];
-type InferredTeamsArrayFromPoolsType = InferredPoolsForDivisionSingleType["teams"];
+
 
 type PoolTableProps = {
   pool: InferredPoolsForDivisionSingleType;

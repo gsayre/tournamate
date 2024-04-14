@@ -2,10 +2,9 @@ import { MyPoolTable } from "@components/MyPoolTable";
 import { PoolSchedule, isCurrentGame } from "@components/PoolSchedule";
 import { PoolTable } from "@components/PoolTable";
 import { Format } from "@prisma/client";
-import { inferRouterOutputs } from "@trpc/server";
 import Image from "next/image";
 import { useState } from "react";
-import { AppRouter } from "server/trpc/router/_app";
+import type { InferredDivisionSingle, InferredGameSingleType, InferredGetBracketByDivisionType, InferredPoolsForDivisionType, nullableBracketGames } from "server/trpc/exportedTypes";
 import { trpc } from "utils/trpc";
 
 export type divAccordianProps = {
@@ -17,23 +16,7 @@ export type divAccordianProps = {
 
 type Gender = "MENS" | "WOMENS" | undefined;
 
-type RouterOutputs = inferRouterOutputs<AppRouter>;
-export type InferredPoolsForDivisionType =
-  RouterOutputs["tournament"]["getPoolsByDivision"];
-export type InferredPoolsForDivisionSingleType = ArrayElement<
-  InferredPoolsForDivisionType["poolsForDivision"]
->;
-type gamesPickType = Pick<
-  InferredPoolsForDivisionType["poolsForDivision"][number],
-  "games"
->;
-type InferredDivisionByType = RouterOutputs["tournament"]["getDivisionsByType"];
-type ArrayElement<ArrayType extends readonly unknown[]> =
-  ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
-export type InferredDivisionSingle = ArrayElement<InferredDivisionByType>;
-type InferredGameSingleType = ArrayElement<gamesPickType["games"]>;
-type InferredGetBracketByDivisionType =
-  RouterOutputs["bracket"]["getBracketByDivision"];
+
 
 export const DivisionAccordian = ({
   division,
@@ -825,19 +808,6 @@ type positionsToEnterMap = {
   4: number[];
   2: number[];
 };
-
-type Modify<T, R> = Omit<T, keyof R> & R;
-type bracketGames = Pick<
-  NonNullable<InferredGetBracketByDivisionType>,
-  "games"
->;
-type singleBracketGame = ArrayElement<bracketGames["games"]>;
-type nullableBracketGames = Modify<
-  bracketGames,
-  {
-    games: Array<singleBracketGame | null>;
-  }
->;
 
 function AddBlankGamesToBracket(
   divisionBracket: InferredGetBracketByDivisionType,

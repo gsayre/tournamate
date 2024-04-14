@@ -1,10 +1,7 @@
-import { inferRouterOutputs } from "@trpc/server";
-import { AppRouter } from "server/trpc/router/_app";
+import type { InferredGetMyPoolType, InferredSingleTeamType } from "server/trpc/exportedTypes";
 import { amIInTeam } from "utils/lib/am-i-in-utils";
 
-type RouterOutputs = inferRouterOutputs<AppRouter>;
-type InferredGetMyPoolType = RouterOutputs["tournament"]["getMyPool"];
-type InferredSingleTeamType = InferredGetMyPoolType["myPool"]["teams"][0];
+
 
 type OtherPoolTableProps = {
   pool: InferredGetMyPoolType;

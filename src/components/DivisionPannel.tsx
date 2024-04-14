@@ -1,16 +1,14 @@
 import { Division, Format } from "@prisma/client";
-import { inferRouterOutputs } from "@trpc/server";
-import { AppRouter } from "server/trpc/router/_app";
 import { trpc } from "utils/trpc";
 import { DivisionAccordian } from "./Admin/DivisionAccordian";
 import { NewDivisionForm } from "./DivisionForm";
+import type { InferredDivisionByType } from "server/trpc/exportedTypes";
 
 export type DivisionPannelProps = {
   format: string;
   id: number;
 };
-type RouterOutputs = inferRouterOutputs<AppRouter>;
-type InferredDivisionByType = RouterOutputs["tournament"]["getDivisionsByType"];
+
 
 export function DivisionPannel(props: DivisionPannelProps) {
   const divisions: InferredDivisionByType = [];
