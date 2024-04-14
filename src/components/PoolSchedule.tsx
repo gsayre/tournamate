@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
-import { trpc } from "utils/trpc";
 import type { InferredGetMyScheduleType, gameArrayOtherType, gameArrayType } from "server/trpc/exportedTypes";
+import { trpc } from "@utils/trpc";
 
 
 
@@ -16,8 +16,7 @@ export const PoolSchedule = ({
   tournamentId,
 }: PoolScheduleProps) => {
   const { user } = useUser();
-
-  const utils = trpc.useUtils();
+  const utils = trpc.useContext();
   const addPointMock = trpc.tournament.addPointToGameMock.useMutation();
   const finishGameMock = trpc.tournament.finishGameMock.useMutation();
 

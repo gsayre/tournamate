@@ -11,7 +11,7 @@ export type divAccordianProps = {
   division: InferredDivisionSingle;
   tournamentId: number;
   divisionType: Format;
-  divisionSex?: Gender; //yes please
+  divisionSex?: Gender; 
 };
 
 type Gender = "MENS" | "WOMENS" | undefined;
@@ -24,7 +24,7 @@ export const DivisionAccordian = ({
   divisionType,
   divisionSex,
 }: divAccordianProps) => {
-  const utils = trpc.useUtils();
+  const utils = trpc.useContext();
   const addUserToDivision = trpc.tournament.mockTournamentEntries.useMutation();
   const updatePools = trpc.tournament.updatePool.useMutation();
   const createPoolSchedule = trpc.tournament.createPoolSchedule.useMutation();
@@ -258,7 +258,7 @@ type PoolSectionProps = {
 
 const PoolSection = ({ poolsForDivision, division }: PoolSectionProps) => {
   const finishGameMock = trpc.tournament.finishGameMock.useMutation();
-  const utils = trpc.useUtils();
+  const utils = trpc.useContext();
 
   const poolsWithSeeds = poolsForDivision.poolsForDivision;
   if (poolsWithSeeds) {
@@ -423,7 +423,7 @@ const BracketSection = ({ divisionId }: BracketSectionProps) => {
   const createBracket = trpc.bracket.createBracketSchedule.useMutation();
   const finishBracketGameMock =
     trpc.bracket.finishBracketGameMock.useMutation();
-  const utils = trpc.useUtils();
+  const utils = trpc.useContext();
   const divisionBracket = trpc.bracket.getBracketByDivision.useQuery({
     divisionId: divisionId,
   }).data;
@@ -853,9 +853,8 @@ const DivisionControls = ({
   divisionId,
   numBreaking,
 }: DivisionControlProps) => {
-  const utils = trpc.useUtils();
-  const updateNumBreakingPool =
-    trpc.division.updateNumBreakingPool.useMutation();
+  const utils = trpc.useContext();
+  const updateNumBreakingPool = trpc.division.updateNumBreakingPool.useMutation();
   const allowWildcards = trpc.division.allowWildCards.useMutation();
   const [numBreakingValue, setNumBreakingValue] = useState(numBreaking);
   return (
