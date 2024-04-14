@@ -2,7 +2,6 @@ import { InferredDivisionSingle } from "@components/Admin/DivisionAccordian";
 import {
   Division,
   Format,
-  Game,
   Prisma,
   Team,
   Tournament,
