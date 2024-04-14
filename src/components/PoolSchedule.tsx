@@ -1,49 +1,49 @@
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
-import { trpc } from "utils/trpc";
+import type { InferredGetMyScheduleType, gameArrayOtherType, gameArrayType } from "server/trpc/exportedTypes";
+import { trpc } from "@utils/trpc";
 
-type GameSchedule = {
-  poolId: string;
-};
+
 
 type PoolScheduleProps = {
-  poolSchedule: any;
-  currentUserName: string;
+  poolSchedule: InferredGetMyScheduleType;
   // setMyPool: React.Dispatch<React.SetStateAction<FakeEntriesTeamArr>>;
   tournamentId: number;
 };
 
 export const PoolSchedule = ({
   poolSchedule,
-  currentUserName,
   tournamentId,
 }: PoolScheduleProps) => {
   const { user } = useUser();
-
   const utils = trpc.useContext();
   const addPointMock = trpc.tournament.addPointToGameMock.useMutation();
   const finishGameMock = trpc.tournament.finishGameMock.useMutation();
-  const addPoint = trpc.tournament.addPointToGame.useMutation();
 
   return (
     <div>
       <div>
-        {poolSchedule &&
-          poolSchedule[0].games.map((game, i, arr) => {
-            let teamOneId = game.teams[0].teamId;
-            let teamTwoId = game.teams[1].teamId;
-            let player1: string | undefined =
+        {poolSchedule.mySchedule &&
+          poolSchedule.mySchedule[0].games.map((game, i: number, arr) => {
+            const teamOneId = game.teams[0].teamId;
+            const teamTwoId = game.teams[1].teamId;
+            const poolId = game.poolId;
+            const teamOneRating = game.teams[0].Team.teamRating;
+            const teamTwoRating = game.teams[1].Team.teamRating;
+            const player1: string | undefined =
               game.teams[0].Team.players[0].user.fullName;
-            let player2: string | undefined =
+            const player2: string | undefined =
               game.teams[0].Team.players[1].user.fullName;
-            let player3: string | undefined =
+            const player3: string | undefined =
               game.teams[1].Team.players[0].user.fullName;
-            let player4: string | undefined =
+            const player4: string | undefined =
               game.teams[1].Team.players[1]?.user.fullName;
-            let ref1: string | undefined =
-              game.referees.players[0]?.user.fullName;
-            let ref2: string | undefined =
-              game.referees.players[1]?.user.fullName;
+            const ref1: string | undefined = game.referees
+              ? game.referees.players[0]?.user.fullName
+              : undefined;
+            const ref2: string | undefined = game.referees
+              ? game.referees.players[1]?.user.fullName
+              : undefined;
             const isLastGame = isCurrentGame(arr) === arr.length - 1;
             console.log(isLastGame);
 
@@ -124,41 +124,45 @@ export const PoolSchedule = ({
                       >
                         Ref Game
                       </Link>
-                      <button
-                        className="flex items-center rounded-xl bg-orange-500 p-2 text-lg"
-                        onClick={() => {
-                          finishGameMock.mutate(
-                            {
-                              gameId: game.gameId,
-                              numSets: game.numSets,
-                              gameOneTeamOneScore: game.gameOneTeamOneScore,
-                              gameOneTeamTwoScore: game.gameOneTeamTwoScore,
-                              scoreCapGame1: game.gameOneScoreCap,
-                              gameTwoTeamOneScore: game.gameTwoTeamOneScore,
-                              gameTwoTeamTwoScore: game.gameTwoTeamTwoScore,
-                              scoreCapGame2: game.gameTwoScoreCap,
-                              gameThreeTeamOneScore: game.gameThreeTeamOneScore,
-                              gameThreeTeamTwoScore: game.gameThreeTeamTwoScore,
-                              scoreCapGame3: game.gameThreeScoreCap,
-                              teamOneId: teamOneId,
-                              teamOneRating: game.teams[0].teamRating,
-                              teamTwoId: teamTwoId,
-                              teamTwoRating: game.teams[1].teamRating,
-                              isLastGame: isLastGame,
-                              poolId: game.poolId,
-                            },
-                            {
-                              onSuccess: () => {
-                                console.log(finishGameMock.data);
-                                utils.tournament.getMyScheudule.invalidate();
-                                utils.tournament.getMyPool.invalidate();
+                      {poolId && (
+                        <button
+                          className="flex items-center rounded-xl bg-orange-500 p-2 text-lg"
+                          onClick={() => {
+                            finishGameMock.mutate(
+                              {
+                                gameId: game.gameId,
+                                numSets: game.numSets,
+                                gameOneTeamOneScore: game.gameOneTeamOneScore,
+                                gameOneTeamTwoScore: game.gameOneTeamTwoScore,
+                                scoreCapGame1: game.gameOneScoreCap,
+                                gameTwoTeamOneScore: game.gameTwoTeamOneScore,
+                                gameTwoTeamTwoScore: game.gameTwoTeamTwoScore,
+                                scoreCapGame2: game.gameTwoScoreCap,
+                                gameThreeTeamOneScore:
+                                  game.gameThreeTeamOneScore,
+                                gameThreeTeamTwoScore:
+                                  game.gameThreeTeamTwoScore,
+                                scoreCapGame3: game.gameThreeScoreCap,
+                                teamOneId: teamOneId,
+                                teamOneRating: teamOneRating,
+                                teamTwoId: teamTwoId,
+                                teamTwoRating: teamTwoRating,
+                                isLastGame: isLastGame,
+                                poolId: poolId,
                               },
-                            },
-                          );
-                        }}
-                      >
-                        Finish Game
-                      </button>
+                              {
+                                onSuccess: () => {
+                                  console.log(finishGameMock.data);
+                                  utils.tournament.getMyScheudule.invalidate();
+                                  utils.tournament.getMyPool.invalidate();
+                                },
+                              },
+                            );
+                          }}
+                        >
+                          Finish Game
+                        </button>
+                      )}
                     </div>
                   ) : isCurrentGame(arr) === i ? (
                     <div className="flex flex-row gap-4">
@@ -180,39 +184,45 @@ export const PoolSchedule = ({
                       >
                         Add Point
                       </button>
-                      <button
-                        className="flex items-center rounded-xl bg-orange-500 p-2 text-lg"
-                        onClick={() => {
-                          finishGameMock.mutate(
-                            {
-                              gameId: game.gameId,
-                              numSets: game.numSets,
-                              gameOneTeamOneScore: game.gameOneTeamOneScore,
-                              gameOneTeamTwoScore: game.gameOneTeamTwoScore,
-                              scoreCapGame1: game.gameOneScoreCap,
-                              gameTwoTeamOneScore: game.gameTwoTeamOneScore,
-                              gameTwoTeamTwoScore: game.gameTwoTeamTwoScore,
-                              scoreCapGame2: game.gameTwoScoreCap,
-                              gameThreeTeamOneScore: game.gameThreeTeamOneScore,
-                              gameThreeTeamTwoScore: game.gameThreeTeamTwoScore,
-                              scoreCapGame3: game.gameThreeScoreCap,
-                              teamOneId: teamOneId,
-                              teamTwoId: teamTwoId,
-                              isLastGame: isLastGame,
-                              poolId: game.poolId,
-                            },
-                            {
-                              onSuccess: () => {
-                                console.log(finishGameMock.data);
-                                utils.tournament.getMyScheudule.invalidate();
-                                utils.tournament.getMyPool.invalidate();
+                      {poolId && (
+                        <button
+                          className="flex items-center rounded-xl bg-orange-500 p-2 text-lg"
+                          onClick={() => {
+                            finishGameMock.mutate(
+                              {
+                                gameId: game.gameId,
+                                numSets: game.numSets,
+                                gameOneTeamOneScore: game.gameOneTeamOneScore,
+                                gameOneTeamTwoScore: game.gameOneTeamTwoScore,
+                                scoreCapGame1: game.gameOneScoreCap,
+                                gameTwoTeamOneScore: game.gameTwoTeamOneScore,
+                                gameTwoTeamTwoScore: game.gameTwoTeamTwoScore,
+                                scoreCapGame2: game.gameTwoScoreCap,
+                                gameThreeTeamOneScore:
+                                  game.gameThreeTeamOneScore,
+                                gameThreeTeamTwoScore:
+                                  game.gameThreeTeamTwoScore,
+                                scoreCapGame3: game.gameThreeScoreCap,
+                                teamOneId: teamOneId,
+                                teamTwoId: teamTwoId,
+                                isLastGame: isLastGame,
+                                poolId: poolId,
+                                teamOneRating: teamOneRating,
+                                teamTwoRating: teamTwoRating,
                               },
-                            },
-                          );
-                        }}
-                      >
-                        Finish Game
-                      </button>
+                              {
+                                onSuccess: () => {
+                                  console.log(finishGameMock.data);
+                                  utils.tournament.getMyScheudule.invalidate();
+                                  utils.tournament.getMyPool.invalidate();
+                                },
+                              },
+                            );
+                          }}
+                        >
+                          Finish Game
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <></>
@@ -227,7 +237,10 @@ export const PoolSchedule = ({
   );
 };
 
-export function isCurrentGame(gameArray: any): number | undefined {
+
+
+
+export function isCurrentGame(gameArray: gameArrayType | gameArrayOtherType): number | undefined {
   for (let i = 0; i < gameArray.length; i++) {
     if (!gameArray[i].gameFinished) {
       return i;

@@ -1,14 +1,10 @@
-import { useAuth } from "@clerk/nextjs";
-import type { NextPage } from "next";
-import { redirect } from "next/dist/server/api-utils";
-import { NextResponse } from "next/server";
-import { PropsWithChildren, useEffect } from "react";
+import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
 import TopBar from "@components/TopBar";
-import { getAuth, buildClerkProps } from "@clerk/nextjs/server";
+import type { GetServerSidePropsContext } from "next";
+import { useEffect } from "react";
 import { trpc } from "../../utils/trpc";
-import { prisma } from "../../server/db/client";
 
-export async function getServerSideProps(context: any) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { userId } = getAuth(context.req);
 
   if (!userId) {
@@ -22,11 +18,11 @@ export async function getServerSideProps(context: any) {
   return { props: { ...buildClerkProps(context.req) } };
 }
 
-export default function Dashboard({ children }: PropsWithChildren) {
+export default function Dashboard() {
   const updateOrCreateUser = trpc.user.createOrFindUser.useMutation();
   useEffect(() => {
     updateOrCreateUser.mutate();
-  }, []);
+  });
   return (
     <div className="flex h-screen w-screen">
       <div className="flex h-full w-full flex-row">

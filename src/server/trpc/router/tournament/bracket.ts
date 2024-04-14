@@ -1,14 +1,7 @@
+import { Prisma, PrismaClient, Team, User, UsersInTeam } from "@prisma/client";
+import { DefaultArgs } from "@prisma/client/runtime/library";
 import { z } from "zod";
 import { protectedProcedure, router } from "../../trpc";
-import {
-  Game,
-  Prisma,
-  PrismaClient,
-  Team,
-  User,
-  UsersInTeam,
-} from "@prisma/client";
-import { DefaultArgs } from "@prisma/client/runtime/library";
 
 export const bracketRouter = router({
   createBracketSchedule: protectedProcedure
@@ -34,8 +27,8 @@ export const bracketRouter = router({
           },
         },
       });
-      let teamsThatBrokePool = [];
-      let potentialWildcardArray = [];
+      const teamsThatBrokePool = [];
+      const potentialWildcardArray = [];
       let wildcardArray: TeamsForBracketT = [];
       const DivisionTypeToMock = divisionToAddBracket;
       if (DivisionTypeToMock && DivisionTypeToMock.pools) {
@@ -65,23 +58,25 @@ export const bracketRouter = router({
           }
           teamsThatBrokePool.push(teamsThatBroke);
         }
-        let flattentedWildcardArray = potentialWildcardArray.flat();
-        const orderedWildcardCandidates = flattentedWildcardArray.sort(
-          (a: FakeTeamInFakeDivision, b: FakeTeamInFakeDivision) => {
-            return (
-              b.poolWins / b.poolLosses - a.poolWins / a.poolLosses ||
-              b.poolPointDifferential - a.poolPointDifferential
-            );
-          },
-        );
-        wildcardArray = orderedWildcardCandidates
-          .slice(0, numWildCard)
-          .sort((a: FakeTeamInFakeDivision, b: FakeTeamInFakeDivision) => {
-            return (
-              b.poolWins / b.poolLosses - a.poolWins / a.poolLosses ||
-              b.poolPointDifferential - a.poolPointDifferential
-            );
-          });
+        if (hasWildCard && numWildCard) {
+          const flattentedWildcardArray = potentialWildcardArray.flat();
+          const orderedWildcardCandidates = flattentedWildcardArray.sort(
+            (a: TeamInBracketT, b: TeamInBracketT) => {
+              return (
+                b.poolWins / b.poolLosses - a.poolWins / a.poolLosses ||
+                b.poolPointDifferential - a.poolPointDifferential
+              );
+            },
+          );
+          wildcardArray = orderedWildcardCandidates
+            .slice(0, numWildCard)
+            .sort((a: TeamInBracketT, b: TeamInBracketT) => {
+              return (
+                b.poolWins / b.poolLosses - a.poolWins / a.poolLosses ||
+                b.poolPointDifferential - a.poolPointDifferential
+              );
+            });
+        }
         BracketMakerHelper({
           teamsThatCleanBroke: teamsThatBrokePool.flat(),
           teamsThatGotWildCard: wildcardArray,
@@ -170,17 +165,17 @@ export const bracketRouter = router({
               gameOneteamTwoScore++;
             }
           }
-          let WinningTeam =
+          const WinningTeam =
             gameOneteamOneScore > gameOneteamTwoScore
               ? input.teamOneId
               : input.teamTwoId;
-          let LosingTeam =
+          const LosingTeam =
             WinningTeam === input.teamOneId ? input.teamTwoId : input.teamOneId;
-          let WinningTeamPointDifferential =
+          const WinningTeamPointDifferential =
             gameOneteamOneScore > gameOneteamTwoScore
               ? gameOneteamOneScore - gameOneteamTwoScore
               : gameOneteamTwoScore - gameOneteamOneScore;
-          let LosingTeamPointDifferential = WinningTeamPointDifferential * -1;
+          const LosingTeamPointDifferential = WinningTeamPointDifferential * -1;
 
           updatedGame = await ctx.prisma.game.update({
             where: {
@@ -192,7 +187,7 @@ export const bracketRouter = router({
               gameFinished: true,
             },
           });
-          const updateWinningTeam = await ctx.prisma.team.update({
+          await ctx.prisma.team.update({
             where: {
               teamId: WinningTeam,
             },
@@ -205,7 +200,7 @@ export const bracketRouter = router({
               },
             },
           });
-          const updateLosingTeam = await ctx.prisma.team.update({
+          await ctx.prisma.team.update({
             where: {
               teamId: LosingTeam,
             },
@@ -219,7 +214,7 @@ export const bracketRouter = router({
             },
           });
           if (input.nextGame) {
-            const updateNextBracketGame = await ctx.prisma.game.update({
+            await ctx.prisma.game.update({
               where: {
                 gameId: input.nextGame,
               },
@@ -328,7 +323,7 @@ export const bracketRouter = router({
               gameFinished: true,
             },
           });
-          const updateTeamOne = await ctx.prisma.team.update({
+          await ctx.prisma.team.update({
             where: {
               teamId: input.teamOneId,
             },
@@ -342,7 +337,7 @@ export const bracketRouter = router({
               },
             },
           });
-          const updateTeamTwo = await ctx.prisma.team.update({
+          await ctx.prisma.team.update({
             where: {
               teamId: input.teamTwoId,
             },
@@ -488,34 +483,34 @@ export const bracketRouter = router({
               gameFinished: true,
             },
           });
-          // const updateFirstTeam = await ctx.prisma.team.update({
-          //   where: {
-          //     teamId: input.teamOneId,
-          //   },
-          //   data: {
-          //     poolWins: { increment: teamOneWins },
-          //     poolLosses: { increment: teamOneLosses },
-          //     poolPointDifferential: {
-          //       increment: teamOnePoolPointDifferential,
-          //     },
-          //   },
-          // });
-          // const updateSecondTeam = await ctx.prisma.team.update({
-          //   where: {
-          //     teamId: input.teamTwoId,
-          //   },
-          //   data: {
-          //     poolWins: { increment: teamTwoWins },
-          //     poolLosses: { increment: teamTwoLosses },
-          //     poolPointDifferential: {
-          //       increment: teamTwoPoolPointDifferential,
-          //     },
-          //   },
-          // });
-          let WinningTeam =
+          await ctx.prisma.team.update({
+            where: {
+              teamId: input.teamOneId,
+            },
+            data: {
+              poolWins: { increment: teamOneWins },
+              poolLosses: { increment: teamOneLosses },
+              poolPointDifferential: {
+                increment: teamOnePoolPointDifferential,
+              },
+            },
+          });
+          await ctx.prisma.team.update({
+            where: {
+              teamId: input.teamTwoId,
+            },
+            data: {
+              poolWins: { increment: teamTwoWins },
+              poolLosses: { increment: teamTwoLosses },
+              poolPointDifferential: {
+                increment: teamTwoPoolPointDifferential,
+              },
+            },
+          });
+          const WinningTeam =
             teamOneWins > teamTwoWins ? input.teamOneId : input.teamTwoId;
           if (input.nextGame) {
-            const updateNextBracketGame = await ctx.prisma.game.update({
+            await ctx.prisma.game.update({
               where: {
                 gameId: input.nextGame,
               },
@@ -532,7 +527,7 @@ export const bracketRouter = router({
               },
             });
           } else if (input.bracketId) {
-            const updateBracket = await ctx.prisma.bracket.update({
+            await ctx.prisma.bracket.update({
               where: {
                 bracketId: input.bracketId,
               },
@@ -576,18 +571,18 @@ export const bracketRouter = router({
           },
         },
       });
-      let bracketTeamStandingsFinal = []
+      const bracketTeamStandingsFinal = [];
       if (divisionBracket) {
         for (let i = 0; i < divisionBracket.games.length; i++) {
           const game = divisionBracket.games[i];
           let winningTeam: number;
-          let winningPlayers
+          let winningPlayers;
           let losingTeam: number;
-          let losingPlayers
+          let losingPlayers;
           let teamOneWins = 0;
-          let teamOneId = game.teams[0].Team.teamId;
+          const teamOneId = game.teams[0].Team.teamId;
           let teamTwoWins = 0;
-          let teamTwoId = game.teams[1].Team.teamId;
+          const teamTwoId = game.teams[1].Team.teamId;
           if (
             game.gameOneTeamOneScore &&
             game.gameOneTeamTwoScore &&
@@ -626,14 +621,14 @@ export const bracketRouter = router({
           }
           if (teamOneWins > teamTwoWins) {
             winningTeam = teamOneId;
-            winningPlayers = game.teams[0].Team.players
+            winningPlayers = game.teams[0].Team.players;
             losingTeam = teamTwoId;
-            losingPlayers = game.teams[1].Team.players
+            losingPlayers = game.teams[1].Team.players;
           } else {
             winningTeam = teamTwoId;
-            winningPlayers = game.teams[1].Team.players
+            winningPlayers = game.teams[1].Team.players;
             losingTeam = teamOneId;
-            losingPlayers = game.teams[0].Team.players
+            losingPlayers = game.teams[0].Team.players;
           }
           if (bracketTeamStandingsFinal.length === 0) {
             bracketTeamStandingsFinal.push({
@@ -645,20 +640,26 @@ export const bracketRouter = router({
               players: losingPlayers,
             });
           }
-          if (bracketTeamStandingsFinal.filter(el => el.teamId === winningTeam).length === 0) {
+          if (
+            bracketTeamStandingsFinal.filter((el) => el.teamId === winningTeam)
+              .length === 0
+          ) {
             bracketTeamStandingsFinal.push({
               teamId: winningTeam,
               players: winningPlayers,
             });
           }
-          if (bracketTeamStandingsFinal.filter(el => el.teamId === losingTeam).length === 0) {
+          if (
+            bracketTeamStandingsFinal.filter((el) => el.teamId === losingTeam)
+              .length === 0
+          ) {
             bracketTeamStandingsFinal.push({
               teamId: losingTeam,
               players: losingPlayers,
             });
           }
         }
-        return {finalStandings: bracketTeamStandingsFinal}
+        return { finalStandings: bracketTeamStandingsFinal };
       }
     }),
 });
@@ -691,7 +692,6 @@ const BracketMakerHelper = async ({
   divisionId,
 }: BracketMakerHelperProps): Promise<void> => {
   let fullBracketTeams;
-  let numByes;
   if (teamsThatGotWildCard) {
     fullBracketTeams = teamsThatCleanBroke.concat(teamsThatGotWildCard);
   } else {
@@ -706,7 +706,7 @@ const BracketMakerHelper = async ({
     Math.ceil(Math.log2(fullBracketTeams.length)),
   );
 
-  numByes = Math.min(
+  const numByes = Math.min(
     Math.abs(fullBracketTeams.length - lowerPower),
     Math.abs(fullBracketTeams.length - higherPower),
   );
@@ -737,24 +737,24 @@ const BracketMakerHelper = async ({
     upperEschelonPogchamps,
     numByes,
   );
+
   const teamsThatAreUpper = upperEschelonPogchamps
     .flat()
     .filter((team) => !teamsThatGetByes.includes(team))
-    .sort((a: FakeTeamInFakeDivision, b: FakeTeamInFakeDivision) => {
+    .sort((a: TeamInBracketT, b: TeamInBracketT) => {
       return (
         b.poolWins / b.poolLosses - a.poolWins / a.poolLosses ||
         b.poolPointDifferential - a.poolPointDifferential
       );
     });
+  console.log(teamsThatAreUpper);
   const gameArray = createGameArray(
-    fullBracketTeams.sort(
-      (a: FakeTeamInFakeDivision, b: FakeTeamInFakeDivision) => {
-        return (
-          b.poolWins / b.poolLosses - a.poolWins / a.poolLosses ||
-          b.poolPointDifferential - a.poolPointDifferential
-        );
-      },
-    ),
+    fullBracketTeams.sort((a: TeamInBracketT, b: TeamInBracketT) => {
+      return (
+        b.poolWins / b.poolLosses - a.poolWins / a.poolLosses ||
+        b.poolPointDifferential - a.poolPointDifferential
+      );
+    }),
   );
   const previousBracket = await prismaContext.bracket.findFirst({
     where: {
@@ -815,8 +815,9 @@ const pullOutByes = (
   return [];
 };
 
-const createGameArray = (wholeBracket: TeamsForBracketT): any[] => {
-  const games: Game[] = [];
+const createGameArray = (
+  wholeBracket: TeamsForBracketT,
+): Array<TeamsForBracketT | TeamInBracketT> => {
   // if there are byes and wildcards
   const twoSidesOfBracket: Array<TeamsForBracketT | TeamInBracketT> = [[], []];
   let sideOfBracket: number = 0;
@@ -838,7 +839,9 @@ const createGameArray = (wholeBracket: TeamsForBracketT): any[] => {
       wholeBracket[i].poolPointDifferential,
       sideOfBracket,
     );
-    twoSidesOfBracket[sideOfBracket].push(wholeBracket[i]);
+    (twoSidesOfBracket[sideOfBracket] as TeamsForBracketT).push(
+      wholeBracket[i],
+    );
     sideOfBracketXtra =
       sideOfBracketXtra === "0"
         ? "1"
@@ -852,23 +855,27 @@ const createGameArray = (wholeBracket: TeamsForBracketT): any[] => {
   }
   console.log("--------------------");
   if ("length" in twoSidesOfBracket[0] && twoSidesOfBracket[0].length > 2) {
-    twoSidesOfBracket[0] = createGameArray(twoSidesOfBracket[0]);
+    twoSidesOfBracket[0] = createGameArray(
+      twoSidesOfBracket[0],
+    ) as TeamsForBracketT;
   }
   if ("length" in twoSidesOfBracket[1] && twoSidesOfBracket[1].length > 2) {
-    twoSidesOfBracket[1] = createGameArray(twoSidesOfBracket[1]);
+    twoSidesOfBracket[1] = createGameArray(
+      twoSidesOfBracket[1],
+    ) as TeamsForBracketT;
   }
   if ("length" in twoSidesOfBracket[0] && twoSidesOfBracket[0].length === 1) {
-    twoSidesOfBracket[0] = twoSidesOfBracket[0][0];
+    twoSidesOfBracket[0] = twoSidesOfBracket[0][0] as TeamInBracketT;
   }
   if ("length" in twoSidesOfBracket[1] && twoSidesOfBracket[1].length === 1) {
-    twoSidesOfBracket[0] = twoSidesOfBracket[1][0];
+    twoSidesOfBracket[0] = twoSidesOfBracket[1][0] as TeamInBracketT;
   }
   return twoSidesOfBracket;
 };
 
 const createGames = async (
-  team1: any[] | TeamInBracketT,
-  team2: any[] | TeamInBracketT,
+  team1: TeamsForBracketT | TeamInBracketT,
+  team2: TeamsForBracketT | TeamInBracketT,
   prismaContext: PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>,
   bracketId: number,
   nextGameId?: number,
@@ -879,7 +886,7 @@ const createGames = async (
     console.log(team1Id, team2Id);
     // These are first round games
     if (nextGameId) {
-      const gameCreated = await prismaContext.game.create({
+      await prismaContext.game.create({
         data: {
           gameOneScoreCap: 21,
           gameTwoScoreCap: 21,
@@ -908,7 +915,7 @@ const createGames = async (
         },
       });
     } else {
-      const gameCreated = await prismaContext.game.create({
+      await prismaContext.game.create({
         data: {
           gameOneScoreCap: 21,
           gameTwoScoreCap: 21,
@@ -1083,292 +1090,292 @@ const createGames = async (
   }
 };
 
-type FakeDivisions = {
-  numBreakingPool: number;
-  hasWildcards: boolean;
-  numWildcards: number;
-  pools: Array<FakePoolInDivision>;
-};
-type FakePoolInDivision = {
-  teams: Array<FakeTeamInFakeDivision>;
-};
-type FakeTeamInFakeDivision = {
-  teamId: number;
-  poolWins: number;
-  poolLosses: number;
-  poolPointDifferential: number;
-};
+// type FakeDivisions = {
+//   numBreakingPool: number;
+//   hasWildcards: boolean;
+//   numWildcards: number;
+//   pools: Array<FakePoolInDivision>;
+// };
+// type FakePoolInDivision = {
+//   teams: Array<FakeTeamInFakeDivision>;
+// };
+// type FakeTeamInFakeDivision = {
+//   teamId: number;
+//   poolWins: number;
+//   poolLosses: number;
+//   poolPointDifferential: number;
+// };
 
-const fakeTwoPoolDivision: FakeDivisions = {
-  numBreakingPool: 2,
-  hasWildcards: false,
-  numWildcards: 1,
-  pools: [
-    {
-      teams: [
-        {
-          teamId: 1,
-          poolWins: 3,
-          poolLosses: 3,
-          poolPointDifferential: 4,
-        },
-        {
-          teamId: 2,
-          poolWins: 6,
-          poolLosses: 0,
-          poolPointDifferential: 34,
-        },
-        {
-          teamId: 3,
-          poolWins: 3,
-          poolLosses: 3,
-          poolPointDifferential: 10,
-        },
-        {
-          teamId: 4,
-          poolWins: 0,
-          poolLosses: 6,
-          poolPointDifferential: -23,
-        },
-      ],
-    },
-    {
-      teams: [
-        {
-          teamId: 5,
-          poolWins: 2,
-          poolLosses: 4,
-          poolPointDifferential: -1,
-        },
-        {
-          teamId: 6,
-          poolWins: 4,
-          poolLosses: 2,
-          poolPointDifferential: 27,
-        },
-        {
-          teamId: 7,
-          poolWins: 1,
-          poolLosses: 5,
-          poolPointDifferential: -12,
-        },
-        {
-          teamId: 8,
-          poolWins: 5,
-          poolLosses: 1,
-          poolPointDifferential: 22,
-        },
-      ],
-    },
-  ],
-};
-const fakeThreePoolDivision: FakeDivisions = {
-  numBreakingPool: 2,
-  hasWildcards: true,
-  numWildcards: 1,
-  pools: [
-    {
-      teams: [
-        {
-          teamId: 1,
-          poolWins: 3,
-          poolLosses: 3,
-          poolPointDifferential: 4,
-        },
-        {
-          teamId: 2,
-          poolWins: 6,
-          poolLosses: 0,
-          poolPointDifferential: 34,
-        },
-        {
-          teamId: 3,
-          poolWins: 3,
-          poolLosses: 3,
-          poolPointDifferential: 10,
-        },
-        {
-          teamId: 4,
-          poolWins: 0,
-          poolLosses: 6,
-          poolPointDifferential: -23,
-        },
-      ],
-    },
-    {
-      teams: [
-        {
-          teamId: 5,
-          poolWins: 2,
-          poolLosses: 4,
-          poolPointDifferential: -1,
-        },
-        {
-          teamId: 6,
-          poolWins: 4,
-          poolLosses: 2,
-          poolPointDifferential: 27,
-        },
-        {
-          teamId: 7,
-          poolWins: 1,
-          poolLosses: 5,
-          poolPointDifferential: -12,
-        },
-        {
-          teamId: 8,
-          poolWins: 5,
-          poolLosses: 1,
-          poolPointDifferential: 22,
-        },
-      ],
-    },
-    {
-      teams: [
-        {
-          teamId: 9,
-          poolWins: 2,
-          poolLosses: 4,
-          poolPointDifferential: -1,
-        },
-        {
-          teamId: 10,
-          poolWins: 4,
-          poolLosses: 2,
-          poolPointDifferential: 27,
-        },
-        {
-          teamId: 11,
-          poolWins: 1,
-          poolLosses: 5,
-          poolPointDifferential: -12,
-        },
-        {
-          teamId: 12,
-          poolWins: 5,
-          poolLosses: 1,
-          poolPointDifferential: 22,
-        },
-      ],
-    },
-  ],
-};
-const fakeFourPoolDivision: FakeDivisions = {
-  numBreakingPool: 2,
-  hasWildcards: true,
-  numWildcards: 1,
-  pools: [
-    {
-      teams: [
-        {
-          teamId: 1,
-          poolWins: 3,
-          poolLosses: 3,
-          poolPointDifferential: 4,
-        },
-        {
-          teamId: 2,
-          poolWins: 6,
-          poolLosses: 0,
-          poolPointDifferential: 34,
-        },
-        {
-          teamId: 3,
-          poolWins: 3,
-          poolLosses: 3,
-          poolPointDifferential: 10,
-        },
-        {
-          teamId: 4,
-          poolWins: 0,
-          poolLosses: 6,
-          poolPointDifferential: -23,
-        },
-      ],
-    },
-    {
-      teams: [
-        {
-          teamId: 5,
-          poolWins: 2,
-          poolLosses: 4,
-          poolPointDifferential: -1,
-        },
-        {
-          teamId: 6,
-          poolWins: 4,
-          poolLosses: 2,
-          poolPointDifferential: 27,
-        },
-        {
-          teamId: 7,
-          poolWins: 1,
-          poolLosses: 5,
-          poolPointDifferential: -12,
-        },
-        {
-          teamId: 8,
-          poolWins: 5,
-          poolLosses: 1,
-          poolPointDifferential: 22,
-        },
-      ],
-    },
-    {
-      teams: [
-        {
-          teamId: 9,
-          poolWins: 2,
-          poolLosses: 4,
-          poolPointDifferential: -1,
-        },
-        {
-          teamId: 10,
-          poolWins: 4,
-          poolLosses: 2,
-          poolPointDifferential: 27,
-        },
-        {
-          teamId: 11,
-          poolWins: 1,
-          poolLosses: 5,
-          poolPointDifferential: -12,
-        },
-        {
-          teamId: 12,
-          poolWins: 5,
-          poolLosses: 1,
-          poolPointDifferential: 22,
-        },
-      ],
-    },
-    {
-      teams: [
-        {
-          teamId: 13,
-          poolWins: 3,
-          poolLosses: 3,
-          poolPointDifferential: 4,
-        },
-        {
-          teamId: 14,
-          poolWins: 6,
-          poolLosses: 0,
-          poolPointDifferential: 34,
-        },
-        {
-          teamId: 15,
-          poolWins: 3,
-          poolLosses: 3,
-          poolPointDifferential: 10,
-        },
-        {
-          teamId: 16,
-          poolWins: 0,
-          poolLosses: 6,
-          poolPointDifferential: -23,
-        },
-      ],
-    },
-  ],
-};
+// const fakeTwoPoolDivision: FakeDivisions = {
+//   numBreakingPool: 2,
+//   hasWildcards: false,
+//   numWildcards: 1,
+//   pools: [
+//     {
+//       teams: [
+//         {
+//           teamId: 1,
+//           poolWins: 3,
+//           poolLosses: 3,
+//           poolPointDifferential: 4,
+//         },
+//         {
+//           teamId: 2,
+//           poolWins: 6,
+//           poolLosses: 0,
+//           poolPointDifferential: 34,
+//         },
+//         {
+//           teamId: 3,
+//           poolWins: 3,
+//           poolLosses: 3,
+//           poolPointDifferential: 10,
+//         },
+//         {
+//           teamId: 4,
+//           poolWins: 0,
+//           poolLosses: 6,
+//           poolPointDifferential: -23,
+//         },
+//       ],
+//     },
+//     {
+//       teams: [
+//         {
+//           teamId: 5,
+//           poolWins: 2,
+//           poolLosses: 4,
+//           poolPointDifferential: -1,
+//         },
+//         {
+//           teamId: 6,
+//           poolWins: 4,
+//           poolLosses: 2,
+//           poolPointDifferential: 27,
+//         },
+//         {
+//           teamId: 7,
+//           poolWins: 1,
+//           poolLosses: 5,
+//           poolPointDifferential: -12,
+//         },
+//         {
+//           teamId: 8,
+//           poolWins: 5,
+//           poolLosses: 1,
+//           poolPointDifferential: 22,
+//         },
+//       ],
+//     },
+//   ],
+// };
+// const fakeThreePoolDivision: FakeDivisions = {
+//   numBreakingPool: 2,
+//   hasWildcards: true,
+//   numWildcards: 1,
+//   pools: [
+//     {
+//       teams: [
+//         {
+//           teamId: 1,
+//           poolWins: 3,
+//           poolLosses: 3,
+//           poolPointDifferential: 4,
+//         },
+//         {
+//           teamId: 2,
+//           poolWins: 6,
+//           poolLosses: 0,
+//           poolPointDifferential: 34,
+//         },
+//         {
+//           teamId: 3,
+//           poolWins: 3,
+//           poolLosses: 3,
+//           poolPointDifferential: 10,
+//         },
+//         {
+//           teamId: 4,
+//           poolWins: 0,
+//           poolLosses: 6,
+//           poolPointDifferential: -23,
+//         },
+//       ],
+//     },
+//     {
+//       teams: [
+//         {
+//           teamId: 5,
+//           poolWins: 2,
+//           poolLosses: 4,
+//           poolPointDifferential: -1,
+//         },
+//         {
+//           teamId: 6,
+//           poolWins: 4,
+//           poolLosses: 2,
+//           poolPointDifferential: 27,
+//         },
+//         {
+//           teamId: 7,
+//           poolWins: 1,
+//           poolLosses: 5,
+//           poolPointDifferential: -12,
+//         },
+//         {
+//           teamId: 8,
+//           poolWins: 5,
+//           poolLosses: 1,
+//           poolPointDifferential: 22,
+//         },
+//       ],
+//     },
+//     {
+//       teams: [
+//         {
+//           teamId: 9,
+//           poolWins: 2,
+//           poolLosses: 4,
+//           poolPointDifferential: -1,
+//         },
+//         {
+//           teamId: 10,
+//           poolWins: 4,
+//           poolLosses: 2,
+//           poolPointDifferential: 27,
+//         },
+//         {
+//           teamId: 11,
+//           poolWins: 1,
+//           poolLosses: 5,
+//           poolPointDifferential: -12,
+//         },
+//         {
+//           teamId: 12,
+//           poolWins: 5,
+//           poolLosses: 1,
+//           poolPointDifferential: 22,
+//         },
+//       ],
+//     },
+//   ],
+// };
+// const fakeFourPoolDivision: FakeDivisions = {
+//   numBreakingPool: 2,
+//   hasWildcards: true,
+//   numWildcards: 1,
+//   pools: [
+//     {
+//       teams: [
+//         {
+//           teamId: 1,
+//           poolWins: 3,
+//           poolLosses: 3,
+//           poolPointDifferential: 4,
+//         },
+//         {
+//           teamId: 2,
+//           poolWins: 6,
+//           poolLosses: 0,
+//           poolPointDifferential: 34,
+//         },
+//         {
+//           teamId: 3,
+//           poolWins: 3,
+//           poolLosses: 3,
+//           poolPointDifferential: 10,
+//         },
+//         {
+//           teamId: 4,
+//           poolWins: 0,
+//           poolLosses: 6,
+//           poolPointDifferential: -23,
+//         },
+//       ],
+//     },
+//     {
+//       teams: [
+//         {
+//           teamId: 5,
+//           poolWins: 2,
+//           poolLosses: 4,
+//           poolPointDifferential: -1,
+//         },
+//         {
+//           teamId: 6,
+//           poolWins: 4,
+//           poolLosses: 2,
+//           poolPointDifferential: 27,
+//         },
+//         {
+//           teamId: 7,
+//           poolWins: 1,
+//           poolLosses: 5,
+//           poolPointDifferential: -12,
+//         },
+//         {
+//           teamId: 8,
+//           poolWins: 5,
+//           poolLosses: 1,
+//           poolPointDifferential: 22,
+//         },
+//       ],
+//     },
+//     {
+//       teams: [
+//         {
+//           teamId: 9,
+//           poolWins: 2,
+//           poolLosses: 4,
+//           poolPointDifferential: -1,
+//         },
+//         {
+//           teamId: 10,
+//           poolWins: 4,
+//           poolLosses: 2,
+//           poolPointDifferential: 27,
+//         },
+//         {
+//           teamId: 11,
+//           poolWins: 1,
+//           poolLosses: 5,
+//           poolPointDifferential: -12,
+//         },
+//         {
+//           teamId: 12,
+//           poolWins: 5,
+//           poolLosses: 1,
+//           poolPointDifferential: 22,
+//         },
+//       ],
+//     },
+//     {
+//       teams: [
+//         {
+//           teamId: 13,
+//           poolWins: 3,
+//           poolLosses: 3,
+//           poolPointDifferential: 4,
+//         },
+//         {
+//           teamId: 14,
+//           poolWins: 6,
+//           poolLosses: 0,
+//           poolPointDifferential: 34,
+//         },
+//         {
+//           teamId: 15,
+//           poolWins: 3,
+//           poolLosses: 3,
+//           poolPointDifferential: 10,
+//         },
+//         {
+//           teamId: 16,
+//           poolWins: 0,
+//           poolLosses: 6,
+//           poolPointDifferential: -23,
+//         },
+//       ],
+//     },
+//   ],
+// };

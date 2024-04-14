@@ -1,12 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
-import { useAuth, UserButton, useUser } from "@clerk/nextjs";
+import { useAuth, UserButton } from "@clerk/nextjs";
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
-import { trpc } from "../utils/trpc";
+import { GetServerSidePropsContext } from "next";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
-import { useRouter } from "next/router";
+import { trpc } from "../utils/trpc";
 
-export async function getServerSideProps(context: any) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { userId } = getAuth(context.req);
 
   if (!userId) {
@@ -21,11 +20,9 @@ export async function getServerSideProps(context: any) {
   return { props: { ...buildClerkProps(context.req) } };
 }
 
-export default function TopBar(props: any) {
+export default function TopBar() {
   const toggleTDStatus = trpc.user.toggleTournamentDirectorRole.useMutation();
   const toggleAdminStatus = trpc.user.toggleAdminRole.useMutation();
-  const router = useRouter();
-  const { user } = useUser();
   const { userId } = useAuth();
 
   return (
@@ -140,7 +137,7 @@ export default function TopBar(props: any) {
   );
 }
 
-const TextWithIcon = ({ text, iconURL }: { text: string; iconURL: string }) => {
+const TextWithIcon = ({ text }: { text: string; iconURL: string }) => {
   return (
     <div className="flex flex-row items-center space-x-3 p-2 text-2xl">
       {/* <img src={iconURL} alt="" className="h-8 w-8" /> */}

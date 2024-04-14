@@ -1,20 +1,20 @@
 /* eslint-disable @next/next/no-img-element */
 import { buildClerkProps, getAuth } from "@clerk/nextjs/server";
+import { InvitationCard } from "@components/InvitationCard";
 import { SignupModal } from "@components/SignupModal";
 import {
   Division,
   Team,
-  TeamInvitation,
   User,
-  UsersInTeam,
+  UsersInTeam
 } from "@prisma/client";
+import { GetServerSidePropsContext } from "next";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import TopBar from "../../../../components/TopBar";
 import { trpc } from "../../../../utils/trpc";
-import { InvitationCard } from "@components/InvitationCard";
 
-export async function getServerSideProps(context: any) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { userId } = getAuth(context.req);
 
   if (!userId) {
@@ -39,7 +39,6 @@ export default function TournamentView() {
     tournamentId: tId,
   }).data;
   const inviteData = trpc.tournament.getTeamInvitations.useQuery().data;
-  const [modalOpen, setModalOpen] = useState(false);
   let firstDayDivisions;
   let secondDayDivisions;
   if (
@@ -257,7 +256,7 @@ const DivisionAccordian = ({ division }: divAccordianProps) => {
   );
 };
 
-const PoolTable = (props: any) => {
+const PoolTable = () => {
   return (
     <div className="flex h-full w-full flex-col rounded-xl bg-slate-200">
       <div className="w-full rounded-t-xl bg-green-500 text-center">Header</div>

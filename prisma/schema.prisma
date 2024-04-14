@@ -25,6 +25,11 @@ model User {
   @@fulltext([fullName])
 }
 
+model ComingSoonSubscriptions {
+  id Int @id @default(autoincrement()) 
+  email String 
+}
+
 model VerificationToken {
   identifier String
   token      String   @unique

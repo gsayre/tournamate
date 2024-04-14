@@ -8,10 +8,13 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { trpc } from "utils/trpc";
 import { PartnerCard } from "./PartnerCard";
+import type { InferredTournamentDataType } from "server/trpc/exportedTypes";
+
+
 
 type SignupModalProps = {
   divisionsPerDay: Array<Division[]>;
-  tournamentData: any;
+  tournamentData: InferredTournamentDataType;
 };
 
 export const SignupModal = ({

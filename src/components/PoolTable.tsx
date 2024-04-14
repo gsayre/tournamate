@@ -1,17 +1,17 @@
-import { Game, Pool, Team, User } from "@prisma/client";
-import { FakeEntriesTeamArr } from "../utils/types/team";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { trpc } from "utils/trpc";
+import { useEffect, useState } from "react";
+import type { InferredPoolsForDivisionSingleType, InferredPoolsForDivisionType, InferredSingleTeamFromPoolsType, InferredTeamsArrayFromPoolsType } from "server/trpc/exportedTypes";
+
+
 
 type PoolTableProps = {
-  pool: any;
+  pool: InferredPoolsForDivisionSingleType;
   poolNumber: number;
-  pools: any;
+  pools: InferredPoolsForDivisionType["poolsForDivision"];
   numBreaking: number;
   hasWildcards: boolean;
 };
 
-export const PoolTable = ({ pool, poolNumber, pools, numBreaking, hasWildcards }: PoolTableProps) => {
+export const PoolTable = ({ pool, poolNumber, numBreaking, hasWildcards }: PoolTableProps) => {
   // const updateSwap = (index: number) => {
   //   const newArr = [...isSwapping];
   //   newArr[index] = !newArr[index];
@@ -27,11 +27,14 @@ export const PoolTable = ({ pool, poolNumber, pools, numBreaking, hasWildcards }
   //     return b.teamRating - a.teamRating;
   //   });
   // }
-  const compareFunction = (a: any, b: any) => {
+  const compareFunction = (
+    a: InferredSingleTeamFromPoolsType,
+    b: InferredSingleTeamFromPoolsType,
+  ) => {
     return b.teamRating - a.teamRating;
   };
   const [poolRating, setPoolRating] = useState(0);
-  const [sortedPools, setSortedPools] = useState([]);
+  const [, setSortedPools] = useState<Array<InferredTeamsArrayFromPoolsType>>([]);
   useEffect(() => {
     let accumualtedRating = 0;
     for (let i = 0; i < pool.teams.length; i++) {
@@ -41,7 +44,7 @@ export const PoolTable = ({ pool, poolNumber, pools, numBreaking, hasWildcards }
     setPoolRating(accumualtedRating);
     // sortedPools = pool.teams.sort((a,b) => a.teamRating > b.teamRating ? -1 : a.teamRating > b.teamRating ? 1 : 0 )
     setSortedPools(pool.teams.sort(compareFunction));
-  }, []);
+  }, [pool.teams]);
 
   return (
     <>
@@ -120,6 +123,11 @@ export const PoolTable = ({ pool, poolNumber, pools, numBreaking, hasWildcards }
   );
 };
 
-function compareFunctionPool(a: any, b: any) {
-  return b.poolWins - a.poolWins || b.poolPointDifferential - a.poolPointDifferential;
+function compareFunctionPool(
+  a: InferredSingleTeamFromPoolsType,
+  b: InferredSingleTeamFromPoolsType,
+) {
+  return (
+    b.poolWins - a.poolWins || b.poolPointDifferential - a.poolPointDifferential
+  );
 }

@@ -1,8 +1,16 @@
-import { authMiddleware } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { withClerkMiddleware } from "@clerk/nextjs";
 
-export default authMiddleware();
+import { NextResponse } from "next/server";
+
+// New middleware don't know why it doesn't work
+// export default authMiddleware({
+//   publicRoutes: ["/api/trpc/comingSoon.subscribeToUpdates(.*)"],
+//   ignoredRoutes: ["/", "/api/trpc/comingSoon.subscribeToUpdates"],
+// });
+
+export default withClerkMiddleware(() => {
+  return NextResponse.next()
+})
 
 // Stop Middleware running on static files
 export const config = {

@@ -1,15 +1,15 @@
-import { FakeEntriesTeam, FakeEntriesTeamArr } from "../utils/types/team";
-import { Dispatch, SetStateAction, useState } from "react";
+import type { InferredGetMyPoolType, InferredSingleTeamType } from "server/trpc/exportedTypes";
 import { amIInTeam } from "utils/lib/am-i-in-utils";
-import { trpc } from "utils/trpc";
+
+
 
 type OtherPoolTableProps = {
-  pool: any;
+  pool: InferredGetMyPoolType;
   poolNumber: number;
   isMyPool: boolean;
   currentUserName: string;
   numBreaking: number;
-  hasWildcards: boolean
+  hasWildcards: boolean;
 };
 
 export const MyPoolTable = ({
@@ -18,9 +18,9 @@ export const MyPoolTable = ({
   isMyPool,
   currentUserName,
   numBreaking,
-  hasWildcards
+  hasWildcards,
 }: OtherPoolTableProps) => {
-
+  const myPool = pool?.myPool;
   return (
     <>
       <table className="border-seperate border-none">
@@ -50,8 +50,7 @@ export const MyPoolTable = ({
           </td>
         </tr>
         {pool &&
-          pool[0]?.teams.sort(compareFunction).map((team, i) => {
-            console.log(team);
+          myPool?.teams.sort(compareFunction).map((team, i) => {
             return (
               <tr
                 key={i}
@@ -78,11 +77,11 @@ export const MyPoolTable = ({
                     return (
                       <>
                         {j == arr.length - 1 ? (
-                          <span key={player.userId}>
+                          <span key={player.user.id}>
                             {player.user.fullName}
                           </span>
                         ) : (
-                          <span key={player.userId}>
+                          <span key={player.user.id}>
                             {player.user.fullName} {" - "}
                           </span>
                         )}
@@ -101,6 +100,6 @@ export const MyPoolTable = ({
   );
 };
 
-function compareFunction(a: any, b:any) {
-  return b.poolWins - a.poolWins 
+function compareFunction(a: InferredSingleTeamType, b: InferredSingleTeamType) {
+  return b.poolWins - a.poolWins;
 }
