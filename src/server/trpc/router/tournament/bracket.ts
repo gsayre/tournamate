@@ -512,7 +512,7 @@ export const bracketRouter = router({
           const WinningTeam =
             teamOneWins > teamTwoWins ? input.teamOneId : input.teamTwoId;
           if (input.nextGame) {
-            const updateNextBracketGame = await ctx.prisma.game.update({
+            await ctx.prisma.game.update({
               where: {
                 gameId: input.nextGame,
               },

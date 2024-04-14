@@ -3,6 +3,7 @@ import {
   Division,
   Format,
   Game,
+  Prisma,
   Team,
   Tournament,
   Type,
@@ -1276,7 +1277,9 @@ export const tournamentRouter = router({
   addPointToGameMock: protectedProcedure
     .input(z.object({ gameId: z.number(), gameNumber: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      let pointAdded: Game;
+      let pointAdded:
+        | Prisma.PromiseReturnType<typeof ctx.prisma.game.update>
+        | undefined;
       switch (input.gameNumber) {
         case 1: {
           if (Math.random() < 0.5) {
@@ -1331,7 +1334,6 @@ export const tournamentRouter = router({
           }
           break;
         }
-
         case 3: {
           if (Math.random() < 0.5) {
             pointAdded = ctx.prisma.game.update({
@@ -1460,17 +1462,17 @@ export const tournamentRouter = router({
               gameOneteamTwoScore++;
             }
           }
-          let WinningTeam =
+          const WinningTeam =
             gameOneteamOneScore > gameOneteamTwoScore
               ? input.teamOneId
               : input.teamTwoId;
-          let LosingTeam =
+          const LosingTeam =
             WinningTeam === input.teamOneId ? input.teamTwoId : input.teamOneId;
-          let WinningTeamPointDifferential =
+          const WinningTeamPointDifferential =
             gameOneteamOneScore > gameOneteamTwoScore
               ? gameOneteamOneScore - gameOneteamTwoScore
               : gameOneteamTwoScore - gameOneteamOneScore;
-          let LosingTeamPointDifferential = WinningTeamPointDifferential * -1;
+          const LosingTeamPointDifferential = WinningTeamPointDifferential * -1;
 
           updatedGame = await ctx.prisma.game.update({
             where: {
@@ -1482,7 +1484,7 @@ export const tournamentRouter = router({
               gameFinished: true,
             },
           });
-          const updateWinningTeam = await ctx.prisma.team.update({
+          await ctx.prisma.team.update({
             where: {
               teamId: WinningTeam,
             },
@@ -1495,7 +1497,7 @@ export const tournamentRouter = router({
               },
             },
           });
-          const updateLosingTeam = await ctx.prisma.team.update({
+          await ctx.prisma.team.update({
             where: {
               teamId: LosingTeam,
             },
@@ -1509,7 +1511,7 @@ export const tournamentRouter = router({
             },
           });
           if (input.isLastGame) {
-            const updatePoolFinish = await ctx.prisma.pool.update({
+            await ctx.prisma.pool.update({
               where: {
                 poolId: input.poolId,
               },
@@ -1607,7 +1609,7 @@ export const tournamentRouter = router({
               gameFinished: true,
             },
           });
-          const updateTeamOne = await ctx.prisma.team.update({
+          await ctx.prisma.team.update({
             where: {
               teamId: input.teamOneId,
             },
@@ -1621,7 +1623,7 @@ export const tournamentRouter = router({
               },
             },
           });
-          const updateTeamTwo = await ctx.prisma.team.update({
+          await ctx.prisma.team.update({
             where: {
               teamId: input.teamTwoId,
             },
@@ -1634,7 +1636,7 @@ export const tournamentRouter = router({
             },
           });
           if (input.isLastGame) {
-            const updatePoolFinish = await ctx.prisma.pool.update({
+            await ctx.prisma.pool.update({
               where: {
                 poolId: input.poolId,
               },
@@ -1777,7 +1779,7 @@ export const tournamentRouter = router({
               gameFinished: true,
             },
           });
-          const updateWinningTeam = await ctx.prisma.team.update({
+          await ctx.prisma.team.update({
             where: {
               teamId: input.teamOneId,
             },
@@ -1789,7 +1791,7 @@ export const tournamentRouter = router({
               }
             },
           });
-          const updateLosingTeam = await ctx.prisma.team.update({
+          await ctx.prisma.team.update({
             where: {
               teamId: input.teamTwoId,
             },
@@ -1802,7 +1804,7 @@ export const tournamentRouter = router({
             },
           });
           if (input.isLastGame) {
-            const updatePoolFinish = await ctx.prisma.pool.update({
+            await ctx.prisma.pool.update({
               where: {
                 poolId: input.poolId,
               },
@@ -1834,7 +1836,7 @@ export const tournamentRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       let pointAdded;
-      let setString =
+      const setString =
         input.currentSet === 1
           ? "One"
           : input.currentSet === 2
@@ -1844,7 +1846,7 @@ export const tournamentRouter = router({
           : input.currentSet === 4
           ? "Four"
           : "Five";
-      let teamNumString =
+      const teamNumString =
         input.teamNum === 1 ? "One" : input.teamNum === 2 ? "Two" : "";
       const teamToIncrement = `game${setString}Team${teamNumString}Score`;
 
@@ -1864,7 +1866,7 @@ export const tournamentRouter = router({
           },
         });
         //Update Statistics
-        const playerStats = await ctx.prisma.gameStatistics.update({
+        await ctx.prisma.gameStatistics.update({
           where: {
             userId_gameId: {
               gameId: input.gameId,
@@ -1880,7 +1882,7 @@ export const tournamentRouter = router({
             },
           },
         });
-        const partnerStats = await ctx.prisma.gameStatistics.update({
+        await ctx.prisma.gameStatistics.update({
           where: {
             userId_gameId: {
               gameId: input.gameId,
@@ -1894,7 +1896,7 @@ export const tournamentRouter = router({
           },
         });
         for (let i = 0; i < input.opponentIds.length; i++) {
-          const opponentStats = await ctx.prisma.gameStatistics.update({
+          await ctx.prisma.gameStatistics.update({
             where: {
               userId_gameId: {
                 gameId: input.gameId,
@@ -1921,7 +1923,7 @@ export const tournamentRouter = router({
           },
         });
         //Update Statistics
-        const playerStats = await ctx.prisma.gameStatistics.update({
+        await ctx.prisma.gameStatistics.update({
           where: {
             userId_gameId: {
               gameId: input.gameId,
