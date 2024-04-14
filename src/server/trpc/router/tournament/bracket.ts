@@ -1,8 +1,7 @@
-import { z } from "zod";
-import { protectedProcedure, router } from "../../trpc";
 import { Prisma, PrismaClient, Team, User, UsersInTeam } from "@prisma/client";
 import { DefaultArgs } from "@prisma/client/runtime/library";
-import { RouterOutputs } from "server/trpc/exportedTypes";
+import { z } from "zod";
+import { protectedProcedure, router } from "../../trpc";
 
 export const bracketRouter = router({
   createBracketSchedule: protectedProcedure
