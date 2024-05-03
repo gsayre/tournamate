@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Button, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link, Stack } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
@@ -7,12 +7,14 @@ import { FlashList } from "@shopify/flash-list";
 import type { RouterOutputs } from "~/utils/api";
 import { api } from "~/utils/api";
 
-function PostCard(props: {
-  post: RouterOutputs["post"]["all"][number];
-  onDelete: () => void;
-}) {
+function PostCard(
+  props: Readonly<{
+    post: RouterOutputs["post"]["all"][number];
+    onDelete: () => void;
+  }>,
+) {
   return (
-    <View className="flex flex-row rounded-lg bg-muted p-4">
+    <View className="flex flex-row rounded-lg bg-white/10 p-4">
       <View className="flex-grow">
         <Link
           asChild
@@ -21,16 +23,16 @@ function PostCard(props: {
             params: { id: props.post.id },
           }}
         >
-          <Pressable className="">
-            <Text className=" text-xl font-semibold text-primary">
+          <Pressable>
+            <Text className="text-xl font-semibold text-pink-400">
               {props.post.title}
             </Text>
-            <Text className="mt-2 text-foreground">{props.post.content}</Text>
+            <Text className="mt-2 text-white">{props.post.content}</Text>
           </Pressable>
         </Link>
       </View>
       <Pressable onPress={props.onDelete}>
-        <Text className="font-bold uppercase text-primary">Delete</Text>
+        <Text className="font-bold uppercase text-pink-400">Delete</Text>
       </Pressable>
     </View>
   );
@@ -51,31 +53,33 @@ function CreatePost() {
   });
 
   return (
-    <View className="mt-4 flex gap-2">
+    <View className="mt-4">
       <TextInput
-        className=" items-center rounded-md border border-input bg-background px-3 text-lg leading-[1.25] text-foreground"
+        className="mb-2 rounded bg-white/10 p-2 text-white"
+        placeholderTextColor="rgba(255, 255, 255, 0.5)"
         value={title}
         onChangeText={setTitle}
         placeholder="Title"
       />
       {error?.data?.zodError?.fieldErrors.title && (
-        <Text className="mb-2 text-destructive">
+        <Text className="mb-2 text-red-500">
           {error.data.zodError.fieldErrors.title}
         </Text>
       )}
       <TextInput
-        className="items-center rounded-md border border-input bg-background px-3  text-lg leading-[1.25] text-foreground"
+        className="mb-2 rounded bg-white/10 p-2 text-white"
+        placeholderTextColor="rgba(255, 255, 255, 0.5)"
         value={content}
         onChangeText={setContent}
         placeholder="Content"
       />
       {error?.data?.zodError?.fieldErrors.content && (
-        <Text className="mb-2 text-destructive">
+        <Text className="mb-2 text-red-500">
           {error.data.zodError.fieldErrors.content}
         </Text>
       )}
       <Pressable
-        className="flex items-center rounded bg-primary p-2"
+        className="rounded bg-pink-400 p-2"
         onPress={() => {
           mutate({
             title,
@@ -83,10 +87,10 @@ function CreatePost() {
           });
         }}
       >
-        <Text className="text-foreground">Create</Text>
+        <Text className="font-semibold text-white">Publish post</Text>
       </Pressable>
       {error?.data?.code === "UNAUTHORIZED" && (
-        <Text className="mt-2 text-destructive">
+        <Text className="mt-2 text-red-500">
           You need to be logged in to create a post
         </Text>
       )}
@@ -98,29 +102,27 @@ export default function Index() {
   const utils = api.useUtils();
 
   const postQuery = api.post.all.useQuery();
-
   const deletePostMutation = api.post.delete.useMutation({
-    onSettled: () => utils.post.all.invalidate().then(),
+    onSettled: () => utils.post.all.invalidate(),
   });
 
   return (
-    <SafeAreaView className=" bg-background">
+    <SafeAreaView style={{ backgroundColor: "#1F104A" }}>
       {/* Changes page title visible on the header */}
       <Stack.Screen options={{ title: "Home Page" }} />
-      <View className="h-full w-full bg-background p-4">
-        <Text className="pb-2 text-center text-5xl font-bold text-foreground">
-          Create <Text className="text-primary">T3</Text> Turbo
+      <View className="h-full w-full bg-[#1F104A] p-4">
+        <Text className="pb-2 text-center text-5xl font-bold text-white">
+          Create <Text className="text-pink-400">T3</Text> Turbo
         </Text>
 
-        <Pressable
+        <Button
           onPress={() => void utils.post.all.invalidate()}
-          className="flex items-center rounded-lg bg-primary p-2"
-        >
-          <Text className="text-foreground"> Refresh posts</Text>
-        </Pressable>
+          title="Refresh posts"
+          color={"#f472b6"}
+        />
 
         <View className="py-2">
-          <Text className="font-semibold italic text-primary">
+          <Text className="font-semibold italic text-white">
             Press on a post
           </Text>
         </View>

@@ -1,18 +1,20 @@
 import { relations, sql } from "drizzle-orm";
-import {
-  index,
-  int,
-  primaryKey,
-  text,
-  timestamp,
-  varchar,
-} from "drizzle-orm/mysql-core";
+import { boolean, double, index, int, primaryKey, serial, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+
+
 
 import { mySqlTable } from "./_table";
+import { gameStatistics } from "./stats";
+import { team, userInTeam } from "./team";
+import { division, tournament } from "./tournament";
+
 
 export const users = mySqlTable("user", {
   id: varchar("id", { length: 255 }).notNull().primaryKey(),
-  name: varchar("name", { length: 255 }),
+  fullName: varchar("fullName", { length: 255 }),
+  isAdmin: boolean("isAdmin").notNull().default(false),
+  isTournamentDirector: boolean("isTournamentDirector").notNull().default(false),
+  playerRating: double("playerRating", { precision: 7, scale: 2 }).notNull().default(1000.00),
   email: varchar("email", { length: 255 }).notNull(),
   emailVerified: timestamp("emailVerified", {
     mode: "date",
@@ -23,6 +25,11 @@ export const users = mySqlTable("user", {
 
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
+  teamsParticipation: many(userInTeam),
+  tournamentsDirected: many(tournament),
+  invitationsSent: many(teamInvitations),
+  teamInvitations: many(userInInvitations),
+  gameStatistics: many(gameStatistics),
 }));
 
 export const accounts = mySqlTable(
@@ -83,3 +90,45 @@ export const verificationTokens = mySqlTable(
     compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
   }),
 );
+
+export const comingSoon = mySqlTable("comingSoon", {
+  id: serial('comingSoon').notNull().primaryKey(),
+  email: varchar('email', { length: 255 }).notNull(),
+});
+
+export const teamInvitations = mySqlTable("teamInvitations", {
+  id: serial('teamInvitations').notNull().primaryKey(),
+
+  inviterId: int('inviterId').notNull(),
+  tournamentId: int('tournamentId').notNull(),
+  divisionId: int('divisionId').notNull(),
+
+});
+
+export const teamInvitationsRelations = relations(teamInvitations, ({ one, many }) => ({
+  inviter: one(users, { fields: [teamInvitations.inviterId], references: [users.id] }),
+  tournament: one(tournament, { fields: [teamInvitations.tournamentId], references: [tournament.tournamentId] }),
+  division: one(division, { fields: [teamInvitations.divisionId], references: [division.divisionId] }),
+  invitees: many(userInInvitations),
+}));
+
+export const userInInvitations = mySqlTable("userInInvitations", {
+  teamInvitationId: int("teamInvitationId").notNull(),
+  inviteeId: int("inviteeId").notNull(),
+});
+
+export const userInInvitationsRelations = relations(userInInvitations, ({ one }) => ({
+  teamInvitation: one(teamInvitations, { fields: [userInInvitations.teamInvitationId], references: [teamInvitations.id] }),
+  invitee: one(users, { fields: [userInInvitations.inviteeId], references: [users.id] }),
+}))
+
+export const tournamentDirectorRequests = mySqlTable("tournamentDirectorRequests", {
+  id: serial('tournamentDirectorRequests').notNull().primaryKey(),
+  content: text('content').notNull(),
+
+  userId: varchar('userId', { length: 255 }).notNull(),
+});
+
+export const tournamentDirectorRequestsRelations = relations(tournamentDirectorRequests, ({ one }) => ({
+  user: one(users, { fields: [tournamentDirectorRequests.userId], references: [users.id] }),
+}));

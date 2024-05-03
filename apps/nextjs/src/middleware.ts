@@ -1,11 +1,20 @@
-export { auth as middleware } from "@acme/auth";
+import { authMiddleware } from "@clerk/nextjs";
 
-// Or like this if you need to do something here.
-// export default auth((req) => {
-//   console.log(req.auth) //  { session: { user: { ... } } }
-// })
+export default authMiddleware({
+  publicRoutes: ["/api/trpc/post.all", "/"],
+});
 
-// Read more: https://nextjs.org/docs/app/building-your-application/routing/middleware#matcher
+// Stop Middleware running on static files
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    /*
+     * Match request paths except for the ones starting with:
+     * - _next
+     * - static (static files)
+     * - favicon.ico (favicon file)
+     *
+     * This includes images, and requests from TRPC.
+     */
+    "/(.*?trpc.*?|(?!static|.*\\..*|_next|favicon.ico).*)",
+  ],
 };

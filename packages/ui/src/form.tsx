@@ -7,7 +7,7 @@ import type {
   FieldValues,
   UseFormProps,
 } from "react-hook-form";
-import type { ZodType, ZodTypeDef } from "zod";
+import type { ZodType } from "zod";
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Slot } from "@radix-ui/react-slot";
@@ -18,22 +18,21 @@ import {
   useFormContext,
 } from "react-hook-form";
 
-import { cn } from "@acme/ui";
-
+import { cn } from ".";
 import { Label } from "./label";
 
-const useForm = <TOut, TDef extends ZodTypeDef, TIn extends FieldValues>(
-  props: Omit<UseFormProps<TIn>, "resolver"> & {
-    schema: ZodType<TOut, TDef, TIn>;
+function useForm<TSchema extends ZodType>(
+  props: Omit<UseFormProps<TSchema["_input"]>, "resolver"> & {
+    schema: TSchema;
   },
-) => {
-  const form = __useForm<TIn>({
+) {
+  const form = __useForm<TSchema["_input"]>({
     ...props,
     resolver: zodResolver(props.schema, undefined),
   });
 
   return form;
-};
+}
 
 const Form = FormProvider;
 
@@ -44,8 +43,8 @@ interface FormFieldContextValue<
   name: TName;
 }
 
-const FormFieldContext = React.createContext<FormFieldContextValue | null>(
-  null,
+const FormFieldContext = React.createContext<FormFieldContextValue>(
+  {} as FormFieldContextValue,
 );
 
 const FormField = <
@@ -66,10 +65,11 @@ const useFormField = () => {
   const itemContext = React.useContext(FormItemContext);
   const { getFieldState, formState } = useFormContext();
 
+  const fieldState = getFieldState(fieldContext.name, formState);
+
   if (!fieldContext) {
     throw new Error("useFormField should be used within <FormField>");
   }
-  const fieldState = getFieldState(fieldContext.name, formState);
 
   const { id } = itemContext;
 
@@ -167,7 +167,7 @@ const FormMessage = React.forwardRef<
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, children, ...props }, ref) => {
   const { error, formMessageId } = useFormField();
-  const body = error ? String(error.message) : children;
+  const body = error ? String(error?.message) : children;
 
   if (!body) {
     return null;

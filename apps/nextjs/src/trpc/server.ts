@@ -1,8 +1,29 @@
+// import { createTRPCNextLayout } from "@trpc/next";
+// import superjson from "superjson";
+
+// import { appRouter } from "@acme/api";
+// import { createContextInner } from "@acme/api";
+
+// import "server-only";
+
+// export const trpcRsc = createTRPCNextLayout({
+//   router: appRouter,
+//   transformer: superjson,
+//   createContext() {
+//     const auth = getAuth();
+
+//     return createContextInner({
+//       auth,
+//       req: null,
+//     });
+//   },
+// });
+
 import { cache } from "react";
 import { headers } from "next/headers";
+import { auth } from "@clerk/nextjs";
 
 import { createCaller, createTRPCContext } from "@acme/api";
-import { auth } from "@acme/auth";
 
 /**
  * This wraps the `createTRPCContext` helper and provides the required context for the tRPC API when
@@ -13,7 +34,7 @@ const createContext = cache(async () => {
   heads.set("x-trpc-source", "rsc");
 
   return createTRPCContext({
-    session: await auth(),
+    auth: auth(),
     headers: heads,
   });
 });

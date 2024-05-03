@@ -1,10 +1,10 @@
 {
-  "name": "create-t3-turbo",
+  "name": "t3-turbo-and-clerk",
   "private": true,
   "engines": {
-    "node": ">=20.12.0"
+    "node": ">=20.10"
   },
-  "packageManager": "pnpm@9.0.6",
+  "packageManager": "pnpm@8.14.0",
   "scripts": {
     "build": "turbo build",
     "clean": "git clean -xdf node_modules",
@@ -18,15 +18,14 @@
     "lint:fix": "turbo lint --continue -- --fix --cache --cache-location node_modules/.cache/.eslintcache",
     "lint:ws": "pnpm dlx sherif@latest",
     "postinstall": "pnpm lint:ws",
-    "typecheck": "turbo typecheck",
-    "ui-add": "pnpm -F ui ui-add"
+    "typecheck": "turbo typecheck"
   },
   "devDependencies": {
-    "@acme/prettier-config": "workspace:*",
-    "@turbo/gen": "^1.13.3",
-    "prettier": "^3.2.5",
-    "turbo": "^1.13.3",
-    "typescript": "^5.4.5"
+    "@acme/prettier-config": "workspace:^0.1.0",
+    "@turbo/gen": "^1.11.3",
+    "prettier": "^3.2.4",
+    "turbo": "^1.11.3",
+    "typescript": "^5.3.3"
   },
   "prettier": "@acme/prettier-config"
 }

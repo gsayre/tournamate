@@ -1,33 +1,38 @@
+import React from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import Constants from "expo-constants";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-
-import { TRPCProvider } from "~/utils/api";
+import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-expo";
 
 import "../styles.css";
 
-import { useColorScheme } from "nativewind";
+import { SignInSignUpScreen } from "../screens/signin";
+import { TRPCProvider } from "../utils/api";
+import { tokenCache } from "../utils/cache";
 
-// This is the main layout of the app
-// It wraps your pages with the providers they need
 export default function RootLayout() {
-  const { colorScheme } = useColorScheme();
+  const publishable_key = Constants.expoConfig?.extra
+    ?.CLERK_PUBLISHABLE_KEY as string;
   return (
-    <TRPCProvider>
-      {/*
-          The Stack component displays the current page.
-          It also allows you to configure your screens 
-        */}
-      <Stack
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: "#f472b6",
-          },
-          contentStyle: {
-            backgroundColor: colorScheme == "dark" ? "#09090B" : "#FFFFFF",
-          },
-        }}
-      />
-      <StatusBar />
-    </TRPCProvider>
+    <ClerkProvider publishableKey={publishable_key} tokenCache={tokenCache}>
+      <SignedIn>
+        <TRPCProvider>
+          <SafeAreaProvider>
+            <Stack
+              screenOptions={{
+                headerStyle: {
+                  backgroundColor: "#f472b6",
+                },
+              }}
+            />
+            <StatusBar />
+          </SafeAreaProvider>
+        </TRPCProvider>
+      </SignedIn>
+      <SignedOut>
+        <SignInSignUpScreen />
+      </SignedOut>
+    </ClerkProvider>
   );
 }
