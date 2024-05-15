@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { HomeIcon, LogIn, LogOut, Trophy } from "lucide-react";
+import { HomeIcon, Lock, LogIn, LogOut, Settings, Trophy } from "lucide-react";
 import { getServerAuthSession } from "@/server/auth";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default async function MainNav() {
   const session = await getServerAuthSession();
@@ -19,6 +20,9 @@ export default async function MainNav() {
         </div>
       </div>
       <div className="flex items-center gap-4">
+        <TournamentDirectorToggle
+          isTournamentDirector={session?.user.isTournamentDirector}
+        />
         <Link href="/" className="flex flex-row ">
           <div className="flex items-center justify-center gap-3">
             <div className="rounded-lg bg-[#1e293b] p-2 text-white">
@@ -35,6 +39,16 @@ export default async function MainNav() {
             <span className="text-md tracking-wider">Tournaments</span>
           </div>
         </Link>
+        {session?.user.isAdmin && (
+          <Link href="/admin" className="flex flex-row ">
+            <div className="flex items-center justify-center gap-3">
+              <div className="rounded-lg bg-[#1e293b] p-2 text-white">
+                <Settings className="h-4 w-4" />
+              </div>
+              <span className="text-md tracking-wider">Admin</span>
+            </div>
+          </Link>
+        )}
         <Link
           href={session ? "/api/auth/signout" : "/api/auth/signin"}
           className="flex flex-row "
@@ -54,5 +68,32 @@ export default async function MainNav() {
         </Link>
       </div>
     </nav>
+  );
+}
+
+export function TournamentDirectorToggle({
+  isTournamentDirector,
+}: {
+  isTournamentDirector: boolean | undefined;
+}) {
+  return (
+    <Tabs defaultValue="player">
+      <TabsList>
+        <TabsTrigger value="player">Player</TabsTrigger>
+        <TabsTrigger
+          value="tournament director"
+          disabled={!isTournamentDirector}
+        >
+          {isTournamentDirector ? (
+            <span>Tournament Director</span>
+          ) : (
+            <div className="flex flex-row items-center justify-center gap-1">
+              <Lock className="h-4 w-4" />
+              <span>Tournament Director</span>
+            </div>
+          )}
+        </TabsTrigger>
+      </TabsList>
+    </Tabs>
   );
 }

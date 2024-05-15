@@ -1,6 +1,7 @@
-import { relations, sql } from "drizzle-orm";
+import { is, relations, sql } from "drizzle-orm";
 import {
   bigint,
+  boolean,
   index,
   int,
   mysqlTableCreator,
@@ -33,13 +34,15 @@ export const posts = createTable(
   (example) => ({
     createdByIdIdx: index("createdById_idx").on(example.createdById),
     nameIndex: index("name_idx").on(example.name),
-  })
+  }),
 );
 
 export const users = createTable("user", {
   id: varchar("id", { length: 255 }).notNull().primaryKey(),
   name: varchar("name", { length: 255 }),
   email: varchar("email", { length: 255 }).notNull(),
+  isTournamentDirector: boolean("isTournamentDirector").default(false),
+  isAdmin: boolean("isAdmin").default(false),
   emailVerified: timestamp("emailVerified", {
     mode: "date",
     fsp: 3,
@@ -74,7 +77,7 @@ export const accounts = createTable(
       columns: [account.provider, account.providerAccountId],
     }),
     userIdIdx: index("accounts_userId_idx").on(account.userId),
-  })
+  }),
 );
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
@@ -92,7 +95,7 @@ export const sessions = createTable(
   },
   (session) => ({
     userIdIdx: index("session_userId_idx").on(session.userId),
-  })
+  }),
 );
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -108,5 +111,5 @@ export const verificationTokens = createTable(
   },
   (vt) => ({
     compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
-  })
+  }),
 );
