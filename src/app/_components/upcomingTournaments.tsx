@@ -22,7 +22,7 @@ export default function UpcomingTournaments() {
               <TableHead className="w-[100px]">Name</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Location</TableHead>
-              <TableHead className="text-right">Signups</TableHead>
+              <TableHead >Signups</TableHead>
               <TableHead className="text-right"></TableHead>
             </TableRow>
           </TableHeader>
@@ -31,7 +31,7 @@ export default function UpcomingTournaments() {
               <TableCell className="font-medium">Test</TableCell>
               <TableCell>09/18/24</TableCell>
               <TableCell>Raleigh, North Carolina</TableCell>
-              <TableCell className="text-right">31/64</TableCell>
+              <TableCell >31/64</TableCell>
               <TableCell className="text-right">
                 <Link href={`/tournaments/${1}`}>Go To</Link>
               </TableCell>

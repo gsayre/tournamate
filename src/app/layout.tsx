@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans";
 
 import { TRPCReactProvider } from "@/trpc/react";
 import MainNav from "./_components/main-nav";
+import { Toaster } from "@/components/ui/toaster";
 
 export const metadata = {
   title: "TournaMate",
@@ -22,6 +23,7 @@ export default function RootLayout({
         <TRPCReactProvider>
           <MainNav />
           {children}
+          <Toaster />
         </TRPCReactProvider>
       </body>
     </html>

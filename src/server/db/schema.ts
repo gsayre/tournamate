@@ -113,3 +113,20 @@ export const verificationTokens = createTable(
     compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
   }),
 );
+
+export const tournamentDirectorRequests = createTable(
+  "tournamentDirectorRequests",
+  {
+    userId: varchar("userId", { length: 255 }).notNull(),
+  },
+);
+
+export const tournamentDirectorRequestsRelations = relations(
+  tournamentDirectorRequests,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [tournamentDirectorRequests.userId],
+      references: [users.id],
+    }),
+  }),
+);

@@ -1,7 +1,7 @@
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getServerAuthSession } from "@/server/auth";
+import TDApplication from "./_components/tdApplication";
 
 export default async function Home() {
   const session = await getServerAuthSession();
@@ -22,21 +22,7 @@ export default async function Home() {
                 !
               </h2>
             )}
-            <p>
-              Want to be a tournament director?{" "}
-              <Dialog>
-                <DialogTrigger className="text-sky-500">Apply here</DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Are you absolutely sure?</DialogTitle>
-                    <DialogDescription>
-                      This action cannot be undone. This will permanently delete
-                      your account and remove your data from our servers.
-                    </DialogDescription>
-                  </DialogHeader>
-                </DialogContent>
-              </Dialog>
-            </p>
+            {session?.user.id && !session.user.isTournamentDirector && <TDApplication userId={session?.user.id} />}
           </div>
         </div>
         <div className="w-fit pb-8">
