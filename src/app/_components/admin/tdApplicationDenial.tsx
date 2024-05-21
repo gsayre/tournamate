@@ -2,7 +2,7 @@
 import { api } from "@/trpc/react";
 import { X } from "lucide-react";
 
-export default function RequestDenial({ userId }: { userId: string }) {
+export default function requestDenial({ userId }: { userId: string }) {
     const denyTournamentDirectorApplication = api.admin.denyTournamentDirectorApplication.useMutation();
     return (
       <div

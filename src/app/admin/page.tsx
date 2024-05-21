@@ -13,7 +13,6 @@ import RequestDenial from "../_components/admin/tdApplicationDenial";
 export default async function Admin() {
   const tournamentDirectorRequests =
     await api.admin.getTournamentDirectorApplication();
-
   return (
     <main className="flex flex-col p-8 pt-6">
       <h2 className="pb-4 text-3xl font-bold tracking-tight">Admin</h2>
