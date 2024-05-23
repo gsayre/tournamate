@@ -9,7 +9,7 @@ import EmailProvider from "next-auth/providers/email";
 
 import { env } from "@/env";
 import { db } from "@/server/db";
-import { createTable } from "@/server/db/schema";
+import { createTable } from "@/server/db/schema/schema";
 import { getIsAdmin, getIsTournamentDirector } from "./userRoles";
 
 /**

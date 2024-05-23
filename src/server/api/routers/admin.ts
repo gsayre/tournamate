@@ -1,5 +1,5 @@
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
-import { clientSchema } from "@/server/db";
+import { schema } from "@/server/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -17,24 +17,20 @@ export const adminRouter = createTRPCRouter({
     .input(z.object({ userId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db
-        .update(clientSchema.users)
+        .update(schema.users)
         .set({
           isTournamentDirector: true,
         })
-        .where(eq(clientSchema.users.id, input.userId));
+        .where(eq(schema.users.id, input.userId));
       await ctx.db
-        .delete(clientSchema.tournamentDirectorRequests)
-        .where(
-          eq(clientSchema.tournamentDirectorRequests.userId, input.userId),
-        );
+        .delete(schema.tournamentDirectorRequests)
+        .where(eq(schema.tournamentDirectorRequests.userId, input.userId));
     }),
   denyTournamentDirectorApplication: protectedProcedure
     .input(z.object({ userId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db
-        .delete(clientSchema.tournamentDirectorRequests)
-        .where(
-          eq(clientSchema.tournamentDirectorRequests.userId, input.userId),
-        );
+        .delete(schema.tournamentDirectorRequests)
+        .where(eq(schema.tournamentDirectorRequests.userId, input.userId));
     }),
 });

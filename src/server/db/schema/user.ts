@@ -1,16 +1,20 @@
-import { is, relations, sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
-  bigint,
   boolean,
+  double,
   index,
   int,
   mysqlTableCreator,
   primaryKey,
+  serial,
   text,
   timestamp,
   varchar,
 } from "drizzle-orm/mysql-core";
 import { type AdapterAccount } from "next-auth/adapters";
+import { gameStatistics } from "./stats";
+import { userInTeam } from "./team";
+import { division, tournament } from "./tournament";
 
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
@@ -20,28 +24,15 @@ import { type AdapterAccount } from "next-auth/adapters";
  */
 export const createTable = mysqlTableCreator((name) => `tournamate_${name}`);
 
-export const posts = createTable(
-  "post",
-  {
-    id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
-    name: varchar("name", { length: 256 }),
-    createdById: varchar("createdById", { length: 255 }).notNull(),
-    createdAt: timestamp("created_at")
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updatedAt").onUpdateNow(),
-  },
-  (example) => ({
-    createdByIdIdx: index("createdById_idx").on(example.createdById),
-    nameIndex: index("name_idx").on(example.name),
-  }),
-);
 
 export const users = createTable("user", {
   id: varchar("id", { length: 255 }).notNull().primaryKey(),
   name: varchar("name", { length: 255 }),
   email: varchar("email", { length: 255 }).notNull(),
   isTournamentDirector: boolean("isTournamentDirector").default(false),
+  playerRating: double("playerRating", { precision: 7, scale: 2 })
+    .notNull()
+    .default(1000.0),
   isAdmin: boolean("isAdmin").default(false),
   emailVerified: timestamp("emailVerified", {
     mode: "date",
@@ -53,6 +44,11 @@ export const users = createTable("user", {
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
+  teamsParticipation: many(userInTeam),
+  tournamentsDirected: many(tournament),
+  invitationsSent: many(teamInvitations),
+  teamInvitations: many(userInInvitations),
+  gameStatistics: many(gameStatistics),
 }));
 
 export const accounts = createTable(
@@ -126,6 +122,52 @@ export const tournamentDirectorRequestsRelations = relations(
   ({ one }) => ({
     user: one(users, {
       fields: [tournamentDirectorRequests.userId],
+      references: [users.id],
+    }),
+  }),
+);
+
+export const teamInvitations = createTable("teamInvitations", {
+  id: serial("teamInvitations").notNull().primaryKey(),
+
+  inviterId: int("inviterId").notNull(),
+  tournamentId: int("tournamentId").notNull(),
+  divisionId: int("divisionId").notNull(),
+});
+
+export const teamInvitationsRelations = relations(
+  teamInvitations,
+  ({ one, many }) => ({
+    inviter: one(users, {
+      fields: [teamInvitations.inviterId],
+      references: [users.id],
+    }),
+    tournament: one(tournament, {
+      fields: [teamInvitations.tournamentId],
+      references: [tournament.tournamentId],
+    }),
+    division: one(division, {
+      fields: [teamInvitations.divisionId],
+      references: [division.divisionId],
+    }),
+    invitees: many(userInInvitations),
+  }),
+);
+
+export const userInInvitations = createTable("userInInvitations", {
+  teamInvitationId: int("teamInvitationId").notNull(),
+  inviteeId: int("inviteeId").notNull(),
+});
+
+export const userInInvitationsRelations = relations(
+  userInInvitations,
+  ({ one }) => ({
+    teamInvitation: one(teamInvitations, {
+      fields: [userInInvitations.teamInvitationId],
+      references: [teamInvitations.id],
+    }),
+    invitee: one(users, {
+      fields: [userInInvitations.inviteeId],
       references: [users.id],
     }),
   }),

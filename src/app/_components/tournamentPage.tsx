@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PastTournaments from "./pastTournaments";
 import UpcomingTournaments from "./upcomingTournaments";
 import { Lock } from "lucide-react";
+import TDPage from "./tdPage";
 
 export default function TournamentPage({
   isTournamentDirector,
@@ -29,12 +30,14 @@ export default function TournamentPage({
               </div>
             )}
           </TabsTrigger>
-          <TabsContent value="player">
-            <div className="flex flex-col p-4">
-              <h3 className="text-xl font-semibold tracking-tight">
-                Tournaments
-              </h3>
-              <Tabs defaultValue="upcoming" className="space-y-4">
+        </TabsList>
+        <TabsContent value="player">
+          <div className="flex flex-col p-4">
+              <Tabs
+                defaultValue="upcoming"
+                className="space-y-4"
+                orientation="horizontal"
+              >
                 <TabsList>
                   <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
                   <TabsTrigger value="past">Past</TabsTrigger>
@@ -47,11 +50,10 @@ export default function TournamentPage({
                 </TabsContent>
               </Tabs>
             </div>
-          </TabsContent>
-          <TabsContent value="tournament director">
-            <div>Tournament Director</div>
-          </TabsContent>
-        </TabsList>
+        </TabsContent>
+        <TabsContent value="tournament director">
+          <TDPage/>
+        </TabsContent>
       </Tabs>
     </div>
   );
