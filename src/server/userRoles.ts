@@ -1,13 +1,13 @@
 import { eq } from "drizzle-orm";
-import { clientSchema, db } from "./db";
+import { schema, db } from "./db";
 
 export async function getIsTournamentDirector(
   userId: string,
 ): Promise<boolean> {
   const result = await db
-    .select({ isTournamentDirector: clientSchema.users.isTournamentDirector })
-    .from(clientSchema.users)
-    .where(eq(clientSchema.users.id, userId));
+    .select({ isTournamentDirector: schema.users.isTournamentDirector })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
   if (result[0] === undefined) {
     throw new Error("User not found");
   }
@@ -22,9 +22,9 @@ export async function getIsAdmin(
   userId: string,
 ): Promise<boolean> {
   const result = await db
-    .select({ isAdmin: clientSchema.users.isAdmin })
-    .from(clientSchema.users)
-    .where(eq(clientSchema.users.id, userId));
+    .select({ isAdmin: schema.users.isAdmin })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
   if (result[0] === undefined) {
     throw new Error("User not found");
   }

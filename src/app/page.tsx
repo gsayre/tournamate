@@ -2,9 +2,11 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getServerAuthSession } from "@/server/auth";
 import TDApplication from "./_components/tdApplication";
+import { api } from "@/trpc/server";
 
 export default async function Home() {
   const session = await getServerAuthSession();
+  const hasActiveTDApplications = await api.role.getActiveTournamentDirectorApplications({ userId: session!.user.id });
 
   return (
     <main className="flex min-h-screen flex-col p-2">
@@ -22,7 +24,7 @@ export default async function Home() {
                 !
               </h2>
             )}
-            {session?.user.id && !session.user.isTournamentDirector && <TDApplication userId={session?.user.id} />}
+            {session?.user.id && !session.user.isTournamentDirector && !hasActiveTDApplications  && <TDApplication userId={session?.user.id} />}
           </div>
         </div>
         <div className="w-fit pb-8">

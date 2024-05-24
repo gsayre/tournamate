@@ -7,6 +7,7 @@ export default async function Tournaments() {
     <main className="flex flex-col p-8 pt-6">
       <TournamentPage
         isTournamentDirector={session?.user.isTournamentDirector}
+        userId={session!.user.id}
       />
     </main>
   );
