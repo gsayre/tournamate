@@ -5,6 +5,7 @@ import { GeistSans } from "geist/font/sans";
 import { TRPCReactProvider } from "@/trpc/react";
 import MainNav from "./_components/main-nav";
 import { Toaster } from "@/components/ui/toaster";
+import { getServerAuthSession } from "@/server/auth";
 
 export const metadata = {
   title: "TournaMate",
@@ -12,16 +13,17 @@ export const metadata = {
   icons: [{ rel: "icon", url: "/WhiteLogo.png" }],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
-}) {
+  }) {
+  const session = await getServerAuthSession();
   return (
     <html lang="en" className={`${GeistSans.variable}`}>
       <body>
         <TRPCReactProvider>
-          <MainNav />
+          {session && <MainNav />}
           {children}
           <Toaster />
         </TRPCReactProvider>
