@@ -43,6 +43,13 @@
       "when": 1716429746559,
       "tag": "0005_silent_the_fallen",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1717255988828,
+      "tag": "0006_light_overlord",
+      "breakpoints": true
     }
   ]
 }

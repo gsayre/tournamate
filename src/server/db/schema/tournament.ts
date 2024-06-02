@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { InferSelectModel, relations } from "drizzle-orm";
 import {
   boolean,
   int,
@@ -54,7 +54,6 @@ export const tournamentRelations = relations(tournament, ({ one, many }) => ({
     fields: [tournament.tournamentDirectorId],
     references: [users.id],
   }),
-  participants: many(users),
   divisions: many(division),
   teamInvitations: many(teamInvitations),
 }));
@@ -62,12 +61,12 @@ export const tournamentRelations = relations(tournament, ({ one, many }) => ({
 export const division = createTable("division", {
   divisionId: serial("divisionId").primaryKey(),
   name: varchar("name", { length: 256 }).notNull(),
-  type: mysqlEnum("type", ["BB", "B", "A", "AA", "Open"]).notNull(),
+  type: mysqlEnum("type", ["MENS", "WOMEN", "COED", "REVCO"]).notNull(),
   isDayOf: boolean("isDayOf").notNull().default(false),
   isPoolFinished: boolean("isPoolFinished").notNull().default(false),
   isBracketFinished: boolean("isBracketFinished").notNull().default(false),
   numBreakingPool: int("numBreakingPool").notNull().default(0),
-  numWildcards: int("numWildcards"),
+  numWildcards: int("numWildcards").default(0),
   hasWildcards: boolean("hasWildcards").notNull().default(false),
 
   tournamentId: int("tournamentId").notNull(),
@@ -85,6 +84,8 @@ export const divisionRelations = relations(division, ({ one, many }) => ({
     references: [bracket.divisionId],
   }),
 }));
+
+export type DivisionType = InferSelectModel<typeof division>;
 
 export const pool = createTable("pool", {
   poolId: serial("poolId").primaryKey(),

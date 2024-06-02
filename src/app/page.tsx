@@ -17,10 +17,11 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import AlertList from "./_components/alertList";
 
 export default async function Home() {
   const session = await getServerAuthSession();
-  
+
   if (!session) {
     return (
       <div className="h-full w-full">
@@ -123,10 +124,10 @@ export default async function Home() {
   return (
     <main className="flex min-h-screen flex-col p-2">
       <div className="flex flex-col p-8 pt-6">
-        <div className="flex h-64 flex-row gap-4 pb-8">
+        <div className="fflex-row flex h-64 gap-4 pb-8">
           <Skeleton className="h-64 w-64 rounded-full" />
           <Separator orientation="vertical" />
-          <div className="flex flex-row justify-between w-full">
+          <div className="flex w-full flex-row sm:flex-col 2xl:justify-between gap-2">
             <div className="flex flex-col gap-2">
               {session && (
                 <h2 className=" text-3xl">
@@ -145,16 +146,8 @@ export default async function Home() {
                   <TDApplication userId={session?.user.id} />
                 )}
             </div>
-            <div className="flex flex-col pr-16">
-              {!hasName && (
-                <Alert className="text-orange-500 border-orange-500">
-                  <TriangleAlert className="h-4 w-4 stroke-orange-500" />
-                  <AlertTitle>We&apos;re missing your name</AlertTitle>
-                  <AlertDescription>
-                    You can add your name to make it easier for other to search and find you
-                  </AlertDescription>
-                </Alert>
-              )}
+            <div className="flex flex-col lg:pr-16">
+              {!hasName && <AlertList userId={session?.user.id} />}
             </div>
           </div>
         </div>
