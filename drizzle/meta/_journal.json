@@ -50,6 +50,13 @@
       "when": 1717255988828,
       "tag": "0006_light_overlord",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1717550008596,
+      "tag": "0007_dark_blindfold",
+      "breakpoints": true
     }
   ]
 }

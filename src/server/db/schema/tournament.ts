@@ -11,7 +11,7 @@ import {
 
 import { teamInvitations, users } from "./user";
 import { gameStatistics } from "./stats";
-import { team, teamInGame } from "./team";
+import { team, teamInDivision, teamInGame } from "./team";
 
 const createTable = mysqlTableCreator((name) => `tournamate_${name}`);
 
@@ -78,7 +78,7 @@ export const divisionRelations = relations(division, ({ one, many }) => ({
     references: [tournament.tournamentId],
   }),
   pools: many(pool),
-  entries: many(team),
+  entries: many(teamInDivision),
   brackets: one(bracket, {
     fields: [division.divisionId],
     references: [bracket.divisionId],

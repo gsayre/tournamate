@@ -23,10 +23,18 @@ export const tournamentDivisionRouter = createTRPCRouter({
   getDivisions: protectedProcedure
     .input(z.object({ tournamentId: z.number() }))
     .query(async ({ ctx, input }) => {
-      const divisions = await ctx.db.query.division.findFirst({
+      const divisions = await ctx.db.query.division.findMany({
         where: eq(schema.division.tournamentId, input.tournamentId),
         with: {
-          entries: true,
+          entries: {
+            with: {
+              team: {
+                with: {
+                  players: true,
+                },
+              },
+            },
+          },
         },
       });
       return divisions;

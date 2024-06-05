@@ -28,6 +28,7 @@ export const teamRelations = relations(team, ({ one, many }) => ({
     fields: [team.tournamentId],
     references: [tournament.tournamentId],
   }),
+  divisions: many(teamInDivision),
   pool: one(pool, { fields: [team.poolId], references: [pool.poolId] }),
   players: many(userInTeam),
   games: many(teamInGame),
@@ -52,4 +53,17 @@ export const teamInGame = createTable("teamInGame", {
 export const teamInGameRelations = relations(teamInGame, ({ one }) => ({
   team: one(team, { fields: [teamInGame.teamId], references: [team.id] }),
   game: one(game, { fields: [teamInGame.gameId], references: [game.gameId] }),
+}));
+
+export const teamInDivision = createTable("teamInDivision", {
+  teamId: int("teamId").notNull(),
+  divisionId: int("divisionId").notNull(),
+});
+
+export const teamInDivisionRelations = relations(teamInDivision, ({ one }) => ({
+  team: one(team, { fields: [teamInDivision.teamId], references: [team.id] }),
+  division: one(division, {
+    fields: [teamInDivision.divisionId],
+    references: [division.divisionId],
+  }),
 }));

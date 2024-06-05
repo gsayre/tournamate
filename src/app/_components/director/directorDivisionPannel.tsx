@@ -32,13 +32,12 @@ export type InferResultType<
   }
 >;
 
+type DivisionWithEntries = InferResultType<"division", {entries: {with: {team: {with: {players: true}}}}}>;
 
 
-export default function DirectorDivisionPannel({
+export default function DirectorDivisionPannel<T>({
   divisions,
-}: {
-  divisions: DivisionType[];
-}) {
+}: {divisions: DivisionWithEntries[]}) {
   return (
     <div>
       <Accordion type="single" collapsible>
@@ -59,8 +58,8 @@ export default function DirectorDivisionPannel({
                     </TableHeader>
                     <TableBody>
                     {division.entries.map((entry) => (
-                        <TableRow>
-                            <TableCell>{entry.}</TableCell>
+                        <TableRow key={entry.team.id}>
+                            <TableCell>{entry.team.players[0]?.userId + " " + entry.team.players[0]?.userId}</TableCell>
                         </TableRow>
                     ))}
                     </TableBody>
