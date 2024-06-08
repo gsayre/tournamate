@@ -5,33 +5,98 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import type {
+  BuildQueryResult,
+  DBQueryConfig,
+  ExtractTablesWithRelations,
+} from "drizzle-orm";
+import { type schema } from "@/server/db";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 
-export default function DivisionAccordian() {
+type Schema = typeof schema;
+type TSchema = ExtractTablesWithRelations<Schema>;
+
+export type IncludeRelation<TableName extends keyof TSchema> = DBQueryConfig<
+  "one" | "many",
+  boolean,
+  TSchema,
+  TSchema[TableName]
+>["with"];
+
+export type InferResultType<
+  TableName extends keyof TSchema,
+  With extends IncludeRelation<TableName> | undefined = undefined,
+> = BuildQueryResult<
+  TSchema,
+  TSchema[TableName],
+  {
+    with: With;
+  }
+>;
+
+type DivisionWithEntries = InferResultType<
+  "division",
+  { entries: { with: { team: { with: { players: true } } } } }
+>;
+
+export default function DivisionAccordian({
+  divisions,
+}: {
+  divisions: DivisionWithEntries[];
+}) {
   return (
     <div>
       <Accordion type="single" collapsible className="w-4/5">
-        {/* {mockedDivisions.map((division) => (
-            <AccordionItem key={division.name} value={division.name}>
-              <AccordionTrigger>{division.name}</AccordionTrigger>
-              <AccordionContent>
-                <h4 className="pb-2 text-xl font-semibold tracking-tight">
-                  Teams
-                </h4>
-                <ul>
-                  {division.teams.map((team) => (
-                    <li key={team.id} className="flex flex-row ">
-                      <p className="mr-2">{team.name + " - "}</p>
-                      <p>
-                        {team.players.map((player) => (
-                          <div key={player.id}>{player.name}</div>
+        {divisions.map((division) => (
+          <AccordionItem value={division.name} key={division.name}>
+            <AccordionTrigger>
+              <div className="flex flex-row justify-between w-full">
+                <p>{division.type + " - " + division.name}</p>
+                <Button className="mr-4">Register</Button>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="flex flex-row gap-4">
+                <div className="flex flex-col">
+                  <h5 className="pb-2 text-lg font-semibold">Entries</h5>
+                  {division.entries.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableCell>Team</TableCell>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {division.entries.map((entry) => (
+                          <>
+                            {entry.team.players.length > 0 && (
+                              <TableRow key={entry.team.id}>
+                                <TableCell>
+                                  {entry.team.players[0]?.userId +
+                                    " " +
+                                    entry.team.players[0]?.userId}
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </>
                         ))}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </AccordionContent>
-            </AccordionItem>
-          ))} */}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div>No entries</div>
+                  )}
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
       </Accordion>
     </div>
   );

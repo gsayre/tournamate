@@ -7,9 +7,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
-import { type DivisionType } from "@/server/db/schema/tournament";
 import type { BuildQueryResult, DBQueryConfig, ExtractTablesWithRelations } from 'drizzle-orm';
-import {schema}from '@/server/db';
+import {type schema}from '@/server/db';
 
 type Schema = typeof schema;
 type TSchema = ExtractTablesWithRelations<Schema>;
@@ -35,7 +34,7 @@ export type InferResultType<
 type DivisionWithEntries = InferResultType<"division", {entries: {with: {team: {with: {players: true}}}}}>;
 
 
-export default function DirectorDivisionPannel<T>({
+export default function DirectorDivisionPannel({
   divisions,
 }: {divisions: DivisionWithEntries[]}) {
   return (
@@ -58,9 +57,11 @@ export default function DirectorDivisionPannel<T>({
                     </TableHeader>
                     <TableBody>
                     {division.entries.map((entry) => (
-                        <TableRow key={entry.team.id}>
+                        <>
+                        {entry.team.players.length > 0 && (<TableRow key={entry.team.id}>
                             <TableCell>{entry.team.players[0]?.userId + " " + entry.team.players[0]?.userId}</TableCell>
-                        </TableRow>
+                        </TableRow>)}
+                        </>
                     ))}
                     </TableBody>
                     
