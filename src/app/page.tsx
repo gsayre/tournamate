@@ -124,10 +124,10 @@ export default async function Home() {
   return (
     <main className="flex min-h-screen flex-col p-2">
       <div className="flex flex-col p-8 pt-6">
-        <div className="fflex-row flex h-64 gap-4 pb-8">
-          <Skeleton className="h-64 w-64 rounded-full" />
+        <div className="flex h-64 flex-row gap-4 mb-8">
+          <Skeleton className="h-64 w-72 rounded-full" />
           <Separator orientation="vertical" />
-          <div className="flex w-full flex-row sm:flex-col 2xl:justify-between gap-2">
+          <div className="flex w-full flex-row gap-2 sm:flex-col 2xl:justify-between">
             <div className="flex flex-col gap-2">
               {session && (
                 <h2 className=" text-3xl">

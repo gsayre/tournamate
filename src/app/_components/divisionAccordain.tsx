@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+
 
 type Schema = typeof schema;
 type TSchema = ExtractTablesWithRelations<Schema>;
@@ -41,7 +41,7 @@ export type InferResultType<
   }
 >;
 
-type DivisionWithEntries = InferResultType<
+export type DivisionWithEntries = InferResultType<
   "division",
   { entries: { with: { team: { with: { players: true } } } } }
 >;
@@ -50,6 +50,7 @@ export default function DivisionAccordian({
   divisions,
 }: {
   divisions: DivisionWithEntries[];
+  name: string;
 }) {
   return (
     <div>
@@ -57,10 +58,7 @@ export default function DivisionAccordian({
         {divisions.map((division) => (
           <AccordionItem value={division.name} key={division.name}>
             <AccordionTrigger>
-              <div className="flex flex-row justify-between w-full">
                 <p>{division.type + " - " + division.name}</p>
-                <Button className="mr-4">Register</Button>
-              </div>
             </AccordionTrigger>
             <AccordionContent>
               <div className="flex flex-row gap-4">
