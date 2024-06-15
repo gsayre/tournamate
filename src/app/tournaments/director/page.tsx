@@ -1,4 +1,4 @@
-import TournamentCreationDialog from "@/app/_components/tournamentCreationDialog";
+import TournamentCreationDialog from "@/app/_components/director/tournamentCreationDialog";
 import {
   Card,
   CardDescription,
@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getServerAuthSession } from "@/server/auth";
 import { api } from "@/trpc/server";
 import Link from "next/link";
+import { Lock } from "lucide-react";
 
 export default async function Director() {
   const session = await getServerAuthSession();
@@ -18,7 +19,21 @@ export default async function Director() {
     userId: session!.user.id,
   });
   return (
-    <div className="p-2">
+    <div className="p-4">
+      <div className="flex flex-row gap-2 p-2 tracking-widest text-blue-500">
+        <Link href="/tournaments">Player</Link>
+        <Separator orientation="vertical" className="h-8 bg-gray-300" />
+        <Link href="/tournaments/director">
+          {session?.user.isTournamentDirector ? (
+            <span>Tournament Director</span>
+          ) : (
+            <div className="flex flex-row items-center justify-center gap-1">
+              <Lock className="h-4 w-4" />
+              <span>Tournament Director</span>
+            </div>
+          )}
+        </Link>
+      </div>
       <div className="flex flex-row justify-between">
         <h1 className="pb-4 text-3xl font-semibold">TD Page</h1>
         <TournamentCreationDialog userId={session!.user.id} />
@@ -31,7 +46,9 @@ export default async function Director() {
               <CardHeader>
                 <CardTitle>{tournament.name}</CardTitle>
                 <CardDescription>
-                  <Link href={`/tournaments/director/${tournament.tournamentId}`}>
+                  <Link
+                    href={`/tournaments/director/${tournament.tournamentId}`}
+                  >
                     {" "}
                     Go To
                   </Link>

@@ -1,9 +1,9 @@
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getServerAuthSession } from "@/server/auth";
-import TDApplication from "./_components/tdApplication";
+import TDApplication from "./_components/director/tdApplication";
 import { api } from "@/trpc/server";
-import { Meteors } from "./_components/meteors";
+import { Meteors } from "./_components/home/meteors";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import {
   DollarSign,
@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import AlertList from "./_components/alertList";
+import AlertList from "./_components/home/alertList";
 
 export default async function Home() {
   const session = await getServerAuthSession();

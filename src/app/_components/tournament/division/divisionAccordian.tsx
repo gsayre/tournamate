@@ -18,7 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
+import PartnerSearch from "./partnerSearch";
+import PartnerList from "./partnerList";
 
 type Schema = typeof schema;
 type TSchema = ExtractTablesWithRelations<Schema>;
@@ -48,6 +49,7 @@ export type DivisionWithEntries = InferResultType<
 
 export default function DivisionAccordian({
   divisions,
+  name,
 }: {
   divisions: DivisionWithEntries[];
   name: string;
@@ -58,10 +60,10 @@ export default function DivisionAccordian({
         {divisions.map((division) => (
           <AccordionItem value={division.name} key={division.name}>
             <AccordionTrigger>
-                <p>{division.type + " - " + division.name}</p>
+              <p>{division.type + " - " + division.name}</p>
             </AccordionTrigger>
             <AccordionContent>
-              <div className="flex flex-row gap-4">
+              <div className="flex flex-col gap-4">
                 <div className="flex flex-col">
                   <h5 className="pb-2 text-lg font-semibold">Entries</h5>
                   {division.entries.length > 0 ? (
@@ -90,6 +92,12 @@ export default function DivisionAccordian({
                   ) : (
                     <div>No entries</div>
                   )}
+                </div>
+                <div className="flex flex-col gap-4">
+                  <h3>Register for division</h3>
+                  <PartnerSearch>
+                    <PartnerList name={name} divisionId={division.divisionId} />
+                  </PartnerSearch>
                 </div>
               </div>
             </AccordionContent>
