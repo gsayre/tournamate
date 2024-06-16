@@ -130,8 +130,7 @@ export const tournamentDirectorRequestsRelations = relations(
 export const teamInvitations = createTable("teamInvitations", {
   id: serial("teamInvitations").notNull().primaryKey(),
 
-  inviterId: int("inviterId").notNull(),
-  tournamentId: int("tournamentId").notNull(),
+  inviterId: varchar("inviterId", { length: 255 }).notNull(),
   divisionId: int("divisionId").notNull(),
 });
 
@@ -141,10 +140,6 @@ export const teamInvitationsRelations = relations(
     inviter: one(users, {
       fields: [teamInvitations.inviterId],
       references: [users.id],
-    }),
-    tournament: one(tournament, {
-      fields: [teamInvitations.tournamentId],
-      references: [tournament.tournamentId],
     }),
     division: one(division, {
       fields: [teamInvitations.divisionId],
@@ -156,7 +151,7 @@ export const teamInvitationsRelations = relations(
 
 export const userInInvitations = createTable("userInInvitations", {
   teamInvitationId: int("teamInvitationId").notNull(),
-  inviteeId: int("inviteeId").notNull(),
+  inviteeId: varchar("inviteeId", { length: 255 }).notNull(),
 });
 
 export const userInInvitationsRelations = relations(

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { schema } from "@/server/db";
-import { InferSelectModel, eq, like } from "drizzle-orm";
+import { type InferSelectModel, eq, like } from "drizzle-orm";
 
 export type findPartnerQueryT = InferSelectModel<typeof schema.users>;
 
@@ -23,5 +23,21 @@ export const tournamentBasicRouter = createTRPCRouter({
         .from(schema.users)
         .where(like(schema.users.name, "%" + input.playerName + "%"));
       return potentialPartners;
+    }),
+  createPartnerInvie: protectedProcedure
+    .input(
+      z.object({
+        playerId: z.string(),
+        divisionId: z.number(),
+        inviterId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Create the team invitation
+      const teamInvitation = await ctx.db.insert(schema.teamInvitations).values({ inviterId: input.inviterId, divisionId: input.divisionId }).execute();
+      if (teamInvitation.insertId) {
+        // Add the invitee to the team invitation
+        await ctx.db.insert(schema.userInInvitations).values({ teamInvitationId: parseInt(teamInvitation.insertId), inviteeId: input.playerId }).execute();
+      }
     }),
 });

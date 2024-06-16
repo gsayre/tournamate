@@ -57,6 +57,20 @@
       "when": 1717550008596,
       "tag": "0007_dark_blindfold",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1718472196461,
+      "tag": "0008_open_red_skull",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1718472455470,
+      "tag": "0009_fancy_justice",
+      "breakpoints": true
     }
   ]
 }

@@ -55,7 +55,6 @@ export const tournamentRelations = relations(tournament, ({ one, many }) => ({
     references: [users.id],
   }),
   divisions: many(division),
-  teamInvitations: many(teamInvitations),
 }));
 
 export const division = createTable("division", {

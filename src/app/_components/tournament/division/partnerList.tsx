@@ -6,9 +6,11 @@ import PartnerInvite from "./partnerInvite";
 export default async function PartnerList({
   name,
   divisionId,
+  inviterId,
 }: {
   name: string;
   divisionId: number;
+  inviterId: string;
 }) {
   const potentialPartners = await api.tournamentBasic.findPartner({
     playerName: name,
@@ -21,10 +23,14 @@ export default async function PartnerList({
           <>
             <div
               key={partner.id}
-              className={`${name.length > 0 ? "" : "hidden"} flex flex-row gap-2`}
+              className={`${name.length > 0 ? "" : "hidden"} flex flex-row gap-2 items-center justify-around`}
             >
               <p>{partner.name}</p>
-              <PartnerInvite partnerId={partner.id} divisionId={divisionId} />
+              <PartnerInvite
+                partnerId={partner.id}
+                divisionId={divisionId}
+                inviterId={inviterId}
+              />
             </div>
             <Separator className={`${name.length > 0 ? "" : "hidden"} my-2`} />
           </>

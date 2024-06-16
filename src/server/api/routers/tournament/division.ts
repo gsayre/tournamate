@@ -2,7 +2,6 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { schema } from "@/server/db";
 import { eq } from "drizzle-orm";
-import { team } from "@/server/db/schema/team";
 
 export const tournamentDivisionRouter = createTRPCRouter({
   addDivision: protectedProcedure
@@ -38,5 +37,24 @@ export const tournamentDivisionRouter = createTRPCRouter({
         },
       });
       return divisions;
+    }),
+  getDivision: protectedProcedure
+    .input(z.object({ divisionId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const division = await ctx.db.query.division.findFirst({
+        where: eq(schema.division.divisionId, input.divisionId),
+        with: {
+          entries: {
+            with: {
+              team: {
+                with: {
+                  players: true,
+                },
+              },
+            },
+          },
+        },
+      });
+      return division;
     }),
 });

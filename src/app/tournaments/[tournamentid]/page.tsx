@@ -1,6 +1,7 @@
 import DivisionAccordian from "@/app/_components/tournament/division/divisionAccordian";
-import PartnerList from "@/app/_components/tournament/division/partnerList";
 import { api } from "@/trpc/server";
+import { Separator } from "@/components/ui/separator";
+import Link from "next/link";
 
 export default async function Tournament({
   params,
@@ -21,17 +22,7 @@ export default async function Tournament({
   const name = searchParams.name ?? "";
   return (
     <main className="flex flex-col p-8 pt-6">
-      <div className="flex flex-col">
-        <h2 className="pb-6 text-3xl font-bold tracking-tight">
-          {tournament?.name}
-        </h2>
-      </div>
-      <div>
-        <h3 className="pb-2 text-2xl font-semibold tracking-tight">
-          Divisions
-        </h3>
-        <DivisionAccordian divisions={divisions} name={name} />
-      </div>
+        {/* <DivisionAccordian divisions={divisions} name={name} /> */}
     </main>
   );
 }
