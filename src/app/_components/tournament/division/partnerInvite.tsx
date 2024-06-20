@@ -13,7 +13,7 @@ export default function PartnerInvite({
   inviterId: string;
   }) {
   const [submitted, setSubmitted] = useState(false);
-  const inviteUser = api.tournamentBasic.createPartnerInvie.useMutation();
+  const inviteUser = api.tournamentBasic.createPartnerInvite.useMutation();
   return (
     <div>
       {submitted ? <Check className="h-4 w-4 text-green-500"/> : <Mail
