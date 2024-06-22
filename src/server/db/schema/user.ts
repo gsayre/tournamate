@@ -113,6 +113,7 @@ export const verificationTokens = createTable(
 export const tournamentDirectorRequests = createTable(
   "tournamentDirectorRequests",
   {
+    id: serial("id").notNull().primaryKey(),
     userId: varchar("userId", { length: 255 }).notNull(),
   },
 );
@@ -149,10 +150,20 @@ export const teamInvitationsRelations = relations(
   }),
 );
 
-export const userInInvitations = createTable("userInInvitations", {
-  teamInvitationId: int("teamInvitationId").notNull(),
-  inviteeId: varchar("inviteeId", { length: 255 }).notNull(),
-});
+export const userInInvitations = createTable(
+  "userInInvitations",
+  {
+    teamInvitationId: int("teamInvitationId").notNull(),
+    inviteeId: varchar("inviteeId", { length: 255 }).notNull(),
+  },
+  (table) => {
+    return {
+      compoundKey: primaryKey({
+        columns: [table.teamInvitationId, table.inviteeId],
+      }),
+    };
+  },
+);
 
 export const userInInvitationsRelations = relations(
   userInInvitations,

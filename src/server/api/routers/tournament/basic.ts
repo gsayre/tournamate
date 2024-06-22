@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
-import { db, schema } from "@/server/db";
-import { type InferSelectModel, eq, like, and } from "drizzle-orm";
-import { division } from "@/server/db/schema/tournament";
+import { schema } from "@/server/db";
+import { type InferSelectModel, eq, like, and, lt, gte } from "drizzle-orm";
 
 export type findPartnerQueryT = InferSelectModel<typeof schema.users>;
+export type getTournamentInvitesQueryT = InferSelectModel<typeof schema.teamInvitations>;
 
 export const tournamentBasicRouter = createTRPCRouter({
   getTournament: protectedProcedure
@@ -15,6 +15,18 @@ export const tournamentBasicRouter = createTRPCRouter({
         .from(schema.tournament)
         .where(eq(schema.tournament.tournamentId, input.tournamentId));
       return tournament;
+    }),
+  getPastTournaments: protectedProcedure.query(async ({ ctx }) => {
+      const tournaments = await ctx.db.query.tournament.findMany({
+        where: lt(schema.tournament.dayOneDate, new Date()),
+      });
+      return tournaments;
+    }),
+  getUpcomingTournaments: protectedProcedure.query(async ({ ctx }) => {
+      const tournaments = await ctx.db.query.tournament.findMany({
+        where: gte(schema.tournament.dayOneDate, new Date()),
+      });
+      return tournaments;
     }),
   findPartner: protectedProcedure
     .input(z.object({ playerName: z.string() }))
@@ -58,7 +70,11 @@ export const tournamentBasicRouter = createTRPCRouter({
         with: {
           teamInvitation: {
             with: {
-              division: true,
+              division: {
+                with: {
+                  tournament: true,
+                }
+              },
               inviter: true,
             },
           },
@@ -75,7 +91,7 @@ export const tournamentBasicRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      //Add users to the division for the tournament
+      //Fetch the team invitation
       const invite = await ctx.db.query.teamInvitations.findFirst({
         where: eq(schema.teamInvitations.id, input.inviteId),
         with: {
@@ -85,38 +101,59 @@ export const tournamentBasicRouter = createTRPCRouter({
         },
       });
       if (!invite) return;
+      //Create the team
+      const team = await ctx.db
+        .insert(schema.team)
+        .values({
+          tournamentId: invite.division.tournamentId,
+          divisionId: input.divisionId,
+        })
+        .execute();
+      const teamId = parseInt(team.insertId);
+      //Add the players to the team
       await ctx.db.insert(schema.userInTeam).values({
-        teamId: input.divisionId,
-        userId: input.userId,
+        userId: invite.inviter.id,
+        teamId: teamId,
+      });
+      for (const invitee of invite.invitees) {
+        await ctx.db.insert(schema.userInTeam).values({
+          userId: invitee.inviteeId,
+          teamId: teamId,
+        });
+      }
+      //Add the team to the division
+      await ctx.db.insert(schema.teamInDivision).values({
+        teamId: teamId,
+        divisionId: input.divisionId,
       });
 
       //Delete the invitation and related rows
       if (invite?.invitees) {
-      for (const invitee of invite?.invitees) {
-        await ctx.db
-          .delete(schema.teamInvitations)
-          .where(
-            and(
-              eq(schema.teamInvitations.id, input.inviteId),
-              eq(schema.teamInvitations.divisionId, input.divisionId),
-            ),
-          )
-          .execute();
-        await ctx.db
-          .delete(schema.userInInvitations)
-          .where(
-            and(
-              eq(schema.userInInvitations.inviteeId, input.userId),
-              eq(
-                schema.userInInvitations.teamInvitationId,
-                invitee.teamInvitationId,
+        for (const invitee of invite?.invitees) {
+          await ctx.db
+            .delete(schema.teamInvitations)
+            .where(
+              and(
+                eq(schema.teamInvitations.id, input.inviteId),
+                eq(schema.teamInvitations.divisionId, input.divisionId),
               ),
-            ),
-          )
-          .execute();
+            )
+            .execute();
+          await ctx.db
+            .delete(schema.userInInvitations)
+            .where(
+              and(
+                eq(schema.userInInvitations.inviteeId, input.userId),
+                eq(
+                  schema.userInInvitations.teamInvitationId,
+                  invitee.teamInvitationId,
+                ),
+              ),
+            )
+            .execute();
+        }
       }
-    }
-}),
+    }),
   declineTournamentInvite: protectedProcedure
     .input(
       z.object({
@@ -127,33 +164,33 @@ export const tournamentBasicRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       //Delete the invitation and related rows
-      const deletedInviteArr = await ctx.db
-        .select({ inviteId: schema.teamInvitations.id })
-        .from(schema.teamInvitations)
-        .where(eq(schema.teamInvitations.id, input.inviteId))
+      const invite = await ctx.db.query.teamInvitations.findFirst({
+        where: eq(schema.teamInvitations.id, input.inviteId),
+        with: {
+          division: true,
+          invitees: true,
+          inviter: true,
+        },
+      });
+      if (!invite) return;
+      //Delete the invitation and related rows
+      await ctx.db
+        .delete(schema.userInInvitations)
+        .where(
+          and(
+            eq(schema.userInInvitations.inviteeId, input.userId),
+            eq(schema.userInInvitations.teamInvitationId, input.inviteId),
+          ),
+        )
         .execute();
-      for (const deletedInvite of deletedInviteArr) {
-        await ctx.db
-          .delete(schema.teamInvitations)
-          .where(
-            and(
-              eq(schema.teamInvitations.id, input.inviteId),
-              eq(schema.teamInvitations.divisionId, input.divisionId),
-            ),
-          )
-          .execute();
-        await ctx.db
-          .delete(schema.userInInvitations)
-          .where(
-            and(
-              eq(schema.userInInvitations.inviteeId, input.userId),
-              eq(
-                schema.userInInvitations.teamInvitationId,
-                deletedInvite.inviteId,
-              ),
-            ),
-          )
-          .execute();
-      }
+      await ctx.db
+        .delete(schema.teamInvitations)
+        .where(
+          and(
+            eq(schema.teamInvitations.inviterId, invite.inviterId),
+            eq(schema.teamInvitations.id, input.inviteId),
+          ),
+        )
+        .execute();
     }),
 });

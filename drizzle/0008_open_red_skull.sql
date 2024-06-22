@@ -1,2 +1,0 @@
-ALTER TABLE `tournamate_teamInvitations` MODIFY COLUMN `inviterId` varchar(255) NOT NULL;--> statement-breakpoint
-ALTER TABLE `tournamate_userInInvitations` MODIFY COLUMN `inviteeId` varchar(255) NOT NULL;

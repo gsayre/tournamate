@@ -5,71 +5,15 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1715552425138,
-      "tag": "0000_yielding_vertigo",
+      "when": 1718926798308,
+      "tag": "0000_dizzy_leader",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "5",
-      "when": 1715628144821,
-      "tag": "0001_far_sphinx",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "5",
-      "when": 1715740539031,
-      "tag": "0002_rapid_scarlet_witch",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "5",
-      "when": 1715907703240,
-      "tag": "0003_steep_skrulls",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "5",
-      "when": 1716429239801,
-      "tag": "0004_lovely_mach_iv",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "5",
-      "when": 1716429746559,
-      "tag": "0005_silent_the_fallen",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "5",
-      "when": 1717255988828,
-      "tag": "0006_light_overlord",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "5",
-      "when": 1717550008596,
-      "tag": "0007_dark_blindfold",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "5",
-      "when": 1718472196461,
-      "tag": "0008_open_red_skull",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "5",
-      "when": 1718472455470,
-      "tag": "0009_fancy_justice",
+      "when": 1718926906553,
+      "tag": "0001_cloudy_tiger_shark",
       "breakpoints": true
     }
   ]

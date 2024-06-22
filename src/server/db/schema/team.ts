@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { double, int, mysqlTableCreator, serial } from "drizzle-orm/mysql-core";
+import { double, int, mysqlTableCreator, primaryKey, serial, varchar } from "drizzle-orm/mysql-core";
 
 import { users } from "./user";
 import { division, tournament, pool, game } from "./tournament";
@@ -10,7 +10,7 @@ export const team = createTable("team", {
   id: serial("team").notNull().primaryKey(),
   divisionId: int("divisionId").notNull(),
   tournamentId: int("tournamentId").notNull(),
-  poolId: int("poolId").notNull(),
+  poolId: int("poolId"),
   teamRating: double("teamRating", { precision: 7, scale: 2 })
     .notNull()
     .default(1000.0),
@@ -35,30 +35,60 @@ export const teamRelations = relations(team, ({ one, many }) => ({
   gamesReffed: many(game), //TODO: check if one-to-many is correct
 }));
 
-export const userInTeam = createTable("userInTeam", {
-  userId: int("userId").notNull(),
-  teamId: int("teamId").notNull(),
-});
+export const userInTeam = createTable(
+  "userInTeam",
+  {
+    userId: varchar("userId", { length: 255 }).notNull(),
+    teamId: int("teamId").notNull(),
+  },
+  (table) => {
+    return {
+      compoundKey: primaryKey({
+        columns: [table.userId, table.teamId],
+      }),
+    };
+  },
+);
 
 export const userInTeamRelations = relations(userInTeam, ({ one }) => ({
   team: one(team, { fields: [userInTeam.teamId], references: [team.id] }),
   user: one(users, { fields: [userInTeam.userId], references: [users.id] }),
 }));
 
-export const teamInGame = createTable("teamInGame", {
-  teamId: int("teamId").notNull(),
-  gameId: int("gameId").notNull(),
-});
+export const teamInGame = createTable(
+  "teamInGame",
+  {
+    teamId: int("teamId").notNull(),
+    gameId: int("gameId").notNull(),
+  },
+  (table) => {
+    return {
+      compoundKey: primaryKey({
+        columns: [table.teamId, table.gameId],
+      }),
+    };
+  },
+);
 
 export const teamInGameRelations = relations(teamInGame, ({ one }) => ({
   team: one(team, { fields: [teamInGame.teamId], references: [team.id] }),
   game: one(game, { fields: [teamInGame.gameId], references: [game.gameId] }),
 }));
 
-export const teamInDivision = createTable("teamInDivision", {
-  teamId: int("teamId").notNull(),
-  divisionId: int("divisionId").notNull(),
-});
+export const teamInDivision = createTable(
+  "teamInDivision",
+  {
+    teamId: int("teamId").notNull(),
+    divisionId: int("divisionId").notNull(),
+  },
+  (table) => {
+    return {
+      compoundKey: primaryKey({
+        columns: [table.teamId, table.divisionId],
+      }),
+    };
+  },
+);
 
 export const teamInDivisionRelations = relations(teamInDivision, ({ one }) => ({
   team: one(team, { fields: [teamInDivision.teamId], references: [team.id] }),

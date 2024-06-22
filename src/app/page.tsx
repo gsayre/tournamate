@@ -10,14 +10,16 @@ import {
   HandCoins,
   LineChart,
   Mail,
-  TriangleAlert,
   Users,
   Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import AlertList from "./_components/home/alertList";
+import { toTitleCase } from "@/lib/utils";
+import InviteAccept from "./_components/home/inviteAccept";
+import InviteDecline from "./_components/home/inviteDecline";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default async function Home() {
   const session = await getServerAuthSession();
@@ -120,35 +122,72 @@ export default async function Home() {
     await api.role.getActiveTournamentDirectorApplications({
       userId: session.user.id,
     });
+  const invites = await api.tournamentBasic.getTournamentInvites({
+    userId: session?.user.id,
+  });
 
   return (
     <main className="flex min-h-screen flex-col p-2">
       <div className="flex flex-col p-8 pt-6">
-        <div className="flex h-64 flex-row gap-4 mb-8">
-          <Skeleton className="h-64 w-72 rounded-full" />
-          <Separator orientation="vertical" />
-          <div className="flex w-full flex-row gap-2 sm:flex-col 2xl:justify-between">
-            <div className="flex flex-col gap-2">
-              {session && (
-                <h2 className=" text-3xl">
-                  Welcome{" "}
-                  <span className="font-bold tracking-tight">
-                    {session.user?.name
-                      ? session.user.name
-                      : session.user.email}
-                  </span>
-                  !
-                </h2>
-              )}
-              {session?.user.id &&
-                !session.user.isTournamentDirector &&
-                !hasActiveTDApplications && (
-                  <TDApplication userId={session?.user.id} />
+        <div className="mb-8 flex h-64 flex-row ">
+          <div className="flex flex-grow flex-row gap-4">
+            <Skeleton className="h-64 w-72 rounded-full" />
+            <Separator orientation="vertical" />
+            <div className="flex w-full flex-row gap-2 sm:flex-col 2xl:justify-between">
+              <div className="flex flex-col gap-2">
+                {session && (
+                  <h2 className=" text-3xl">
+                    Welcome{" "}
+                    <span className="font-bold tracking-tight">
+                      {session.user?.name
+                        ? session.user.name
+                        : session.user.email}
+                    </span>
+                    !
+                  </h2>
                 )}
+                {session?.user.id &&
+                  !session.user.isTournamentDirector &&
+                  !hasActiveTDApplications && (
+                    <TDApplication userId={session?.user.id} />
+                  )}
+              </div>
+              <div className="flex flex-col lg:pr-16">
+                {!hasName && <AlertList userId={session?.user.id} />}
+              </div>
             </div>
-            <div className="flex flex-col lg:pr-16">
-              {!hasName && <AlertList userId={session?.user.id} />}
-            </div>
+          </div>
+
+          <div className="flex w-fit flex-col pr-16">
+            <h3 className="text-lg font-medium">Team Invitations</h3>
+            <Separator className="mb-4 mt-2" />
+            <ScrollArea>
+              {invites.map((invite) => (
+                <div
+                  className="flex flex-row items-center gap-4"
+                  key={invite.teamInvitationId}
+                >
+                  <Mail className="h-8 w-8 text-gray-500" />
+                  <div>
+                    <span className="font-semibold">
+                      {invite.teamInvitation.inviter.name}
+                    </span>
+                    <span> is inviting you to play in </span>
+                    <span className="font-semibold">
+                      {toTitleCase(invite.teamInvitation.division.type) +
+                        " " +
+                        invite.teamInvitation.division.name}
+                    </span>
+                    <span> at </span>
+                    <span className="font-semibold">
+                      {invite.teamInvitation.division.tournament.name}
+                    </span>
+                  </div>
+                  <InviteAccept />
+                  <InviteDecline />
+                </div>
+              ))}
+            </ScrollArea>
           </div>
         </div>
         <div className="w-fit pb-8">

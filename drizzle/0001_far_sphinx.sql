@@ -1,1 +1,0 @@
-ALTER TABLE `tournamate_user` ADD `isTournamentDirector` boolean DEFAULT false;

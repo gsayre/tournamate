@@ -10,11 +10,44 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { api } from "@/trpc/react";
 
+import type {
+  BuildQueryResult,
+  DBQueryConfig,
+  ExtractTablesWithRelations,
+} from "drizzle-orm";
+import { type schema } from "@/server/db";
+
+type Schema = typeof schema;
+type TSchema = ExtractTablesWithRelations<Schema>;
+
+export type IncludeRelation<TableName extends keyof TSchema> = DBQueryConfig<
+  "one" | "many",
+  boolean,
+  TSchema,
+  TSchema[TableName]
+>["with"];
+
+export type InferResultType<
+  TableName extends keyof TSchema,
+  With extends IncludeRelation<TableName> | undefined = undefined,
+> = BuildQueryResult<
+  TSchema,
+  TSchema[TableName],
+  {
+    with: With;
+  }
+>;
+
+type InvitesWithNested = InferResultType<
+  "userInInvitations",
+  { teamInvitation: { with: { division: true; inviter: true } } }
+>;
+
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
 });
 
-export default function InviteList({ userId }: { userId: string }) {
+export default function InviteList({ userId, teamInvitations }: { userId: string, teamInvitations: InvitesWithNested[] }) {
   const updateName = api.user.updateName.useMutation();
   const [addingName, setAddingName] = useState(false);
 
