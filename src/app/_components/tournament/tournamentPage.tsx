@@ -7,7 +7,7 @@ import UpcomingTournaments from "./upcomingTournaments";
 export default function TournamentPage() {
   return (
     <div>
-      <h2 className="pb-4 text-3xl font-bold tracking-tight">Tournaments</h2>
+      
       <Tabs
         defaultValue="upcoming"
         className="space-y-4"
